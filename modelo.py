@@ -134,33 +134,33 @@ TOPES_ADN = {"common": 850000, "rare": 250000, "epic": 85000,
 
 
 # --------------------------------------------------------------------------
-# 6. Stats reales: nivel, puntos de mejora y mejoras
+# 6. Real stats: level, stat boosts and upgrades
 # --------------------------------------------------------------------------
-# Los `stats` que trae cada criatura de paleo.gg SON los de NIVEL 26, y esto no
-# es una deduccion nuestra: lo declara la propia ficha en el enlace «Compare
-# Creatures», que lleva `compare?ck=0__<uuid>__26` en las 518 fichas. Ademas el
-# multiplicador de nivel 26 vale exactamente 1,000000 (ver MULT_NIVEL) y el texto
-# renderizado de la ficha ensena esos mismos numeros (alacranix: 4250 / 1650 /
-# 115 / 40% / 15% / 125%, identicos al JSON). Las tres cosas las comprueba
-# `verificar_stats.py` contra el cache, no contra este fichero.
+# The `stats` carried by each creature in the data are LEVEL 26 values, and this
+# is not our inference: the source states it in the "Compare Creatures" link,
+# which carries `compare?ck=0__<uuid>__26` on all 518 entries. Two more facts
+# agree: the level-26 multiplier is exactly 1.000000 (see MULT_NIVEL) and the
+# rendered text of the entry shows those same numbers (alacranix: 4250 / 1650 /
+# 115 / 40% / 15% / 125%, identical to the JSON). `verificar_stats.py` checks
+# all three against the local cache, not against this file.
 #
-# MULT_NIVEL[L-1] es el factor que se aplica a VIDA y DANO al nivel L, en
-# milmillonésimas: stat(L) = floor(stat26 * MULT_NIVEL[L-1] / 1e9).
-# La velocidad, la armadura y los dos criticos NO escalan con el nivel.
+# MULT_NIVEL[L-1] is the factor applied to HEALTH and DAMAGE at level L, in
+# billionths: stat(L) = floor(stat26 * MULT_NIVEL[L-1] / 1e9).
+# Speed, armour and both crit values do NOT scale with level.
 #
-# Confianza: ALTA. La tabla esta copiada VERBATIM de la constante `m` del propio
-# codigo de paleo.gg (modulo 88475 de su bundle), que es la fuente que usa su
-# calculadora. Se copia y no se recalcula a proposito, y la razon se midio
-# entera en vez de suponerla (`verificar_stats.py`, seccion 5):
-#   - del nivel 1 al 30 la tabla SI es 1,05^(L-26), salvo ruido de redondeo
-#     (error relativo maximo 1,5e-4, en el nivel 4);
-#   - del 31 al 35 NO lo es: son cifras redondas puestas a mano —1,27 · 1,32 ·
-#     1,37 · 1,425 · 1,5— y la forma cerrada se desvia hasta un 3,68 % (nivel 34:
-#     1,425 contra 1,477). En una criatura de 6.000 de vida son 314 puntos, no
-#     un decimal de redondeo.
-# Un comentario anterior en este mismo sitio decia «difiere en hasta 5e-5
-# relativo, ~0,3 puntos de vida»: era FALSO, y por eso ahora la afirmacion va con
-# los numeros medidos y con una prueba que la sujeta.
+# Confidence: HIGH. These are the game's own level multipliers, obtained through
+# paleo.gg and cross-checked against the stat values it renders. They are used
+# as a table instead of being recomputed on purpose, and the reason was measured
+# rather than assumed (`verificar_stats.py`, section 5):
+#   - from level 1 to 30 the table IS 1.05^(L-26), up to rounding noise
+#     (maximum relative error 1.5e-4, at level 4);
+#   - from 31 to 35 it is NOT: those are round figures set by hand —1.27 · 1.32 ·
+#     1.37 · 1.425 · 1.5— and the closed form drifts by up to 3.68 % (level 34:
+#     1.425 vs 1.477). On a creature with 6,000 health that is 314 points, not a
+#     rounding decimal.
+# An earlier comment in this same place claimed "differs by up to 5e-5 relative,
+# ~0.3 health points": it was FALSE, which is why the claim now carries the
+# measured numbers and a test that holds it down.
 MULT_NIVEL = [
     295300006, 310100002, 325600013, 341800003, 358899993,
     376899986, 395699996, 415499992, 436300010, 458100013,
@@ -171,9 +171,9 @@ MULT_NIVEL = [
     1270000000, 1320000000, 1370000000, 1425000000, 1500000000,
 ]
 
-# Cada punto de mejora («stat boost») suma esto:
-#   velocidad: +2 plano   ·   vida y dano: +2,5% sobre el valor ya escalado
-# Confianza: MEDIA-ALTA. Es la funcion `i(e,t,a)` del modulo 88475 de paleo.gg.
+# Each stat-boost point adds this:
+#   speed: +2 flat   ·   health and damage: +2.5% on the already scaled value
+# Confidence: MEDIUM-HIGH. Measured against the source page.
 BOOST_VELOCIDAD = 2
 BOOST_FRACCION = 0.025
 

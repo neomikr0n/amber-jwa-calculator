@@ -69,7 +69,6 @@ const I18N_ES = {
   "<div class=\"aviso info\" style=\"margin-top:12px\">The <b>«Count the DNA to level up the ": "<div class=\"aviso info\" style=\"margin-top:12px\">La casilla <b>«Contar el ADN de subir los ",
   "ingredients»</b> checkbox is unchecked, so these figures follow the <b>paleo.gg</b> criterion. ": "ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. ",
   "Check it on the <b>Fusion Tree</b> tab to see what you actually need to gather.</div>": "Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>",
-  ">Total DNA missing</div><div class=": ">ADN que falta en total</div><div class=",
   " different creatures": " criaturas distintas",
   "</div><div class=\"n\">of the ones that are not fused</div></div>": "</div><div class=\"n\">de las que no se fusionan</div></div>",
   "<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">",
@@ -142,7 +141,6 @@ const I18N_ES = {
   "<div class=\"d\">It's at the <b>game cap (level ": "<div class=\"d\">Está en el <b>tope del juego (nivel ",
   "<div class=\"cifra al\"><div class=\"k\">DNA needed</div><div class=\"v\">": "<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">",
   "</div><div class=\"n\">from ": "</div><div class=\"n\">de ",
-  ">DNA missing</div><div class=": ">ADN que falta</div><div class=",
   "</div><div class=\"n\">only from leveling up</div></div>": "</div><div class=\"n\">solo por subir de nivel</div></div>",
   "<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>": "<div class=\"aviso\" style=\"margin-top:14px\">El tope de ADN de una criatura <b>",
   "</b> is <b>": "</b> es <b>",
@@ -165,7 +163,6 @@ const I18N_ES = {
   "<div class=\"cifra al\"><div class=\"k\">DNA to collect</div><div class=\"v\">": "<div class=\"cifra al\"><div class=\"k\">ADN a recolectar</div><div class=\"v\">",
   "<div class=\"n\">of the ": "<div class=\"n\">de las ",
   " creatures that are not fused": " criaturas que no se fusionan",
-  " shared, counted once": " compartidas, contadas una vez",
   "<div class=\"cifra\"><div class=\"k\">Total fusions</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Fusiones totales</div><div class=\"v\">",
   "<div class=\"cifra\"><div class=\"k\">Total coins</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Monedas totales</div><div class=\"v\">",
   "<div class=\"cifra\"><div class=\"k\">Creatures in the tree</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Criaturas en el árbol</div><div class=\"v\">",
@@ -265,7 +262,6 @@ const I18N_ES = {
   "Total DNA missing": "ADN que falta en total",
   "you have ": "tienes ",
   "Calculator": "Calculadora",
-  "Fusion Tree": "Árbol de fusión",
   "My creatures": "Mis criaturas",
   "Catalysts": "Catalizadores",
   "1 · The creature": "1 · La criatura",
@@ -273,12 +269,9 @@ const I18N_ES = {
   "2 · Your data": "2 · Tus datos",
   "Current level": "Nivel actual",
   "0 = not created": "0 = sin crear",
-  "DNA you have": "ADN que tienes",
   "Drag it or use the arrow keys": "Arrastra o usa las flechas del teclado",
   "Fusion tree — top to bottom": "Árbol de fusión — de arriba abajo",
-  "Created": "Creada",
   "Summary": "Resumen",
-  "Pick a creature on the «Calculator» tab.": "Elige una criatura en la pestaña «Calculadora».",
   "What you have saved": "Lo que has guardado",
   "Export JSON": "Exportar JSON",
   "Import JSON": "Importar JSON",
@@ -305,6 +298,18 @@ const I18N_ES = {
   "with no discrepancies": "sin discrepancias",
   "works": "funciona",
   "offline": "sin conexión",
+  "Fusion Tree": "Árbol de fusión",
+  "My creatures": "Mis criaturas",
+  "DNA you have": "ADN que tienes",
+  "Pick a creature on the «Calculator» tab.": "Elige una criatura en la pestaña «Calculadora».",
+  "Created": "Creada",
+  "It is read <b>downwards</b>: you start at the chosen creature and walk down through every ingredient needed to create it, in cascade. The DNA figures are <b>what has to be gathered</b>, already discounting what you have saved.": "Se recorre <b>hacia abajo</b>: partimos de la criatura elegida y bajamos por todos los ingredientes que hacen falta para crearla, en cascada. Las cifras de ADN son <b>lo que hay que reunir</b>, ya descontando lo que tengas guardado.",
+  "Every creature in the tree is <b>editable</b>: type its level and the DNA you have, or untick <b>Created</b> if it does not exist yet. It is saved immediately and recalculates everything hanging from it.": "Cada criatura del árbol es <b>editable</b>: escribe su nivel y el ADN que tienes, o destilda <b>Creada</b> si todavía no existe. Se guarda al momento y recalcula todo lo que cuelga de ella.",
+  "Count the DNA to <b>level up the ingredients</b> to the level the fusion requires": "Contar el ADN de <b>subir los ingredientes</b> al nivel que exige la fusión",
+  "With the box ticked you get what actually has to be gathered. If you untick it, the calculation imitates <b>paleo.gg</b>, which assumes the ingredients «are already ready to fuse» and only counts the DNA consumed in the fusions.": "Con la casilla marcada obtienes lo que de verdad hay que reunir. Si la desmarcas, el cálculo imita al de <b>paleo.gg</b>, que asume que los ingredientes «ya están listos para fusionar» y solo cuenta el ADN que se consume en las fusiones.",
+  "<b>Press any row</b> — the name, the photo or any gap in the line — and it takes you to that creature's calculator, with its level, its DNA and its target exactly as you left them.": "<b>Pulsa cualquier fila</b> —el nombre, la foto o cualquier hueco de la línea— y te lleva a la calculadora de esa criatura, con su nivel, su ADN y su objetivo tal y como los dejaste.",
+  "Data is stored in the browser (<code>localStorage</code>), on this device. Nothing is sent anywhere. Use «Export» to take it with you.": "Los datos se guardan en el navegador (<code>localStorage</code>), en este dispositivo. No se envía nada a ningún sitio. Usa «Exportar» para llevártelos.",
+  "<b>UNVERIFIED data.</b> Unlike the rest of the calculator, the recombination rates are <b>not published by the game</b>, and the weights and recipes used here were observed by <b>idgt902</b> (guide of Aug 2025). Catalysts are for <b>enhancements</b>, not for levelling up: it is a separate axis.": "<b>Datos NO verificados.</b> A diferencia del resto de la calculadora, las tasas de recombinación <b>no están publicadas por el juego</b> y aquí se usan los pesos y las recetas observadas por <b>idgt902</b> (guía de ago-2025). Los catalizadores sirven para <b>mejoras (enhancements)</b>, no para subir de nivel: es un eje aparte.",
 };
 
 function idiomaInicial(){
@@ -764,7 +769,7 @@ footer code{color:var(--tx2)}
   </div>
   <nav>
     <button class="on" data-t="calc" data-i18n="Calculator">Calculator</button>
-    <button data-t="arbol">Árbol de fusión</button>
+    <button data-t="arbol" data-i18n="Fusion Tree">Fusion Tree</button>
     <button data-t="mios" data-i18n="My creatures">My creatures</button>
     <button data-t="cat" data-i18n="Catalysts">Catalysts</button>
   </nav>
@@ -776,7 +781,7 @@ footer code{color:var(--tx2)}
        se usa: entrar a la herramienta y saltar a un dino de los tuyos. El bloque
        entero se oculta si no hay ninguna guardada. -->
   <div class="panel" id="panelMisFotos" style="display:none">
-    <h2>Mis criaturas <span id="nMisFotos" style="font-weight:400;color:var(--tx2);font-size:12px"></span></h2>
+    <h2><span data-i18n="My creatures">My creatures</span> <span id="nMisFotos" style="font-weight:400;color:var(--tx2);font-size:12px"></span></h2>
     <div class="tira" id="misFotos"></div>
   </div>
 
@@ -815,7 +820,7 @@ footer code{color:var(--tx2)}
         <div class="nota" id="notaNivel" data-i18n="0 = not created">0 = not created</div>
       </div>
       <div>
-        <label for="adnTengo">ADN que tienes</label>
+        <label for="adnTengo" data-i18n="DNA you have">DNA you have</label>
         <input type="number" id="adnTengo" min="0" step="1" value="0">
         <div class="nota" id="notaAdn">—</div>
       </div>
@@ -836,25 +841,14 @@ footer code{color:var(--tx2)}
 <section id="s-arbol">
   <div class="panel">
     <h2 data-i18n="Fusion tree — top to bottom">Fusion tree — top to bottom</h2>
-    <div class="aviso info">
-      Se recorre <b>hacia abajo</b>: partimos de la criatura elegida y bajamos por todos los
-      ingredientes que hacen falta para crearla, en cascada. Las cifras de ADN son
-      <b>lo que hay que reunir</b>, ya descontando lo que tengas guardado.
-    </div>
-    <div class="aviso">
-      Cada criatura del árbol es <b>editable</b>: escribe su nivel y el ADN que tienes, o destilda
-      <b>Creada</b> si todavía no existe. Se guarda al momento y recalcula todo lo que cuelga de ella.
-    </div>
+    <div class="aviso info" data-i18n-html="It is read <b>downwards</b>: you start at the chosen creature and walk down through every ingredient needed to create it, in cascade. The DNA figures are <b>what has to be gathered</b>, already discounting what you have saved.">It is read <b>downwards</b>: you start at the chosen creature and walk down through every ingredient needed to create it, in cascade. The DNA figures are <b>what has to be gathered</b>, already discounting what you have saved.</div>
+    <div class="aviso" data-i18n-html="Every creature in the tree is <b>editable</b>: type its level and the DNA you have, or untick <b>Created</b> if it does not exist yet. It is saved immediately and recalculates everything hanging from it.">Every creature in the tree is <b>editable</b>: type its level and the DNA you have, or untick <b>Created</b> if it does not exist yet. It is saved immediately and recalculates everything hanging from it.</div>
     <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--tx);margin-bottom:16px;cursor:pointer">
       <input type="checkbox" id="chkSubida" checked style="width:auto;margin:0">
-      Contar el ADN de <b>subir los ingredientes</b> al nivel que exige la fusión
+      <span data-i18n-html="Count the DNA to <b>level up the ingredients</b> to the level the fusion requires">Count the DNA to <b>level up the ingredients</b> to the level the fusion requires</span>
     </label>
-    <div class="nota" style="margin:-8px 0 18px">
-      Con la casilla marcada obtienes lo que de verdad hay que reunir. Si la desmarcas, el cálculo
-      imita al de <b>paleo.gg</b>, que asume que los ingredientes «ya están listos para fusionar» y
-      solo cuenta el ADN que se consume en las fusiones.
-    </div>
-    <div id="arbolCuerpo" class="arbol"><p class="vacio-txt">Elige una criatura en la pestaña «Calculadora».</p></div>
+    <div class="nota" style="margin:-8px 0 18px" data-i18n-html="With the box ticked you get what actually has to be gathered. If you untick it, the calculation imitates <b>paleo.gg</b>, which assumes the ingredients «are already ready to fuse» and only counts the DNA consumed in the fusions.">With the box ticked you get what actually has to be gathered. If you untick it, the calculation imitates <b>paleo.gg</b>, which assumes the ingredients «are already ready to fuse» and only counts the DNA consumed in the fusions.</div>
+    <div id="arbolCuerpo" class="arbol"><p class="vacio-txt" data-i18n="Pick a creature on the «Calculator» tab.">Pick a creature on the «Calculator» tab.</p></div>
   </div>
 </section>
 
@@ -862,19 +856,13 @@ footer code{color:var(--tx2)}
 <section id="s-mios">
   <div class="panel">
     <h2 data-i18n="What you have saved">What you have saved</h2>
-    <div class="aviso info" style="margin-bottom:14px">
-      <b>Pulsa cualquier fila</b> —el nombre, la foto o cualquier hueco de la línea— y te lleva
-      a la calculadora de esa criatura, con su nivel, su ADN y su objetivo tal y como los dejaste.
-    </div>
+    <div class="aviso info" style="margin-bottom:14px" data-i18n-html="<b>Press any row</b> — the name, the photo or any gap in the line — and it takes you to that creature's calculator, with its level, its DNA and its target exactly as you left them."><b>Press any row</b> — the name, the photo or any gap in the line — and it takes you to that creature's calculator, with its level, its DNA and its target exactly as you left them.</div>
     <div id="miosCuerpo"></div>
   </div>
   <div class="panel">
     <h2 data-i18n="Summary">Summary</h2>
     <div class="cifras" id="miosResumen"></div>
-    <div class="nota">
-      Los datos se guardan en el navegador (<code>localStorage</code>), en este dispositivo.
-      No se envía nada a ningún sitio. Usa «Exportar» para llevártelos.
-    </div>
+    <div class="nota" data-i18n-html="Data is stored in the browser (<code>localStorage</code>), on this device. Nothing is sent anywhere. Use «Export» to take it with you.">Data is stored in the browser (<code>localStorage</code>), on this device. Nothing is sent anywhere. Use «Export» to take it with you.</div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="gh" id="btnExport" data-i18n="Export JSON">Export JSON</button>
       <button class="gh" id="btnImport" data-i18n="Import JSON">Import JSON</button>
@@ -888,10 +876,7 @@ footer code{color:var(--tx2)}
   <div class="panel">
     <h2 data-i18n="Catalysts — recombination planner">Catalysts — recombination planner</h2>
     <div class="aviso">
-      <b data-i18n="UNVERIFIED data.">UNVERIFIED data.</b> A diferencia del resto de la calculadora, las tasas de
-      recombinación <b>no están publicadas por el juego</b> y aquí se usan los pesos y las
-      recetas observadas por <b>idgt902</b> (guía de ago-2025). Los catalizadores sirven para
-      <b>mejoras (enhancements)</b>, no para subir de nivel: es un eje aparte.
+      <span data-i18n-html="<b>UNVERIFIED data.</b> Unlike the rest of the calculator, the recombination rates are <b>not published by the game</b>, and the weights and recipes used here were observed by <b>idgt902</b> (guide of Aug 2025). Catalysts are for <b>enhancements</b>, not for levelling up: it is a separate axis."><b>UNVERIFIED data.</b> Unlike the rest of the calculator, the recombination rates are <b>not published by the game</b>, and the weights and recipes used here were observed by <b>idgt902</b> (guide of Aug 2025). Catalysts are for <b>enhancements</b>, not for levelling up: it is a separate axis.</span>
     </div>
     <div class="grid g3">
       <div>
@@ -2292,7 +2277,7 @@ function pintarArbol(){
     const m = minLv(n.rareza);
     let s = '<div class="campos">';
     s += i18n("<label class=\"chk\" title=\"If it is not created, the DNA to create it is added\">")+
-         '<input type="checkbox" data-u="'+n.uuid+'" data-campo="creado"'+(n.creado?' checked':'')+'> Creada</label>';
+         '<input type="checkbox" data-u="'+n.uuid+'" data-campo="creado"'+(n.creado?' checked':'')+'> '+i18n("Created")+'</label>';
     /* type="text" + inputmode="numeric", NO type="number". Medido en Firefox 156: en
        un input number `setSelectionRange` lanza InvalidStateError y `selectionStart`
        es null, asi que el cursor no se puede leer NI devolver. Como el arbol se

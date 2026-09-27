@@ -1,44 +1,44 @@
 #!/usr/bin/env python3
 """
-Verifica los stats del dino y la pista de mejoras contra el cache de paleo.gg.
+Checks the dino stats and the enhancement track against the paleo.gg cache.
 
-Por que existe este fichero
----------------------------
-La herramienta ensena seis numeros por criatura y los llama «datos actuales y
-fidedignos». Eso es una AFIRMACION, y hasta ahora no la respaldaba ninguna
-prueba: los numeros venian del JSON, y el JSON lo escribio `scrape_paleo.py`
-una vez. Si paleo.gg corrige un stat, el JSON se queda con el viejo y nada
-avisa. Esto es el mismo agujero que cerro `verificar_fuentes.py` para las
-zonas, y se cierra igual: releyendo la fuente.
+Why this file exists
+--------------------
+The tool shows six numbers per creature and calls them «current and trustworthy
+data». That is a CLAIM, and until now no test backed it: the numbers came from
+the JSON, and the JSON was written by `scrape_paleo.py` once. If paleo.gg fixes
+a stat, the JSON keeps the old one and nothing warns. This is the same hole that
+`verificar_fuentes.py` closed for the zones, and it is closed the same way: by
+re-reading the source.
 
-Que comprueba, y por que
-------------------------
-1. **Los seis stats, uno a uno, contra la ficha cacheada.** No contra el JSON
-   (que es lo que se quiere comprobar), sino contra el campo `health/damage/
-   speed/armor/crit/critm` de `__NEXT_DATA__.props.pageProps.detail`. Y ademas
-   contra el TEXTO RENDERIZADO de la ficha, que es una segunda copia
-   independiente dentro del mismo fichero: si paleo.gg pintara una cosa y
-   sirviera otra, aqui saldria.
-2. **A que nivel son esos numeros.** La propia ficha lo dice en el enlace
-   «Compare Creatures»: `compare?ck=0__<uuid>__26`. El 26 no lo ponemos
-   nosotros, lo pone la fuente, en las 518 fichas. Toda la interfaz se apoya en
-   que el dato es de nivel 26; esto lo comprueba.
-3. **La pista de mejoras, paso a paso, contra el cache**, y contra la copia que
-   el propio paleo.gg trae en `evolutionData` — dos sitios del mismo fichero que
-   tienen que decir lo mismo.
-4. **El orden de los pasos NO es el mismo en unica y en apex.** Se descubrio
-   mirando una captura, despues de haber dado por supuesto lo contrario. Aqui se
-   mide la distribucion entera y se afirma.
-5. **`MULT_NIVEL` no es la forma cerrada `1,05^(L-26)`.** Es el error que
-   estuvo a punto de colarse: la tabla coincide con la forma cerrada hasta el
-   nivel 30 (ruido de redondeo) y a partir del 31 se separa a proposito, hasta
-   un 3,7 % en el nivel 34. Se mide y se afirma en las dos direcciones, para que
-   nadie «simplifique» la tabla creyendo que sobran numeros.
-6. **Los dominios que la interfaz da por hechos**: los cinco tipos de premio,
-   los cuatro recursos, y que exista un icono en disco para cada uno. Un codigo
-   nuevo sin icono se pintaria con un `src` roto y nadie se enteraria.
+What it checks, and why
+-----------------------
+1. **The six stats, one by one, against the cached card.** Not against the JSON
+   (which is what we want to check), but against the `health/damage/
+   speed/armor/crit/critm` field of `__NEXT_DATA__.props.pageProps.detail`. And
+   also against the RENDERED TEXT of the card, which is a second independent
+   copy inside the same file: if paleo.gg painted one thing and served another,
+   it would show up here.
+2. **At what level those numbers are.** The card itself says so in the
+   «Compare Creatures» link: `compare?ck=0__<uuid>__26`. The 26 is not set by
+   us, the source sets it, in all 518 cards. The whole interface relies on the
+   datum being level 26; this checks it.
+3. **The enhancement track, step by step, against the cache**, and against the
+   copy that paleo.gg itself brings in `evolutionData` — two places in the same
+   file that have to say the same thing.
+4. **The order of the steps is NOT the same in Unique and in Apex.** It was
+   discovered by looking at a screenshot, after having assumed the opposite.
+   Here the whole distribution is measured and asserted.
+5. **`MULT_NIVEL` is not the closed form `1.05^(L-26)`.** It is the mistake
+   that almost slipped in: the table matches the closed form up to level 30
+   (rounding noise) and from 31 on it separates on purpose, up to 3.7 % at
+   level 34. It is measured and asserted in both directions, so that nobody
+   «simplifies» the table believing there are spare numbers.
+6. **The domains the interface takes for granted**: the five reward types, the
+   four resources, and that a disk icon exists for each one. New code without
+   an icon would be painted with a broken `src` and nobody would notice.
 
-    python3 verificar_stats.py     -> 0 si todo cuadra, 1 si no
+    python3 verificar_stats.py     -> 0 if everything matches, 1 if not
 """
 import collections
 import json
@@ -67,20 +67,20 @@ def ok(que, bien, detalle=""):
         print("OK    %s%s" % (que, ": " + detalle if detalle else ""))
     else:
         fallos.append(que)
-        print("FALLO %s%s" % (que, ": " + detalle if detalle else ""))
+        print("FAIL  %s%s" % (que, ": " + detalle if detalle else ""))
 
 
 # ---------------------------------------------------------------------------
-# 0) Cargar el cache una sola vez
+# 0) Load the cache only once
 # ---------------------------------------------------------------------------
-# 518 fichas x 180 KB: se leen enteras y se guardan. Leerlas dos veces por
-# seccion seria medio minuto tirado.
+# 518 cards x 180 KB: they are read whole and kept. Reading them twice per
+# section would throw away half a minute.
 NEXT = re.compile(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
-# El bloque de stats va de `id="stats"` a `id="resistance"`: acotado a proposito,
-# porque los iconos de stat tambien salen en el simulador de batalla que la
-# ficha incluye mas abajo.
+# The stats block goes from `id="stats"` to `id="resistance"`: bounded on
+# purpose, because the stat icons also appear in the battle simulator that the
+# card includes further down.
 STAT_TXT = re.compile(r'images/stat/(\w+)\.png"[^>]*/>\s*<b[^>]*>(?:<span[^>]*>)?([^<]+)')
-# El nivel de los numeros, declarado por la propia ficha.
+# The level of the numbers, declared by the card itself.
 NIVEL = re.compile(r'compare\?ck=0__([a-z0-9_]+)__(\d+)')
 
 fichas = {}
@@ -100,29 +100,30 @@ for f in sorted(os.listdir(CACHE)):
 d = json.load(open(DATOS, encoding="utf-8"))
 cri = d["criaturas"]
 
-print("=== 0. el cache y los datos cubren lo mismo ===")
-ok("hay una ficha por criatura y una criatura por ficha",
+print("=== 0. the cache and the data cover the same thing ===")
+ok("there is one card per creature and one creature per card",
    set(fichas) == set(cri) and len(fichas) == 518,
-   "%d fichas, %d criaturas, %d sin pareja"
+   "%d cards, %d creatures, %d without a pair"
    % (len(fichas), len(cri), len(set(fichas) ^ set(cri))))
-ok("todas las fichas tienen __NEXT_DATA__ y bloque de stats",
+ok("all cards have __NEXT_DATA__ and a stats block",
    all(v["det"] and len(v["txt"]) == 6 for v in fichas.values()),
-   "%d fichas revisadas" % len(fichas))
+   "%d cards checked" % len(fichas))
 
 # ---------------------------------------------------------------------------
-# 1) Los seis stats: contra el campo del cache Y contra el texto renderizado
+# 1) The six stats: against the cache field AND against the rendered text
 # ---------------------------------------------------------------------------
-# `CAMPOS` es la traduccion entre el nombre que usa la fuente y el que usamos
-# nosotros. Se escribe una vez y se usa en las dos direcciones: si algun dia
-# alguien renombra una clave del JSON, esto deja de cuadrar.
+# `CAMPOS` is the translation between the name the source uses and the one we
+# use. It is written once and used in both directions: if someday someone
+# renames a JSON key, this stops matching.
 CAMPOS = [("health", "vida"), ("damage", "dano"), ("speed", "velocidad"),
           ("armor", "armadura"), ("crit", "critico"), ("critm", "dano_critico")]
-# Los tres que la ficha pinta con «%». Es una decision de presentacion, pero se
-# apoya en el dato: si paleo.gg dejara de pintarlos asi, habria que revisarla.
+# The three that the card paints with «%». It is a presentation decision, but it
+# rests on the data: if paleo.gg stopped painting them that way, it would have to
+# be reviewed.
 PCT = {"armor", "crit", "critm"}
 
 print()
-print("=== 1. los seis stats, uno a uno (518 x 6 = 3.108 numeros) ===")
+print("=== 1. the six stats, one by one (518 x 6 = 3,108 numbers) ===")
 malCampo = []
 malTxt = []
 for u, v in sorted(fichas.items()):
@@ -136,32 +137,32 @@ for u, v in sorted(fichas.items()):
     for campo, clave in CAMPOS:
         esperado = cri[u]["stats"][clave]
         bruto = pintado.get(campo)
-        # La ficha pinta el numero pelado, sin separador de millares, y con «%»
-        # en los tres porcentajes. Se compara el numero, no el formato: lo que
-        # importa es que la cifra que se ve sea la que tenemos.
+        # The card paints the bare number, without a thousands separator, and
+        # with «%» on the three percentages. The number is compared, not the
+        # format: what matters is that the figure seen is the one we have.
         limpio = (bruto or "").replace("%", "").strip()
         if not limpio.isdigit() or int(limpio) != esperado:
             malTxt.append("%s.%s: pintado=%r esperado=%d" % (u, campo, bruto, esperado))
-ok("el campo del cache y el JSON dicen lo mismo en los 3.108",
-   not malCampo, malCampo[0] if malCampo else "3.108 numeros, 518 criaturas")
-ok("el texto RENDERIZADO de la ficha tambien (segunda copia independiente)",
-   not malTxt, malTxt[0] if malTxt else "sin discrepancias")
-ok("los tres porcentajes se pintan con «%» y los otros tres no",
+ok("the cache field and the JSON say the same in all 3,108",
+   not malCampo, malCampo[0] if malCampo else "3,108 numbers, 518 creatures")
+ok("the RENDERED text of the card too (second independent copy)",
+   not malTxt, malTxt[0] if malTxt else "no discrepancies")
+ok("the three percentages are painted with «%» and the other three are not",
    all(("%" in dict(v["txt"])[c]) == (c in PCT)
        for v in fichas.values() for c, _ in CAMPOS),
-   "armor, crit y critm llevan «%»; health, damage y speed no")
-ok("la ficha pinta los seis en el mismo orden, siempre",
+   "armor, crit and critm carry «%»; health, damage and speed do not")
+ok("the card paints the six in the same order, always",
    all([c for c, _ in v["txt"]] == [c for c, _ in CAMPOS] for v in fichas.values()),
    "health, damage, speed, armor, crit, critm")
 
 # ---------------------------------------------------------------------------
-# 2) A que nivel son esos numeros: lo dice la fuente, no nosotros
+# 2) At what level those numbers are: the source says it, not us
 # ---------------------------------------------------------------------------
-# Este es el cimiento de toda la herramienta. Si el dato no fuera de nivel 26,
-# `MULT_NIVEL[25] == 1e9` no valdria y todos los stats de la interfaz estarian
-# desplazados. La ficha lo declara en el enlace de comparar.
+# This is the foundation of the whole tool. If the datum were not level 26,
+# `MULT_NIVEL[25] == 1e9` would not hold and all the interface stats would be
+# shifted. The card declares it in the compare link.
 print()
-print("=== 2. el nivel del dato, declarado por la fuente ===")
+print("=== 2. the level of the datum, declared by the source ===")
 niveles = collections.Counter()
 enlaces = []
 for u, v in fichas.items():
@@ -169,39 +170,39 @@ for u, v in fichas.items():
         enlaces.append((u, v["nivel"][:2]))
     else:
         niveles[v["nivel"][0][1]] += 1
-ok("cada ficha declara su nivel una vez, y es la suya",
-   not enlaces, str(enlaces[:3]) if enlaces else "%d fichas" % len(fichas))
-ok("el nivel declarado es 26 en las 518 (no 1, no 35, no el maximo)",
+ok("each card declares its level once, and it is its own",
+   not enlaces, str(enlaces[:3]) if enlaces else "%d cards" % len(fichas))
+ok("the declared level is 26 in all 518 (not 1, not 35, not the maximum)",
    niveles == {"26": 518}, str(dict(niveles)))
-# Y la consecuencia, comprobada sobre el dato entero: a nivel 26 el
-# multiplicador no cambia NADA, en ninguno de los 3.108 numeros.
+# And the consequence, checked over the whole dataset: at level 26 the
+# multiplier changes NOTHING, in none of the 3,108 numbers.
 ident = all(int(cri[u]["stats"][k] * MULT_NIVEL[25] // 10 ** 9) == cri[u]["stats"][k]
             for u in cri for k in cri[u]["stats"])
-ok("a nivel 26 la tabla devuelve el mismo numero, en los 3.108",
+ok("at level 26 the table returns the same number, in all 3,108",
    ident and MULT_NIVEL[25] == 1000000000,
-   "MULT_NIVEL[25] = %d, exacto" % MULT_NIVEL[25])
+   "MULT_NIVEL[25] = %d, exact" % MULT_NIVEL[25])
 
 # ---------------------------------------------------------------------------
-# 3) La pista de mejoras, paso a paso, contra las DOS copias del cache
+# 3) The enhancement track, step by step, against BOTH cache copies
 # ---------------------------------------------------------------------------
-# `detail.enhancements` y `evolutionData[<uuid>].enhancements` son dos copias de
-# lo mismo dentro del mismo fichero. No es redundante comprobar las dos: si
-# paleo.gg actualiza una y se olvida de la otra, es justo lo que hay que ver.
+# `detail.enhancements` and `evolutionData[<uuid>].enhancements` are two copies
+# of the same thing inside the same file. Checking both is not redundant: if
+# paleo.gg updates one and forgets the other, that is exactly what must be seen.
 print()
-print("=== 3. la pista de mejoras (147 criaturas) ===")
+print("=== 3. the enhancement track (147 creatures) ===")
 conPista = [u for u in cri if cri[u].get("mejoras")]
 sinPista = [u for u in cri if not cri[u].get("mejoras")]
-ok("147 con pista y 371 sin ella, y suman 518",
+ok("147 with a track and 371 without one, and they add up to 518",
    len(conPista) == 147 and len(sinPista) == 371 and len(conPista) + len(sinPista) == 518,
    "%d + %d = 518" % (len(conPista), len(sinPista)))
 
 porRareza = collections.Counter(cri[u]["rareza"] for u in conPista)
-ok("solo Unica y Apex tienen pista; ninguna otra rareza",
+ok("only Unique and Apex have a track; no other rarity",
    set(porRareza) == {"unique", "apex"},
-   "unica %d, apex %d" % (porRareza["unique"], porRareza["apex"]))
-ok("y son todas las Unicas y todos los Apex que hay",
+   "unique %d, apex %d" % (porRareza["unique"], porRareza["apex"]))
+ok("and they are all the Uniques and all the Apex there are",
    porRareza["unique"] == 92 and porRareza["apex"] == 55,
-   "92 unicas + 55 apex = 147")
+   "92 unique + 55 apex = 147")
 
 malPaso = []
 malEvol = []
@@ -210,9 +211,9 @@ for u in conPista:
     mj = cri[u]["mejoras"]
     det = fichas[u]["det"]
     if len(mj) != MEJORA_PASOS:
-        sinCinco.append("%s: %d pasos" % (u, len(mj)))
-    # Normalizar: el cache guarda req como listas, el JSON igual; se comparan
-    # como tuplas ordenadas porque el orden dentro de `req` no significa nada.
+        sinCinco.append("%s: %d steps" % (u, len(mj)))
+    # Normalize: the cache stores req as lists, the JSON the same; they are
+    # compared as sorted tuples because the order inside `req` means nothing.
     def norm(pasos):
         return [(p["cost"],
                  tuple(sorted((r[0], r[1]) for r in p["req"])),
@@ -222,30 +223,30 @@ for u in conPista:
     ev = (det.get("evolutionData") or {}).get(u) or {}
     if norm(mj) != norm(ev.get("enhancements") or []):
         malEvol.append(u)
-ok("los 147 tienen exactamente %d pasos" % MEJORA_PASOS, not sinCinco,
-   str(sinCinco[:3]) if sinCinco else "5 pasos x 147 = 735 pasos")
-ok("coste, requisitos y premio de los 735 pasos coinciden con el cache",
-   not malPaso, str(malPaso[:5]) if malPaso else "735 pasos, uno a uno")
-ok("y coinciden tambien con la SEGUNDA copia (`evolutionData`)",
-   not malEvol, str(malEvol[:5]) if malEvol else "el cache no se contradice")
+ok("all 147 have exactly %d steps" % MEJORA_PASOS, not sinCinco,
+   str(sinCinco[:3]) if sinCinco else "5 steps x 147 = 735 steps")
+ok("cost, requirements and reward of the 735 steps match the cache",
+   not malPaso, str(malPaso[:5]) if malPaso else "735 steps, one by one")
+ok("and they also match the SECOND copy (`evolutionData`)",
+   not malEvol, str(malEvol[:5]) if malEvol else "the cache does not contradict itself")
 
-# Los ingredientes van por el mismo camino y con el mismo patron: si una copia
-# se desincroniza, se desincronizan las dos cosas.
+# The ingredients go the same way and with the same pattern: if one copy
+# gets out of sync, both things get out of sync.
 malIng = [u for u in cri
           if sorted(cri[u]["ingredientes"]) !=
              sorted(((fichas[u]["det"].get("evolutionData") or {}).get(u) or {})
                     .get("ingredients") or [])]
-ok("los ingredientes de las 518 cuadran con `evolutionData`", not malIng,
-   str(malIng[:5]) if malIng else "518 criaturas")
+ok("the ingredients of all 518 match `evolutionData`", not malIng,
+   str(malIng[:5]) if malIng else "518 creatures")
 
 # ---------------------------------------------------------------------------
-# 4) El orden de los pasos: NO es el mismo en unica y en apex
+# 4) The order of the steps: it is NOT the same in unique and in apex
 # ---------------------------------------------------------------------------
-# Aqui hubo un error real. Se dio por supuesto un unico orden para las dos
-# rarezas, y era falso: en una Unica el paso 1 es vida, en un Apex el paso 1 es
-# velocidad. Se vio en una captura, no en el codigo. La medicion completa:
+# Here there was a real mistake. A single order was assumed for both
+# rarities, and it was false: in a Unique step 1 is health, in an Apex step 1 is
+# speed. It was seen in a screenshot, not in the code. The full measurement:
 print()
-print("=== 4. el orden de los pasos, por rareza ===")
+print("=== 4. the order of the steps, by rarity ===")
 ordenes = collections.defaultdict(collections.Counter)
 for u in conPista:
     tipo = tuple(p["rwd"]["type"] for p in cri[u]["mejoras"])
@@ -253,15 +254,15 @@ for u in conPista:
 
 for rareza in ("unique", "apex"):
     medido = ordenes[rareza]
-    ok("la %s tiene UN solo orden, y es el de MEJORA_ORDEN" % rareza,
+    ok("the %s has ONE single order, and it is the one in MEJORA_ORDEN" % rareza,
        list(medido) == [tuple(MEJORA_ORDEN[rareza])],
        "x%d  %s" % (list(medido.values())[0], " -> ".join(medido and list(medido)[0] or ())))
-ok("y los dos ordenes son DISTINTOS (el error que se corrigio)",
+ok("and the two orders are DIFFERENT (the mistake that was fixed)",
    MEJORA_ORDEN["unique"] != MEJORA_ORDEN["apex"],
-   "unica empieza por vida; apex, por velocidad")
+   "unique starts with health; apex, with speed")
 
-# Los valores de cada premio, medidos. No son iguales entre rarezas: el
-# `boost_max` da +1 en una Unica y +2 en un Apex.
+# The values of each reward, measured. They are not equal between rarities: the
+# `boost_max` gives +1 in a Unique and +2 in an Apex.
 valores = collections.defaultdict(collections.Counter)
 for u in conPista:
     for p in cri[u]["mejoras"]:
@@ -272,75 +273,76 @@ ESPERADO_VAL = {
     ("apex", "health"): {110: 55}, ("apex", "damage"): {110: 55},
     ("apex", "speed"): {2: 55}, ("apex", "boost_max"): {2: 55},
 }
-ok("los valores de los premios son los medidos (vida/dano x1,10 · vel +2)",
+ok("the reward values are the measured ones (health/damage x1.10 · speed +2)",
    all(dict(valores[k]) == v for k, v in ESPERADO_VAL.items()),
-   "boost_max: +1 en unica (x92), +2 en apex (x55)")
-ok("los pasos de `moves_reactive` dan un movimiento distinto cada uno",
+   "boost_max: +1 in unique (x92), +2 in apex (x55)")
+ok("the `moves_reactive` steps each give a different move",
    all(len({p["rwd"]["value"] for p in cri[u]["mejoras"]
             if p["rwd"]["type"] == "moves_reactive"}) == 1 for u in conPista),
-   "147 movimientos reactivos, ninguno repetido dentro de su criatura")
+   "147 reactive moves, none repeated within its creature")
 
 # ---------------------------------------------------------------------------
-# 5) MULT_NIVEL: 35 entradas, y NO es 1,05^(L-26)
+# 5) MULT_NIVEL: 35 entries, and it is NOT 1.05^(L-26)
 # ---------------------------------------------------------------------------
-# El comentario de `modelo.py` decia que la forma cerrada difiere en «hasta
-# 5e-5 relativo, ~0,3 puntos de vida». Al medirlo entero para escribir esta
-# prueba, result: **es falso**. Coincide hasta el nivel 30 (ruido de redondeo,
-# 1,5e-4 como mucho) y del 31 al 35 se separa a proposito: 1,27 · 1,32 · 1,37 ·
-# 1,425 · 1,50, con un error de hasta el 3,7 %. En una criatura de 6.000 de vida
-# eso son 314 puntos, no 0,3. El comentario se corrigio.
+# The comment in `modelo.py` said that the closed form differs by «up to
+# 5e-5 relative, ~0.3 health points». On measuring it whole to write this
+# test, result: **it is false**. It matches up to level 30 (rounding noise,
+# 1.5e-4 at most) and from 31 to 35 it separates on purpose: 1.27 · 1.32 · 1.37 ·
+# 1.425 · 1.50, with an error of up to 3.7 %. In a creature with 6,000 health
+# that is 314 points, not 0.3. The comment was fixed.
 print()
-print("=== 5. la tabla de niveles ===")
-ok("la tabla tiene 35 entradas, una por nivel",
-   len(MULT_NIVEL) == 35, "%d entradas" % len(MULT_NIVEL))
-ok("es estrictamente creciente (subir de nivel nunca quita stats)",
+print("=== 5. the level table ===")
+ok("the table has 35 entries, one per level",
+   len(MULT_NIVEL) == 35, "%d entries" % len(MULT_NIVEL))
+ok("it is strictly increasing (leveling up never removes stats)",
    all(MULT_NIVEL[i] < MULT_NIVEL[i + 1] for i in range(34)),
-   "de %d a %d" % (MULT_NIVEL[0], MULT_NIVEL[-1]))
-ok("el nivel 26 vale exactamente 1.000.000.000, sin redondeo",
-   MULT_NIVEL[25] == 1000000000, "1e9, exacto")
-ok("el nivel 35 vale 1,5 exacto (el tope esta puesto a mano, no multiplicado)",
-   MULT_NIVEL[34] == 1500000000, "1,5e9, exacto")
+   "from %d to %d" % (MULT_NIVEL[0], MULT_NIVEL[-1]))
+ok("level 26 is exactly 1,000,000,000, without rounding",
+   MULT_NIVEL[25] == 1000000000, "1e9, exact")
+ok("level 35 is exactly 1.5 (the cap is set by hand, not multiplied)",
+   MULT_NIVEL[34] == 1500000000, "1.5e9, exact")
 
 err = {L: abs(MULT_NIVEL[L - 1] / 1e9 - 1.05 ** (L - 26)) / (MULT_NIVEL[L - 1] / 1e9)
        for L in range(1, 36)}
 maxBajo = max(err[L] for L in range(1, 31))
 maxAlto = max(err[L] for L in range(31, 36))
-ok("hasta el nivel 30 SI es 1,05^(L-26), salvo el ruido de redondeo",
-   maxBajo < 2e-4, "error relativo maximo %.2e (nivel %d)"
+ok("up to level 30 it IS 1.05^(L-26), except for rounding noise",
+   maxBajo < 2e-4, "maximum relative error %.2e (level %d)"
    % (maxBajo, max(range(1, 31), key=lambda L: err[L])))
-ok("del 31 al 35 NO lo es, y por mucho: la tabla se separa a proposito",
-   maxAlto > 1e-2, "error relativo maximo %.2e en el nivel %d "
-   "(tabla %.3f, forma cerrada %.3f)"
+ok("from 31 to 35 it is NOT, and by a lot: the table separates on purpose",
+   maxAlto > 1e-2, "maximum relative error %.2e at level %d "
+   "(table %.3f, closed form %.3f)"
    % (maxAlto, max(range(31, 36), key=lambda L: err[L]),
       MULT_NIVEL[max(range(31, 36), key=lambda L: err[L]) - 1] / 1e9,
       1.05 ** (max(range(31, 36), key=lambda L: err[L]) - 26)))
-ok("los cinco ultimos son cifras redondas, no potencias",
+ok("the last five are round figures, not powers",
    [MULT_NIVEL[L - 1] / 1e9 for L in range(31, 36)] == [1.27, 1.32, 1.37, 1.425, 1.5],
-   "1,27 · 1,32 · 1,37 · 1,425 · 1,5")
+   "1.27 · 1.32 · 1.37 · 1.425 · 1.5")
 
 # ---------------------------------------------------------------------------
-# 6) Los dominios que la interfaz da por hechos
+# 6) The domains the interface takes for granted
 # ---------------------------------------------------------------------------
-# La interfaz tiene mapas de etiquetas e iconos indexados por estos codigos. Un
-# codigo nuevo no da error: pinta `undefined` o un `src` roto. Por eso se
-# afirma el dominio aqui.
+# The interface has maps of labels and icons indexed by these codes. A new
+# code raises no error: it paints `undefined` or a broken `src`. That is why
+# the domain is asserted here.
 print()
-print("=== 6. los codigos que la interfaz resuelve ===")
+print("=== 6. the codes the interface resolves ===")
 TIPOS = {"speed", "health", "damage", "boost_max", "moves_reactive"}
 RECURSOS = {"coins", "catalyst_minor", "catalyst", "catalyst_major"}
 
 vistosTipos = {p["rwd"]["type"] for u in conPista for p in cri[u]["mejoras"]}
 vistosRec = {r[0] for u in conPista for p in cri[u]["mejoras"] for r in p["req"]}
-ok("los tipos de premio son exactamente los 5 que la interfaz traduce",
+ok("the reward types are exactly the 5 the interface translates",
    vistosTipos == TIPOS, ", ".join(sorted(vistosTipos)))
-ok("los recursos son exactamente los 4 que la interfaz tiene con icono",
+ok("the resources are exactly the 4 the interface has with an icon",
    vistosRec == RECURSOS, ", ".join(sorted(vistosRec)))
 
-# Y el icono, en disco. La interfaz los pide por ruta relativa; si falta uno, la
-# ficha sale con un hueco y el navegador no se queja en ningun sitio visible.
-# La ruta NO se deriva del codigo: `coins` vive en `img/res/coin.png`, en
-# singular y en otra carpeta. Se escribe el mapa entero, igual que lo escribe la
-# plantilla, y ademas se comprueba que la plantilla diga lo mismo.
+# And the icon, on disk. The interface requests them by relative path; if one is
+# missing, the card comes out with a gap and the browser does not complain
+# anywhere visible. The path is NOT derived from the code: `coins` lives in
+# `img/res/coin.png`, in singular and in another folder. The whole map is
+# written, just as the template writes it, and in addition the template is
+# checked to say the same thing.
 RUTA_REC = {"coins": "img/res/coin.png",
             "catalyst_minor": "img/cat/catalyst_minor.png",
             "catalyst": "img/cat/catalyst.png",
@@ -350,42 +352,43 @@ FICHEROS = ([os.path.join(IMG, "stat", n + ".png")
             + [os.path.join(IMG, "res", "dna.png")]
             + [os.path.join(RAIZ, r) for r in RUTA_REC.values()])
 faltan = [os.path.relpath(p, RAIZ) for p in FICHEROS if not os.path.getsize(p) > 100]
-ok("existe un icono en disco para cada stat, cada recurso y la mejora",
-   not faltan, str(faltan) if faltan else "%d iconos" % len(FICHEROS))
+ok("a disk icon exists for each stat, each resource and the enhancement",
+   not faltan, str(faltan) if faltan else "%d icons" % len(FICHEROS))
 
-# La plantilla declara su propio mapa de recursos. Se lee de ahi y se compara:
-# es la comprobacion de que la interfaz no pide una ruta que no existe.
+# The template declares its own resource map. It is read from there and
+# compared: it is the check that the interface does not request a path that does
+# not exist.
 pl = open(os.path.join(RAIZ, "plantilla.html"), encoding="utf-8").read()
 m = re.search(r"const RES_ICONO = \{(.*?)\};", pl, re.S)
 mapaUI = dict(re.findall(r'(\w+):"([^"]+)"', m.group(1))) if m else {}
-ok("y la plantilla pide exactamente esas rutas, ni una mas ni una menos",
+ok("and the template requests exactly those paths, not one more nor one less",
    mapaUI == RUTA_REC,
-   str(mapaUI) if mapaUI != RUTA_REC else "coincide con el mapa de la interfaz")
+   str(mapaUI) if mapaUI != RUTA_REC else "it matches the interface map")
 
-# Los rangos de los tres porcentajes, medidos. Sirven de centinela: si un stat
-# se colara como numero pelado (400 en vez de 40), esto lo caza.
+# The ranges of the three percentages, measured. They serve as a sentinel: if a
+# stat slipped in as a bare number (400 instead of 40), this catches it.
 rangos = {k: (min(cri[u]["stats"][k] for u in cri), max(cri[u]["stats"][k] for u in cri))
           for k in ("armadura", "critico", "dano_critico")}
-ok("la armadura y los dos criticos son porcentajes, en todo el dinodex",
+ok("armor and the two criticals are percentages, in the whole dinodex",
    rangos["armadura"] == (0, 60) and rangos["critico"] == (0, 50)
    and rangos["dano_critico"] == (125, 200),
-   "armadura %d-%d · critico %d-%d · dano critico %d-%d"
+   "armor %d-%d · critical chance %d-%d · critical damage %d-%d"
    % (rangos["armadura"][0], rangos["armadura"][1], rangos["critico"][0],
       rangos["critico"][1], rangos["dano_critico"][0], rangos["dano_critico"][1]))
 
-# Los tres ajustes del usuario, afirmados contra el dato y no entre si.
-ok("el tope por stat (20) y el minimo de la pista (30) son los medidos",
+# The three user settings, asserted against the data and not against each other.
+ok("the per-stat cap (20) and the track minimum (30) are the measured ones",
    TOPE_BOOST_STAT == 20 and MEJORA_NIVEL_MIN == 30,
-   "+%d por stat, pista desde nivel %d" % (TOPE_BOOST_STAT, MEJORA_NIVEL_MIN))
-ok("los dos ajustes del boost son los de la fuente (+2 plano, +2,5%%)",
+   "+%d per stat, track from level %d" % (TOPE_BOOST_STAT, MEJORA_NIVEL_MIN))
+ok("the two boost settings are those of the source (+2 flat, +2.5%%)",
    BOOST_VELOCIDAD == 2 and BOOST_FRACCION == 0.025,
-   "+%d de velocidad y +%.1f%% de vida y dano por punto"
+   "+%d speed and +%.1f%% health and damage per point"
    % (BOOST_VELOCIDAD, BOOST_FRACCION * 100))
 
 print()
 if fallos:
-    print("RESULTADO: %d FALLOS de %d comprobaciones." % (len(fallos), n_ok + len(fallos)))
+    print("RESULT: %d FAILURES out of %d checks." % (len(fallos), n_ok + len(fallos)))
     for f in fallos:
         print("  - " + f)
     raise SystemExit(1)
-print("RESULTADO: todo OK (%d comprobaciones)." % n_ok)
+print("RESULT: all OK (%d checks)." % n_ok)

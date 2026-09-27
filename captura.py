@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Capturas de la interfaz real, sin informe encima. Sirve para revisar el aspecto
-(que las imagenes se vean, que los campos no rompan la maquetacion, que el
-bloque de nivel maximo quede donde debe).
+Screenshots of the real interface, with no report on top. It is used to review
+the look (that the images show up, that the fields do not break the layout, that
+the max level block stays where it should).
 
-Genera tres PNG en /tmp/jwa-ui/: calculadora, arbol y mios.
+Generates three PNGs in /tmp/jwa-ui/: calculadora, arbol and mios.
 
-Uso:  python3 captura.py
+Usage:  python3 captura.py
 """
 import os, re, shutil, subprocess
 
@@ -16,16 +16,17 @@ IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-ui"
 PERFIL = os.path.join(DIR, "perfil")
 
-# Escenario: Indoraptor a nivel 21 con 1.000 ADN, objetivo 30, y un ingrediente
-# ya a medias. Asi se ven deficit, fusiones y el bloque de nivel maximo.
+# Scenario: Indoraptor at level 21 with 1,000 DNA, target 30, and an Ingredient
+# already half done. That way you see the deficit, the Fusions and the max level
+# block.
 GUION = r"""
 <script>
 (function(){
-  /* El perfil de Firefox es el MISMO entre capturas, asi que localStorage
-     sobrevive de una a otra: sin este borrado, la segunda captura arranca con
-     los puntos de mejora que dejo la primera y las cifras de la imagen no son
-     las del escenario. Se vio en una captura: ponia +10 puntos donde el guion
-     ponia 5. */
+  /* The Firefox profile is the SAME across screenshots, so localStorage
+     survives from one to the next: without this wipe, the second screenshot
+     starts with the Stat Boost points the first one left behind and the figures
+     in the image are not those of the scenario. It was seen in a screenshot: it
+     showed +10 points where the script set 5. */
   INV = {}; MIS = []; guardar(); ponerTema("default");
   elegir("indoraptor");
   function poner(id, v){ var e = document.getElementById(id); e.focus(); e.value = v;
@@ -41,18 +42,19 @@ GUION = r"""
     fijar("velociraptor", "adn", 30000);
   }
   pintarArbol(); pintarMios();
-  // «Mis criaturas» ya NO se llena sola al tocar el arbol: hay que pulsar Guardar.
-  // Sin esto la captura de esa pestaña sale con el mensaje de lista vacia, y de paso
-  // asi se ve la regla nueva en la imagen: 5 criaturas en el arbol, 1 en la lista.
+  // "Mis criaturas" NO LONGER fills itself in when you touch the tree: you have to
+  // press Guardar. Without this the screenshot of that tab comes out with the empty
+  // list message, and by the way that is how the new rule shows in the image:
+  // 5 creatures in the tree, 1 in the list.
   document.getElementById("btnGuardar").click();
   pintarMios();
-  // Y una SEGUNDA criatura con OTRO objetivo, para que la captura de «Mis
-  // criaturas» ensene que el objetivo es de cada una y no uno compartido: dos
-  // filas, dos cifras distintas. Luego se vuelve al Indoraptor, que es el que
-  // tienen que ensenar las vistas de la calculadora y del arbol.
-  // El boton se vuelve a buscar CADA VEZ: `refrescar` rehace el panel de la
-  // calculadora, asi que la referencia de antes queda suelta en el aire y su
-  // click() no hace nada (el primer guardado si entraba, el segundo no).
+  // And a SECOND creature with ANOTHER target, so that the "Mis criaturas"
+  // screenshot shows that the target belongs to each one and is not shared: two
+  // rows, two different figures. Then it goes back to the Indoraptor, which is the
+  // one the calculator and tree views have to show.
+  // The button is looked up again EVERY TIME: `refrescar` rebuilds the calculator
+  // panel, so the earlier reference is left dangling and its click() does nothing
+  // (the first save did go in, the second did not).
   elegir("tyrannosaurus_rex");
   poner("nivelAct", "20");
   poner("adnTengo", "1500");
@@ -60,9 +62,9 @@ GUION = r"""
   document.getElementById("nivelObj").dispatchEvent(new Event("input", {bubbles:true}));
   document.getElementById("btnGuardar").click();
   elegir("indoraptor");
-  /* Puntos de mejora, para que la captura ensene el panel de stats con algo
-     dentro y no con los ceros del arranque. El Indoraptor es Unica, asi que
-     tiene pista de 5 pasos. */
+  /* Stat Boost points, so that the screenshot shows the stats panel with
+     something inside instead of the zeros it starts with. The Indoraptor is
+     Unique, so it has a 5-step Enhancement track. */
   if (typeof cambiarMejora === "function"){
     cambiarMejora("indoraptor", "bVida", 1); cambiarMejora("indoraptor", "bVida", 1);
     cambiarMejora("indoraptor", "bDano", 1); cambiarMejora("indoraptor", "bDano", 1);
@@ -70,9 +72,9 @@ GUION = r"""
   }
   pintarArbol(); pintarMios(); pintarStats();
   var v = new URLSearchParams(location.search).get("v") || "calc";
-  // Vista con el interruptor apagado: el informe tiene que decir que esta
-  // siguiendo el criterio de paleo.gg, o la misma pantalla da dos respuestas
-  // sin decir cual se esta viendo.
+  // View with the toggle off: the report has to say that it is following the
+  // paleo.gg criterion, or the same screen gives two answers without saying
+  // which one you are looking at.
   if (v === "calc-paleo"){
     var chk = document.getElementById("chkSubida");
     chk.checked = false; chk.dispatchEvent(new Event("change", {bubbles:true}));
@@ -80,9 +82,9 @@ GUION = r"""
   }
   if (v === "yellow"){
     ponerTema("yellow");
-    // La pista de mejoras solo existe a partir del nivel 30, asi que esta vista
-    // sube la criatura a 30 antes de tocar los pasos: si no, los mandos salen
-    // apagados y la captura no ensena lo que hace la pista.
+    // The Enhancement track only exists from level 30 on, so this view raises
+    // the creature to 30 before touching the steps: otherwise the controls come
+    // out disabled and the screenshot does not show what the track does.
     poner("nivelAct", "30");
     poner("adnTengo", "6000");
     cambiarMejora("indoraptor", "mejora", 1);
@@ -94,12 +96,12 @@ GUION = r"""
   document.querySelectorAll("nav button").forEach(function(b){
     if (b.dataset.t === v) b.click();
   });
-  /* Vista «buscar»: el desplegable abierto con una fila resaltada por el
-     TECLADO. Va la ULTIMA a proposito: pulsar una pestaña cierra la lista (el
-     manejador de clic de fuera la cierra), asi que si esto fuera antes, la
-     captura saldria con el desplegable ya cerrado. Y hay que pulsar la flecha
-     de verdad: el resaltado no existe hasta que se pulsa, de modo que sin esto
-     la imagen no podria demostrar que el teclado funciona. */
+  /* "buscar" view: the dropdown open with a row highlighted by the KEYBOARD.
+     It goes LAST on purpose: pressing a tab closes the list (the outside-click
+     handler closes it), so if this went earlier, the screenshot would come out
+     with the dropdown already closed. And the arrow has to be really pressed:
+     the highlight does not exist until it is pressed, so without this the image
+     could not prove that the keyboard works. */
   if (v === "buscar"){
     var caja = document.getElementById("q");
     caja.value = "rex";
@@ -127,8 +129,8 @@ def preparar():
 
 def capturar(vista, salida, alto):
     html = open(HTML, encoding="utf-8").read()
-    # El guion va AL FINAL, despues del script principal: si se mete detras de
-    # <body> se ejecuta antes de que existan `elegir` ni `pintarArbol`, y revienta.
+    # The script goes AT THE END, after the main script: if it is put behind
+    # <body> it runs before `elegir` or `pintarArbol` exist, and it blows up.
     html = html + GUION
     ruta = os.path.join(DIR, "cap-%s.html" % vista)
     open(ruta, "w", encoding="utf-8").write(html)

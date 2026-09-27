@@ -64,12 +64,12 @@ sin_usar = sorted(definidas - usadas)
 fallos_estaticos = []
 if huerfanas:
     fallos_estaticos.append(
-        "claves usadas que NO estan en el diccionario: %d, p.ej. %s"
+        "keys used that are NOT in the dictionary: %d, e.g. %s"
         % (len(huerfanas), " | ".join(repr(h[:60]) for h in huerfanas[:3])))
 if not definidas:
-    fallos_estaticos.append("no encuentro el diccionario I18N_ES en el entregable")
+    fallos_estaticos.append("no I18N_ES dictionary found in the deliverable")
 
-print("diccionario: %d entradas | claves usadas: %d | sin usar: %d"
+print("dictionary: %d entries | keys used: %d | unused: %d"
       % (len(definidas), len(usadas), len(sin_usar)))
 
 # --------------------------------------------------------- 2, 3 y 4) navegador
@@ -78,10 +78,10 @@ GUARDA_ES = '<script>try { localStorage.setItem("jwa322.idioma","es"); } catch (
 GUARDA_NADA = '<script>try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n'
 
 CASOS = [
-    # (nombre, inyeccion en el <head>, lang esperado, etiqueta esperada)
-    ("sin nada guardado arranca en ingles", GUARDA_NADA, "en", "Calculator"),
-    ("el valor inyectado gana a lo guardado", GUARDA_ES + PIN_EN, "en", "Calculator"),
-    ("con espanol guardado y sin pin, pinta en espanol", GUARDA_ES, "es", "Calculadora"),
+    # (name, injection into <head>, expected lang, expected label)
+    ("with nothing stored it boots in English", GUARDA_NADA, "en", "Calculator"),
+    ("the injected value beats the stored one", GUARDA_ES + PIN_EN, "en", "Calculator"),
+    ("with Spanish stored and no pin, it renders in Spanish", GUARDA_ES, "es", "Calculadora"),
 ]
 
 DIAG = r"""
@@ -108,7 +108,7 @@ __ENTREGA__
 
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
-# La pagina carga img/ en relativo: el enlace deja las fotos a mano.
+# The page loads img/ relatively: the symlink puts the photos within reach.
 enlace = os.path.join(DIR, "img")
 if not os.path.exists(enlace):
     os.symlink(IMGDIR, enlace)
@@ -120,7 +120,7 @@ env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",
 resultados = []
 for k, (nombre, inyeccion, lang_esp, etiq_esp) in enumerate(CASOS):
     if "<head>" not in fuente:
-        raise SystemExit("no encuentro <head> en el entregable")
+        raise SystemExit("no <head> found in the deliverable")
     pagina = fuente.replace("<head>", "<head>\n" + inyeccion, 1)
     diag = DIAG.replace("__NOMBRE__", nombre).replace("__LANG__", json.dumps(lang_esp)) \
                .replace("__ETIQ__", json.dumps(etiq_esp))
@@ -144,13 +144,13 @@ for k, (nombre, inyeccion, lang_esp, etiq_esp) in enumerate(CASOS):
 
 if fallos_estaticos:
     for f in fallos_estaticos:
-        print("FALLO paridad del diccionario: " + f)
+        print("FAIL dictionary parity: " + f)
     resultados.append(1)
 
 print("-" * 72)
 salida = 0 if all(c == 0 for c in resultados) and not fallos_estaticos else 1
-print("RESULTADO: %s" % ("todo OK" if salida == 0
-                         else "FALLO (%d de %d comprobaciones con problema)"
+print("RESULT: %s" % ("all OK" if salida == 0
+                         else "FAIL (%d of %d checks with a problem)"
                               % (len([c for c in resultados if c]) + len(fallos_estaticos),
                                  len(CASOS) + 1)))
 sys.exit(salida)

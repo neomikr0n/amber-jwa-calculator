@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Construye amber-jwa-3.22.html a partir de data/jwa-3.22.json + modelo.py.
+Builds amber-jwa-3.22.html from data/jwa-3.22.json + modelo.py.
 
-El resultado es UN SOLO fichero HTML autocontenido: sin CDN, sin red, sin
-dependencias. Se abre con doble clic y funciona sin conexion.
+The result is a SINGLE self-contained HTML file: no CDN, no network, no
+dependencies. It opens with a double click and works offline.
 
     python3 build.py
 """
@@ -28,8 +28,8 @@ DESTINO = os.path.join(RAIZ, f"amber-jwa-{VERSION}.html")
 # human double-clicks, and index.html is what the site serves.
 INDICE = os.path.join(RAIZ, "index.html")
 
-# Orden de los seis stats en el slot 8. Es el mismo que usa el juego y el mismo
-# en el que paleo.gg los ensena en su bloque «Basic Stats».
+# Order of the six stats in slot 8. It is the same one the game uses and the
+# same one in which paleo.gg shows them in its «Basic Stats» block.
 STATS_ORDEN = ("vida", "dano", "velocidad", "armadura", "critico", "dano_critico")
 
 
@@ -37,14 +37,14 @@ def cargar_datos():
     with open(ORIGEN, encoding="utf-8") as f:
         d = json.load(f)
     cri = d["criaturas"]
-    # se guardan solo los campos que el navegador necesita
+    # only the fields the browser needs are kept
     compacto = {}
     for u, x in cri.items():
         s = x.get("stats") or {}
-        # Las mejoras se guardan como [coste_adn, req, [tipo, valor]] y solo las
-        # tienen Unica y Apex (147 de 518). Se conservan los codigos crudos de
-        # los recursos y el `type` del efecto: la etiqueta se resuelve en el
-        # navegador, igual que con las zonas.
+        # The enhancements are stored as [dna_cost, req, [type, value]] and only
+        # Unique and Apex have them (147 of 518). The raw codes of the resources
+        # and the `type` of the effect are kept: the label is resolved in the
+        # browser, just as with the zones.
         mj = [[m["cost"], m["req"], [m["rwd"]["type"], m["rwd"]["value"]]]
               for m in (x.get("mejoras") or [])]
         compacto[u] = [
@@ -55,31 +55,32 @@ def cargar_datos():
             1 if x["publicada"] else 0,  # 4
             x["ingredientes"],      # 5
             x["hijos"],             # 6
-            # 7: donde se consigue, en codigos del juego. Se guardan los codigos
-            # crudos y la etiqueta se resuelve en el navegador contra
-            # M.locEtiquetas: el codigo es la identidad y el texto, presentacion.
+            # 7: where it is obtained, in game codes. The raw codes are kept and
+            # the label is resolved in the browser against M.locEtiquetas: the
+            # code is the identity and the text, presentation.
             [f["loc"] for f in x.get("fuentes_adn") or []],
-            # 8: los seis stats BASE, que son los de NIVEL 26. La lista vacia
-            # seria un error de datos, no un caso a contemplar.
+            # 8: the six BASE stats, which are the LEVEL 26 ones. An empty list
+            # would be a data error, not a case to contemplate.
             [s[k] for k in STATS_ORDEN],
-            # 9: la pista de mejoras, o None si la criatura no la tiene.
+            # 9: the enhancement track, or None if the creature does not have it.
             mj or None,
         ]
     return d["meta"], compacto
 
 
 def favicon():
-    """El icono de la pestana, como data URI.
+    """The tab icon, as a data URI.
 
-    Va EN LINEA y no como <link href="img/favicon.svg"> a proposito: asi el
-    icono no depende de que la carpeta `img/` este al lado del HTML. El SVG
-    sigue siendo un fichero de verdad en `img/favicon.svg`, que es la unica
-    fuente; aqui solo se copia.
+    It goes INLINE and not as <link href="img/favicon.svg"> on purpose: that way
+    the icon does not depend on the `img/` folder being next to the HTML. The SVG
+    is still a real file in `img/favicon.svg`, which is the only source; here it
+    is just copied.
     """
     with open(FAVICON, encoding="utf-8") as f:
         svg = f.read().strip()
-    # Los caracteres que romperian un atributo HTML o una URL se codifican; el
-    # resto se deja legible para que el HTML generado se pueda revisar a ojo.
+    # The characters that would break an HTML attribute or a URL are encoded;
+    # the rest is left readable so that the generated HTML can be reviewed by
+    # eye.
     seguro = (svg.replace("%", "%25").replace("#", "%23")
                  .replace("<", "%3C").replace(">", "%3E")
                  .replace('"', "'").replace("\n", " "))
@@ -143,9 +144,9 @@ def main():
         f.write(html)
 
     kb = os.path.getsize(DESTINO) / 1024
-    print(f"escrito {DESTINO}  ({kb:.0f} KB)")
-    print(f"escrito {INDICE}  (idéntico, para el despliegue)")
-    print(f"criaturas: {len(criaturas)}")
+    print(f"wrote {DESTINO}  ({kb:.0f} KB)")
+    print(f"wrote {INDICE}  (identical, for deployment)")
+    print(f"creatures: {len(criaturas)}")
 
 
 if __name__ == "__main__":

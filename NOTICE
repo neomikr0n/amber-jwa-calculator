@@ -1,0 +1,47 @@
+Amber — Jurassic World Alive 3.22 DNA calculator
+Copyright 2026 neomikr0n
+
+This repository contains source code that is entirely original, plus game data
+derived from a third-party source. It does not contain third-party artwork.
+
+--------------------------------------------------------------------------
+1. GAME DATA
+--------------------------------------------------------------------------
+
+data/jwa-3.22.json holds the creature data the calculator works from: stats,
+fusion ingredients, DNA and coin costs, and darting zones. That data describes
+the mechanics of Jurassic World Alive and was extracted from the community site
+paleo.gg, which the application itself credits on screen.
+
+It is included so the calculator works offline and out of the box. The Apache
+License 2.0 in LICENSE covers the source code of this repository. It does not
+extend to this data, which is reproduced here as factual game information with
+its source credited.
+
+--------------------------------------------------------------------------
+2. TRADEMARKS
+--------------------------------------------------------------------------
+
+Jurassic World Alive, Jurassic World and Jurassic Park are trademarks of their
+respective owners. This is an unofficial fan tool. It is not affiliated with,
+endorsed by or sponsored by the game's publisher or developer, nor by paleo.gg.
+
+--------------------------------------------------------------------------
+3. ARTWORK IS NOT DISTRIBUTED
+--------------------------------------------------------------------------
+
+The application can show a photo for each creature. Those images are not part
+of this repository: they are copyrighted material belonging to the game, they
+are listed in .gitignore, and anyone who wants them downloads them locally with
+
+    python3 descargar_imagenes.py
+
+The deployed site therefore shows no creature photos. Nothing breaks without
+them: each image carries an onerror handler that hides it, and the layout falls
+back to names and figures.
+
+The twelve small interface icons under img/stat, img/res and img/cat are
+included, because the interface does not degrade gracefully without them.
+
+The favicon is an original drawing made for this project. It is deliberately
+not the Jurassic Park logo, which is a registered trademark.

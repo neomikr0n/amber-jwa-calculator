@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-"""Captura SOLO el informe del arbol, para revisarlo a ojo.
+"""Captures ONLY the tree report, to review it by eye.
 
-Es el sexto encuadre que le falta a `captura.py`: aquel saca las cinco vistas
-completas, y el informe del arbol es una pieza de la pestana «Calculadora» que en
-una captura de pagina entera se pierde entre el buscador, los campos y el bloque
-de nivel maximo.
+It is the sixth frame that `captura.py` is missing: that one takes the five full
+views, and the tree report is a piece of the "Calculadora" tab that in a
+whole-page screenshot gets lost among the search box, the fields and the max
+level block.
 
-DOS COSAS QUE ME COSTARON UNA CAPTURA EN BLANCO, y que hay que respetar:
+TWO THINGS THAT COST ME A BLANK SCREENSHOT, and that must be respected:
 
-  1. **El informe NO vive en la pestana «Arbol».** `#informeArbol` esta dentro de
-     `#s-calc` (linea ~460 de plantilla.html). Llamar a `irA("arbol")` esconde
-     justo la seccion que se quiere mirar, y la captura sale negra.
-  2. **Esconder los hermanos con `display:none` no basta** si un ancestro lleva la
-     clase `on`/`off` que gobierna las pestanas: el informe queda dentro de algo
-     oculto y no se ve. Hay que llevarselo a un body limpio, con sus `<style>`,
-     que es lo que hace el guion de abajo.
+  1. **The report does NOT live in the "Arbol" tab.** `#informeArbol` is inside
+     `#s-calc` (line ~460 of plantilla.html). Calling `irA("arbol")` hides
+     exactly the section you want to look at, and the screenshot comes out black.
+  2. **Hiding the siblings with `display:none` is not enough** if an ancestor
+     carries the `on`/`off` class that governs the tabs: the report ends up
+     inside something hidden and cannot be seen. It has to be moved to a clean
+     body, with its `<style>`, which is what the script below does.
 
-Uso:  python3 captura_informe.py            # tema «default», estado de partida
-      python3 captura_informe.py yellow     # tema «yellow»
-      python3 captura_informe.py default --despues   # tras pulsar «Criar a todas»
+Usage:  python3 captura_informe.py            # "default" theme, starting state
+      python3 captura_informe.py yellow     # "yellow" theme
+      python3 captura_informe.py default --despues   # after pressing "Criar a todas"
 
-El estado de partida lleva un ingrediente CREADO POR DEBAJO del nivel que exige
-la fusion (Tyrannosaurus Rex a 11, cuando la fusion pide 15): es el caso que n30
-pidio el 25-sep-2026, y sin el la captura no ensenaria nada nuevo. Con
-`--despues` se pulsa el atajo antes de fotografiar, y ahi se ve el resultado:
-todas al nivel de la fusion y el atajo desaparecido.
+The starting state carries an Ingredient CREATED BELOW the level the Fusion
+requires (Tyrannosaurus Rex at 11, when the Fusion asks for 15): it is the case
+n30 asked for on 25-sep-2026, and without it the screenshot would show nothing
+new. With `--despues` the shortcut is pressed before taking the photo, and there
+you see the result: all of them at the Fusion level and the shortcut gone.
 """
 import os, sys, subprocess
 
@@ -39,10 +39,10 @@ DIR = "/tmp/jwa-informe" + SUFIJO + ("-despues" if DESPUES else "")
 PERFIL = os.path.join(DIR, "perfil")
 SALIDA = os.path.join(DIR, "informe" + SUFIJO + ("-despues" if DESPUES else "") + ".png")
 
-# Escenario: la raiz creada a 25 y los TRES ingredientes sin crear, que es lo que
-# hace falta para que se vean los botones «criar» y el atajo «Criar a todas».
-# El nivel 25 de la raiz no es casual: su minimo es 21, asi que el control del
-# atajo es degenerado a proposito (ver `probar_estres.py`, seccion 14).
+# Scenario: the root created at 25 and the THREE Ingredients not created, which
+# is what is needed for the "criar" buttons and the "Criar a todas" shortcut to
+# show. The root level 25 is not casual: its minimum is 21, so the shortcut
+# control is degenerate on purpose (see `probar_estres.py`, section 14).
 GUION = r"""
 <script>
 (function(){
@@ -56,20 +56,20 @@ GUION = r"""
   document.getElementById("nivelObj").dispatchEvent(new Event("input", {bubbles:true}));
   if (typeof fijar === "function"){ fijar("velociraptor", "adn", 30000); }
 
-  /* El caso que cambio: un ingrediente creado, pero POR DEBAJO del nivel que
-     exige la fusion. T-Rex nace a 11 y la fusion de Indominus Rex lo pide a 15,
-     asi que la fila ensena «11 → 15» y «Criar a todas» tiene que subirlo. */
+  /* The case that changed: an Ingredient created, but BELOW the level the
+     Fusion requires. T-Rex is born at 11 and the Indominus Rex Fusion asks for
+     it at 15, so the row shows "11 → 15" and "Criar a todas" has to raise it. */
   if (typeof fijar === "function"){ fijar("tyrannosaurus_rex", "nivel", 11); }
   refrescar();
 
-  /* Con --despues se pulsa el atajo ANTES de aislar el informe: el clic
-     repinta, y lo que se fotografia es el resultado. */
+  /* With --despues the shortcut is pressed BEFORE isolating the report: the
+     click repaints, and what is photographed is the result. */
   if (__DESPUES__){
     var at = document.querySelector('#informeArbol [data-criar-todas]');
     if (at) at.click();
   }
 
-  /* Aislar el informe en un body limpio, con sus hojas de estilo. */
+  /* Isolate the report into a clean body, with its style sheets. */
   var inf = document.getElementById("informeArbol");
   var hojas = Array.prototype.slice.call(document.querySelectorAll("style"));
   var copia = inf.cloneNode(true);

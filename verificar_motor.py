@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Verificacion fuerte: se extrae el MOTOR REAL del HTML entregable
-(no una copia, no la plantilla) y se ejecuta en Node. Los numeros que
-devuelve se comparan contra modelo.py, cifra por cifra.
+Strong verification: the REAL engine is extracted from the deliverable HTML
+(not a copy, not the template) and run in Node. The numbers it returns are
+compared against modelo.py, figure by figure.
 
-A diferencia de equivalencia.py, aqui NO hay captura de pantalla ni lectura
-visual: la comparacion es numerica y automatica. Si algo difiere, falla con
-codigo de salida 1.
+Unlike equivalencia.py, here there is NO screenshot and no visual reading:
+the comparison is numeric and automatic. If anything differs, it fails with
+exit code 1.
 
-Uso:  python3 verificar_motor.py
+Usage:  python3 verificar_motor.py
 """
 import json, math, os, re, subprocess, sys
 
@@ -24,9 +24,9 @@ IMG = os.path.join(RAIZ, "img")
 
 
 def bloque_llaves(texto, pos):
-    """Devuelve el literal {...} que empieza en pos, contando llaves y
-    respetando cadenas y escapes."""
-    assert texto[pos] == "{", "no empieza en una llave"
+    """Returns the literal {...} that starts at pos, counting braces and
+    respecting strings and escapes."""
+    assert texto[pos] == "{", "it does not start with a brace"
     prof = 0
     i = pos
     en_cadena = False
@@ -47,12 +47,12 @@ def bloque_llaves(texto, pos):
                 if prof == 0:
                     return texto[pos:i + 1]
         i += 1
-    raise RuntimeError("llaves sin cerrar")
+    raise RuntimeError("unclosed braces")
 
 
 def bloque_cuerpo(texto, pos_llave):
-    """Devuelve el bloque {...} completo de una funcion, contando llaves.
-    Necesario porque las funciones NO terminan en '};' (terminan en '}')."""
+    """Returns the complete {...} block of a function, counting braces.
+    Needed because functions do NOT end in '};' (they end in '}')."""
     prof, i, cad, esc = 0, pos_llave, False, False
     while i < len(texto):
         ch = texto[i]
@@ -70,22 +70,22 @@ def bloque_cuerpo(texto, pos_llave):
                 if prof == 0:
                     return texto[pos_llave:i + 1]
         i += 1
-    raise RuntimeError("cuerpo de funcion sin cerrar")
+    raise RuntimeError("unclosed function body")
 
 
 def extraer_motor(html):
-    """Saca del HTML entregable el payload de datos y el codigo del motor.
+    """Pulls the data payload and the engine code out of the deliverable HTML.
 
-    El bloque va de `const minLv` hasta el cierre de `costePaso`: incluye el
-    modelo de costes, el inventario (invDe/fijar) y el calculo de nivel maximo.
+    The block goes from `const minLv` to the close of `costePaso`: it includes
+    the cost model, the inventory (invDe/fijar) and the level-cap calculation.
     """
-    # 1) el payload const D = {...}
+    # 1) the payload const D = {...}
     m = re.search(r"const D\s*=\s*", html)
     if not m:
-        raise RuntimeError("no encuentro 'const D =' en el HTML")
+        raise RuntimeError("cannot find 'const D =' in the HTML")
     datos_txt = bloque_llaves(html, html.index("{", m.end()))
 
-    # 2) el codigo del motor
+    # 2) the engine code
     i = html.index("const minLv")
     p = html.index("{", html.index("function costePaso", i))
     j = p + len(bloque_cuerpo(html, p))
@@ -94,15 +94,15 @@ def extraer_motor(html):
     for nec in ("costeADN", "costeMon", "adnFus", "nFus", "nivelMaximo",
                 "costePaso", "nivelCreacion", "costeCreacion"):
         if nec not in motor_txt:
-            raise RuntimeError("el motor extraido no contiene " + nec)
+            raise RuntimeError("the extracted engine does not contain " + nec)
     if motor_txt.count("{") != motor_txt.count("}"):
-        raise RuntimeError("bloque desequilibrado: %d vs %d"
+        raise RuntimeError("unbalanced block: %d vs %d"
                            % (motor_txt.count("{"), motor_txt.count("}")))
     return datos_txt, motor_txt
 
 
 def referencia(cri, u, desde, hasta):
-    """Espejo en Python del motor. Se apoya en modelo.py, no en copias."""
+    """Python mirror of the engine. It relies on modelo.py, not on copies."""
     x = cri[u]
     r = x["rareza"]
     if r == "omega":
@@ -133,16 +133,16 @@ def referencia(cri, u, desde, hasta):
 
 
 def comprobar_sintaxis(html):
-    """node --check sobre TODOS los bloques <script> del HTML.
+    """node --check over ALL the <script> blocks of the HTML.
 
-    Esto va aqui, y no en un comando suelto, por un motivo concreto: una vez se
-    edito el HTML despues de pasar `node --check` y el error de sintaxis no se
-    detecto hasta abrir la pagina en Firefox. Con el chequeo dentro del
-    verificador, es imposible que se quede atras.
+    This goes here, and not in a one-off command, for a concrete reason: once
+    the HTML was edited after passing `node --check` and the syntax error was
+    not detected until opening the page in Firefox. With the check inside the
+    verifier, it is impossible for it to fall behind.
     """
     bloques = re.findall(r"<script[^>]*>(.*?)</script>", html, re.S)
     if not bloques:
-        return ["no hay bloques <script>"]
+        return ["there are no <script> blocks"]
     fallos = []
     for i, b in enumerate(bloques):
         if not b.strip():
@@ -152,7 +152,7 @@ def comprobar_sintaxis(html):
             f.write(b)
         r = subprocess.run(["node", "--check", ruta], capture_output=True, text=True)
         if r.returncode != 0:
-            fallos.append("bloque %d (%d bytes): %s" % (i, len(b), r.stderr.strip()[:400]))
+            fallos.append("block %d (%d bytes): %s" % (i, len(b), r.stderr.strip()[:400]))
     return fallos
 
 
@@ -161,20 +161,20 @@ def main():
 
     errores_sintaxis = comprobar_sintaxis(html)
     if errores_sintaxis:
-        print("FALLO DE SINTAXIS en el HTML entregable:")
+        print("SYNTAX FAILURE in the deliverable HTML:")
         for e in errores_sintaxis:
             print("  -", e)
         print()
-        print("RESULTADO: FALLO")
+        print("RESULT: FAIL")
         return 1
-    print("Sintaxis: todos los bloques <script> pasan node --check.")
+    print("Syntax: all the <script> blocks pass node --check.")
 
     datos_txt, motor_txt = extraer_motor(html)
-    print("Motor extraido del HTML entregable: %d bytes de codigo." % len(motor_txt))
+    print("Engine extracted from the deliverable HTML: %d bytes of code." % len(motor_txt))
 
     cri = json.load(open(DATOS, encoding="utf-8"))["criaturas"]
 
-    # Casos: todas las rarezas + hibridos + omega + extremos de nivel.
+    # Cases: all rarities + hybrids + omega + level extremes.
     casos = []
     vistas = set()
     for u, x in cri.items():
@@ -189,7 +189,7 @@ def main():
         if extra in cri and extra not in casos:
             casos.append(extra)
 
-    # Rangos: (desde, hasta). desde=0 significa "sin crear todavia".
+    # Ranges: (desde, hasta). desde=0 means "not created yet".
     rangos = [(0, 30), (0, 35), (0, 1), (1, 30), (25, 35), (30, 35), (34, 35), (0, 26)]
 
     esperado = {}
@@ -197,9 +197,9 @@ def main():
         for d, h in rangos:
             esperado["%s|%d|%d" % (u, d, h)] = referencia(cri, u, d, h)
 
-    # Casos de NIVEL MAXIMO: (desde, creado, adn disponible)
-    # El adn incluye valores por debajo y por encima del coste de creacion, que
-    # es donde se equivoca uno: ahi el resultado tiene que ser "nivel 0".
+    # LEVEL CAP cases: (desde, creado, available dna)
+    # The dna includes values below and above the creation cost, which is
+    # where one gets it wrong: there the result has to be "level 0".
     adns = [0, 1, 49, 50, 99, 100, 150, 300, 500, 2500, 20000,
             500000, 5000000, 50000000]
     niveles = [0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 34, 35]
@@ -210,9 +210,9 @@ def main():
         for d in niveles:
             for creado in (False, True):
                 if creado and d < m:
-                    continue          # una criatura creada no esta por debajo de su nacimiento
+                    continue          # a created creature is not below its birth
                 if not creado and d != 0:
-                    continue          # sin crear, el nivel de partida es 0
+                    continue          # not created, the starting level is 0
                 for adn in adns:
                     casos_nm.append([u, d, creado, adn])
 
@@ -223,7 +223,7 @@ def main():
         esperado_nm["%s|%d|%s|%d" % (u, d, str(creado).lower(), adn)] = {
             "nivel": n, "gastado": gastado, "sobra": sobra}
 
-    # ---- arnes de Node: ejecuta el motor real ----
+    # ---- Node harness: runs the real engine ----
     arnes = """
 const fs = require("fs");
 const datos = %s;
@@ -264,34 +264,34 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
 
     res = subprocess.run(["node", arnes_js], capture_output=True, text=True, timeout=180)
     if res.returncode != 0:
-        print("FALLO: el motor no se pudo ejecutar en Node.")
+        print("FAIL: the engine could not run in Node.")
         print(res.stderr[:2000])
         return 1
     todo = json.loads(res.stdout)
     obtenido, obtenido_nm = todo["base"], todo["nm"]
 
-    # ---- comparacion ----
+    # ---- comparison ----
     fallos = []
     for clave, esp in esperado.items():
         obt = obtenido.get(clave)
         if obt is None:
-            fallos.append((clave, "sin resultado"))
+            fallos.append((clave, "no result"))
             continue
         if "error" in obt:
-            fallos.append((clave, "ERROR JS: " + obt["error"]))
+            fallos.append((clave, "JS ERROR: " + obt["error"]))
             continue
         for campo in ("adn", "mon", "fus", "monFus", "tope"):
             if obt.get(campo) != esp[campo]:
-                fallos.append((clave, "campo %s: JS=%r Python=%r" % (campo, obt.get(campo), esp[campo])))
+                fallos.append((clave, "field %s: JS=%r Python=%r" % (campo, obt.get(campo), esp[campo])))
 
     fallos_nm = []
     for clave, esp in esperado_nm.items():
         obt = obtenido_nm.get(clave)
         if obt is None:
-            fallos_nm.append((clave, "sin resultado"))
+            fallos_nm.append((clave, "no result"))
             continue
         if "error" in obt:
-            fallos_nm.append((clave, "ERROR JS: " + obt["error"]))
+            fallos_nm.append((clave, "JS ERROR: " + obt["error"]))
             continue
         for campo in ("nivel", "gastado", "sobra"):
             if obt.get(campo) != esp[campo]:
@@ -300,73 +300,83 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
     total = len(esperado) * 5
     total_nm = len(esperado_nm) * 3
 
-    # ---------- los tamaños que el LEEME afirma ----------
-    """Un numero escrito en el LEEME tambien envejece, y ese no lo miraba nadie.
-    Decia «139 KB» para un HTML que ya pesaba 239; se corrigio a 244.842 bytes y
-    en la vuelta siguiente ya eran 250. La regla del proyecto es que **si un
-    numero importa, tiene que haber algo que lo vuelva a calcular**, asi que aqui
-    se recalcula. Cuando esto falla, el propio fallo trae la cifra buena: se copia
-    al LEEME y se acaba. (Y se comparan los BYTES, no los KB, porque el KB del
-    LEEME va redondeado.)
+    # ---------- the sizes the LEEME claims ----------
+    """A number written in the LEEME also ages, and nobody was watching that one.
+    It said «139 KB» for an HTML that already weighed 239; it was corrected to
+    244,842 bytes and the next round it was already 250. The project rule is that
+    **if a number matters, there has to be something that recomputes it**, so
+    here it is recomputed. When this fails, the failure itself brings the right
+    figure: copy it into the LEEME and done. (And the BYTES are compared, not the
+    KB, because the LEEME's KB is rounded.)
 
-    Ojo con el patron, y esto se midio en vez de suponerse. Buscar solo
-    «**N bytes (M KB)**» NO sirve: eso no comprueba que la cifra este DECLARADA
-    en algun sitio, comprueba que en el fichero hay alguna linea en negrita con
-    esa forma. Y hay dos — la declaracion y, mas abajo, la narracion de la
-    trampa, que cita el valor viejo «244.842 bytes (239 KB)». Medido contra el
-    LEEME de verdad:
+    Watch out for the pattern, and this was measured instead of assumed.
+    Searching only for «**N bytes (M KB)**» does NOT work: that does not check
+    that the figure is DECLARED anywhere, it checks that the file has some bold
+    line with that shape. And there are two — the declaration and, further down,
+    the narration of the trap, which quotes the old value «244,842 bytes
+    (239 KB)». Measured against the real LEEME:
 
-        caso                                   patron sin ancla   patron anclado
-        declaracion duplicada con otra cifra   PASA               falla
-        declaracion reescrita (frase ausente)  PASA               falla
-        reescrita y narracion borrada          PASA               falla
+        case                                   unanchored pattern  anchored pattern
+        duplicate declaration with another figure   PASSES         fails
+        rewritten declaration (phrase absent)       PASSES         fails
+        rewritten and narration deleted             PASSES         fails
 
-    Es decir: el patron viejo daba por buenas cifras que podian estar dichas dos
-    veces y en desacuerdo, o no estar dichas en ninguna parte. Por eso el patron
-    lleva ahora el ancla «El HTML solo pesa», que es unica, y ademas se exige que
-    sea UNA SOLA: si aparecen dos, el control falla en vez de elegir una en
-    silencio. (Y se comparan los BYTES, no los KB, porque el KB va redondeado.)"""
+    That is to say: the old pattern accepted figures that could be stated twice
+    and disagree, or not be stated anywhere at all. That is why the pattern now
+    carries the anchor «El HTML solo pesa», which is unique, and it is also
+    required to be a SINGLE one: if two appear, the check fails instead of
+    silently choosing one. (And the BYTES are compared, not the KB, because the
+    KB is rounded.)"""
     fallos_doc = []
-    leeme_ruta = os.path.join(RAIZ, "LEEME.md")
-    leeme = open(leeme_ruta, encoding="utf-8").read()
+    # The LEEME lives under .privado/ and is not published: it documents the
+    # project for its author, including material about third parties that is
+    # deliberately kept out of the repository and off the site. The size claims
+    # it makes are still checked, which is why this reads it from there.
+    leeme_ruta = os.path.join(RAIZ, ".privado", "LEEME.md")
+    if not os.path.exists(leeme_ruta):
+        fallos_doc.append(("LEEME", "no encuentro .privado/LEEME.md, que es donde vive"))
+        leeme = ""
+    else:
+        leeme = open(leeme_ruta, encoding="utf-8").read()
     real_html = os.path.getsize(HTML)
     ms = re.findall(r"El HTML solo pesa\s*\*\*([\d.]+) bytes \(([\d.]+) KB\)\*\*", leeme)
     if not ms:
-        fallos_doc.append(("LEEME, tamaño del HTML",
-                           "no encuentro «El HTML solo pesa **N bytes (M KB)**»; "
-                           "el HTML pesa %d bytes" % real_html))
+        fallos_doc.append(("LEEME, HTML size",
+                           "cannot find «El HTML solo pesa **N bytes (M KB)**»; "
+                           "the HTML weighs %d bytes" % real_html))
     elif len(ms) > 1:
-        fallos_doc.append(("LEEME, tamaño del HTML",
-                           "la declaracion aparece %d veces (%s); tiene que ser una sola"
+        fallos_doc.append(("LEEME, HTML size",
+                           "the declaration appears %d times (%s); it has to be a single one"
                            % (len(ms), " / ".join(a for a, _ in ms))))
     else:
         dicho = int(ms[0][0].replace(".", ""))
         if dicho != real_html:
-            fallos_doc.append(("LEEME, tamaño del HTML",
-                               "dice %s bytes y son %d (%.0f KB)"
+            fallos_doc.append(("LEEME, HTML size",
+                               "it says %s bytes and they are %d (%.0f KB)"
                                % (ms[0][0], real_html, real_html / 1024)))
     fotos = [f for f in os.listdir(IMG) if f.endswith(".webp")]
     mb_fotos = sum(os.path.getsize(os.path.join(IMG, f)) for f in fotos) / 1e6
     m2 = re.findall(r"las fotos son ([\d,]+) MB", leeme)
     if not m2:
-        fallos_doc.append(("LEEME, tamaño de las fotos", "no encuentro «las fotos son N MB»"))
+        fallos_doc.append(("LEEME, photo size", "cannot find «las fotos son N MB»"))
     elif len(m2) > 1:
-        fallos_doc.append(("LEEME, tamaño de las fotos",
-                           "la declaracion aparece %d veces (%s); tiene que ser una sola"
+        fallos_doc.append(("LEEME, photo size",
+                           "the declaration appears %d times (%s); it has to be a single one"
                            % (len(m2), " / ".join(m2))))
     elif abs(float(m2[0].replace(",", ".")) - mb_fotos) > 0.15:
-        fallos_doc.append(("LEEME, tamaño de las fotos",
-                           "dice %s MB y son %.1f MB en %d webp" % (m2[0], mb_fotos, len(fotos))))
+        fallos_doc.append(("LEEME, photo size",
+                           "it says %s MB and they are %.1f MB in %d webp" % (m2[0], mb_fotos, len(fotos))))
 
-    # ---------- el entregable tiene que ser lo que produce build.py ----------
-    """El 25-sep aparecio en disco un HTML de 255.844 bytes que NO era el build:
-    llevaba 133 atributos `data-page-node-id` inyectados por un editor. Quitandolos
-    quedaba identico byte a byte al build limpio, o sea que el producto era el
-    mismo, pero la cifra del LEEME se habia medido sobre el fichero contaminado.
-    Comparar el tamaño no caza eso —el contaminado simplemente pesa mas—, asi que
-    se compara el CONTENIDO: se construye a un temporal y se coteja. De paso caza
-    el caso de editar la plantilla y olvidar reconstruir, que es la misma familia
-    de fallo: entregar algo que no es lo que dice el codigo."""
+    # ---------- the deliverable has to be what build.py produces ----------
+    """On 25-Sep an HTML of 255,844 bytes appeared on disk that was NOT the
+    build: it carried 133 `data-page-node-id` attributes injected by an editor.
+    Removing them left it byte-for-byte identical to the clean build, that is,
+    the product was the same, but the LEEME figure had been measured on the
+    contaminated file. Comparing the size does not catch that —the contaminated
+    one simply weighs more—, so the CONTENT is compared: it is built to a
+    temporary file and checked. Along the way it catches the case of editing the
+    template and forgetting to rebuild, which is the same family of failure:
+    delivering something that is not what the code says."""
     import contextlib
     import io
     import tempfile
@@ -387,37 +397,37 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
         real_contenido = f.read()
     if real_contenido != esperado_html:
         sello = real_contenido.count("data-page-node-id")
-        pista = (", con %d «data-page-node-id» de un editor" % sello) if sello else ""
-        fallos_doc.append(("entregable",
-                           "no es lo que produce build.py: %d bytes en disco frente a %d recien "
-                           "construidos%s" % (len(real_contenido.encode()),
-                                              len(esperado_html.encode()), pista)))
+        pista = (", with %d «data-page-node-id» from an editor" % sello) if sello else ""
+        fallos_doc.append(("deliverable",
+                           "it is not what build.py produces: %d bytes on disk against %d freshly "
+                           "built%s" % (len(real_contenido.encode()),
+                                        len(esperado_html.encode()), pista)))
 
-    print("Casos: %d criaturas x %d rangos = %d calculos, %d campos comparados."
+    print("Cases: %d creatures x %d ranges = %d calculations, %d fields compared."
           % (len(casos), len(rangos), len(esperado), total))
-    print("Nivel maximo: %d combinaciones (criatura x nivel x creada x ADN), %d campos."
+    print("Level cap: %d combinations (creature x level x created x DNA), %d fields."
           % (len(esperado_nm), total_nm))
     print()
     if fallos or fallos_nm or fallos_doc:
         if fallos:
-            print("DISCREPANCIAS en costes: %d" % len(fallos))
+            print("DISCREPANCIES in costs: %d" % len(fallos))
             for clave, det in fallos[:20]:
                 print("  %-42s %s" % (clave, det))
         if fallos_nm:
-            print("DISCREPANCIAS en nivel maximo: %d" % len(fallos_nm))
+            print("DISCREPANCIES in level cap: %d" % len(fallos_nm))
             for clave, det in fallos_nm[:20]:
                 print("  %-42s %s" % (clave, det))
         if fallos_doc:
-            print("EL LEEME Y EL ENTREGABLE, cosas que ya no cuadran: %d" % len(fallos_doc))
+            print("THE LEEME AND THE DELIVERABLE, things that no longer add up: %d" % len(fallos_doc))
             for clave, det in fallos_doc:
                 print("  %-42s %s" % (clave, det))
         print()
-        print("RESULTADO: FALLO")
+        print("RESULT: FAIL")
         return 1
-    print("RESULTADO: %d/%d campos de coste y %d/%d campos de nivel maximo identicos "
-          "entre el motor del HTML y modelo.py." % (total, total, total_nm, total_nm))
-    print("El entregable es exactamente lo que produce build.py, y los tamaños que afirma el "
-          "LEEME cuadran con los ficheros (%d bytes de HTML, %.1f MB de fotos)."
+    print("RESULT: %d/%d cost fields and %d/%d level-cap fields identical "
+          "between the HTML engine and modelo.py." % (total, total, total_nm, total_nm))
+    print("The deliverable is exactly what build.py produces, and the sizes the "
+          "LEEME claims match the files (%d bytes of HTML, %.1f MB of photos)."
           % (real_html, mb_fotos))
     return 0
 

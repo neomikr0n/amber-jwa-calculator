@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Arnés de prueba: mete un script de diagnostico en el HTML y lo captura con Firefox."""
+"""Test harness: injects a diagnostic script into the HTML and captures it with Firefox."""
 import os, re, subprocess, sys, shutil, glob
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
@@ -16,25 +16,25 @@ DIAG = r"""
   function log(k, v){ out.push(k + ": " + v); }
   function txt(id){ var e = document.getElementById(id); return e ? e.innerText.replace(/\s+/g, " ").trim() : "(falta " + id + ")"; }
   try {
-    log("criaturas cargadas", Object.keys(C).length);
-    log("modelo: L.length", M.L.length + "  minLv " + JSON.stringify(M.minLv));
+    log("creatures loaded", Object.keys(C).length);
+    log("model: L.length", M.L.length + "  minLv " + JSON.stringify(M.minLv));
 
-    // --- comprobacion del motor contra valores conocidos ---
-    log("costeADN legendary 16->20", costeADN("legendary", 16, 20, false) + "  (esperado 700)");
-    log("costeADN unique 21->30",    costeADN("unique", 21, 30, false) + "  (esperado 3000)");
-    log("costeADN apex 26->30",      costeADN("apex", 26, 30, false) + "  (esperado 700)");
-    log("costeADN omega 1->30 crear", costeADN("omega", 0, 30, true) + "  (esperado 41700)");
-    log("costeADN common 1->30 crear", costeADN("common", 0, 30, true) + "  (esperado 346800)");
-    log("costeMon unique 21->30",    costeMon("unique", 21, 30) + "  (esperado 1120000)");
-    log("costeMon common 1->30",     costeMon("common", 1, 30) + "  (esperado 1308190)");
-    log("costeMon 30->35",           costeMon("common", 30, 35) + "  (esperado 1250000)");
-    log("adnFus common->unique",     adnFus("common", "unique") + "  (esperado 2000)");
-    log("adnFus epic->apex",         adnFus("epic", "apex") + "  (esperado 500)");
-    log("adnFus rare->epic",         adnFus("rare", "epic") + "  (esperado 50)");
-    log("nFus(700)",                 nFus(700) + "  (esperado 32)");
-    log("nFus(3000)",                nFus(3000) + "  (esperado 137)");
+    // --- engine check against known values ---
+    log("costeADN legendary 16->20", costeADN("legendary", 16, 20, false) + "  (expected 700)");
+    log("costeADN unique 21->30",    costeADN("unique", 21, 30, false) + "  (expected 3000)");
+    log("costeADN apex 26->30",      costeADN("apex", 26, 30, false) + "  (expected 700)");
+    log("costeADN omega 1->30 create", costeADN("omega", 0, 30, true) + "  (expected 41700)");
+    log("costeADN common 1->30 create", costeADN("common", 0, 30, true) + "  (expected 346800)");
+    log("costeMon unique 21->30",    costeMon("unique", 21, 30) + "  (expected 1120000)");
+    log("costeMon common 1->30",     costeMon("common", 1, 30) + "  (expected 1308190)");
+    log("costeMon 30->35",           costeMon("common", 30, 35) + "  (expected 1250000)");
+    log("adnFus common->unique",     adnFus("common", "unique") + "  (expected 2000)");
+    log("adnFus epic->apex",         adnFus("epic", "apex") + "  (expected 500)");
+    log("adnFus rare->epic",         adnFus("rare", "epic") + "  (expected 50)");
+    log("nFus(700)",                 nFus(700) + "  (expected 32)");
+    log("nFus(3000)",                nFus(3000) + "  (expected 137)");
 
-    // --- interaccion 1: Indoraptor sin crear, objetivo 35 ---
+    // --- interaction 1: Indoraptor not created, target 35 ---
     elegir("indoraptor");
     document.getElementById("nivelAct").value = 0;
     document.getElementById("adnTengo").value = 0;
@@ -42,20 +42,20 @@ DIAG = r"""
     calcular();
     log("--- Indoraptor 0->35 ---", txt("resultado").slice(0, 700));
 
-    // --- interaccion 2: con ADN a medias ---
+    // --- interaction 2: with DNA half done ---
     document.getElementById("adnTengo").value = 1500;
     calcular();
-    log("--- Indoraptor con 1500 ADN ---", txt("resultado").slice(0, 420));
+    log("--- Indoraptor with 1500 DNA ---", txt("resultado").slice(0, 420));
 
-    // --- interaccion 3: guardar y ver la tabla ---
+    // --- interaction 3: save and see the table ---
     document.getElementById("btnGuardar").click();
-    log("inventario tras guardar", JSON.stringify(INV));
+    log("inventory after saving", JSON.stringify(INV));
     log("--- Mis criaturas ---", txt("miosCuerpo").slice(0, 400));
 
-    // --- interaccion 4: arbol ---
+    // --- interaction 4: tree ---
     log("--- Arbol ---", txt("arbolCuerpo").slice(0, 700));
 
-    // --- interaccion 5: un apex de la 3.22 ---
+    // --- interaction 5: an apex from 3.22 ---
     elegir("paralidactylus");
     document.getElementById("nivelAct").value = 0;
     document.getElementById("adnTengo").value = 0;
@@ -63,7 +63,7 @@ DIAG = r"""
     calcular();
     log("--- Paralidactylus 0->35 ---", txt("resultado").slice(0, 600));
 
-    // --- interaccion 6: omega ---
+    // --- interaction 6: omega ---
     elegir("93_classic_t_rex");
     document.getElementById("nivelAct").value = 0;
     document.getElementById("adnTengo").value = 0;
@@ -71,7 +71,7 @@ DIAG = r"""
     calcular();
     log("--- 93 Classic T.Rex (omega) ---", txt("resultado").slice(0, 500));
 
-    // --- interaccion 7: catalizadores ---
+    // --- interaction 7: catalysts ---
     document.getElementById("cComun").value = 20000;
     document.getElementById("cRara").value = 0;
     document.getElementById("cEpica").value = 2000;
@@ -79,20 +79,21 @@ DIAG = r"""
     document.getElementById("btnCat").click();
     log("--- Catalizadores ---", txt("catSalida").slice(0, 300));
 
-    // --- pestanas: que existan las cuatro que quedan ---
-    /* La pestana «Referencia» se quito el 25-sep-2026. Se comprueba que su boton
-       y su seccion YA NO estan, y no al reves: una prueba que solo mira las que
-       quedan pasaria igual si alguien reintrodujera la quinta por descuido. */
-    log("botones de pestana", document.querySelectorAll("nav button").length + "  (esperado 4)");
-    log("pestanas sin «Referencia»",
+    // --- tabs: that the four that remain exist ---
+    /* The "Referencia" tab was removed on 25-sep-2026. It is checked that its
+       button and its section are GONE, and not the other way around: a test that
+       only looks at the ones that remain would still pass if someone
+       reintroduced the fifth one by mistake. */
+    log("tab buttons", document.querySelectorAll("nav button").length + "  (expected 4)");
+    log("tabs without \u00abReferencia\u00bb",
         (!document.querySelector('nav button[data-t="ref"]') && !document.getElementById("s-ref")) +
-        "  (esperado true)");
-    log("secciones de pestana", document.querySelectorAll("section").length + "  (esperado 4)");
+        "  (expected true)");
+    log("tab sections", document.querySelectorAll("section").length + "  (expected 4)");
 
-    // --- buscador ---
+    // --- search box ---
     document.getElementById("q").value = "raptor";
     document.getElementById("q").dispatchEvent(new Event("input"));
-    log("buscador 'raptor'", document.getElementById("lista").querySelectorAll(".it").length + " resultados");
+    log("search box 'raptor'", document.getElementById("lista").querySelectorAll(".it").length + " results");
 
   } catch (e) {
     log("!! EXCEPCION", e.message + "  @@ " + (e.stack || "").split("\n")[1]);

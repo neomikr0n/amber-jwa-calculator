@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-Prueba de INTERFAZ en navegador real (Firefox headless).
+INTERFACE test in a real browser (headless Firefox).
 
-Los verificadores numericos (verificar_motor.py / verificar_arbol.py) cubren las
-matematicas. Esto cubre lo otro: que los campos existan, que respondan al teclado,
-que se guarde, y que las imagenes carguen de verdad (naturalWidth > 0, que es la
-unica forma de distinguir "hay un <img>" de "se ve el dinosaurio").
+The numeric verifiers (verificar_motor.py / verificar_arbol.py) cover the
+maths. This covers the rest: that the fields exist, that they respond to the
+keyboard, that it is saved, and that the images really load (naturalWidth > 0,
+which is the only way to tell "there is an <img>" from "the dinosaur is
+visible").
 
-Escribe el informe en un <pre> y lo entrega por un servidor local (ver
-informe_browser.py), ademas de dejarlo en la captura. El script imprime el
-informe y devuelve codigo de salida 0 solo si todo pasa: leer el PNG a ojo no
-es una prueba.
+It writes the report into a <pre> and delivers it through a local server (see
+informe_browser.py), besides leaving it in the screenshot. The script prints the
+report and returns exit code 0 only if everything passes: reading the PNG by eye
+is not a test.
 
-Uso:  python3 probar_ui.py
+Usage:  python3 probar_ui.py
 """
 import os, re, shutil, subprocess
 from informe_browser import arrancar, comprobar_scripts, veredicto
@@ -25,45 +26,45 @@ PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "ui.html")
 SHOT = os.path.join(DIR, "ui.png")
 
-# El informe viaja por aqui, no por una captura que hay que leer a ojo.
+# The report travels through here, not through a screenshot you have to read by eye.
 srv = arrancar()
 
 DIAG = r"""
 <script>
-/* Dos trampas de probar una pagina desde dentro, y como se esquivan:
+/* Two traps of testing a page from inside, and how they are dodged:
 
-   1. `loading="lazy"` retrasa las imagenes hasta que entran en pantalla, asi
-      que comprobar naturalWidth justo despues de pintarlas da 0 SIEMPRE, y en
-      un contenedor oculto ni siquiera llegan a pedirse. Solucion: se clonan
-      como <img> ansiosos y ocultos, que si bloquean el evento load. Cuando
-      load dispara, ya estan resueltas.
+   1. `loading="lazy"` delays the images until they enter the screen, so
+      checking naturalWidth right after painting them gives 0 ALWAYS, and in
+      a hidden container they are not even requested. Solution: they are cloned
+      as eager and hidden <img>, which do block the load event. When
+      load fires, they are already resolved.
 
-   2. Un evento lanzado con dispatchEvent NO enfoca el elemento, asi que
-      document.activeElement sigue siendo <body> y la prueba de "no se pierde
-      el foco" falla sin que la pagina tenga nada roto. Solucion: .focus()
-      antes de disparar, como haria una persona al hacer clic. */
+   2. An event fired with dispatchEvent does NOT focus the element, so
+      document.activeElement is still <body> and the test that "the focus is
+      not lost" fails even though the page has nothing broken. Solution: .focus()
+      before firing, as a person would do when clicking. */
 
-// --- 1) las interacciones, durante el parseo ---
+// --- 1) the interactions, during parsing ---
 var RES = [], FALLOS = 0, CLONES = [], FOCO_U = null;
 function log(k, v){ RES.push(k + ": " + (v === undefined ? "" : v)); }
 function ok(k, cond, detalle){ if (!cond) FALLOS++; log((cond ? "OK   " : "FALLO") + " " + k, detalle); }
 function txt(id){ var e = document.getElementById(id); return e ? e.innerText.replace(/\s+/g," ").trim() : "(falta "+id+")"; }
 function ev(el, tipo){ el.dispatchEvent(new Event(tipo, {bubbles:true})); }
-/* Escribe el valor de golpe. Vale para preparar un escenario, pero NO prueba el
-   tecleo: el campo nunca pasa por un estado intermedio. */
+/* Writes the value in one go. Useful for setting up a scenario, but it does NOT
+   test typing: the field never goes through an intermediate state. */
 function teclear(el, valor){
-  el.focus();                 // como un clic de verdad
+  el.focus();                 // like a real click
   el.value = valor;
   ev(el, "input");
 }
-/* Teclea DIGITO A DIGITO con `execCommand("insertText")`, que es lo unico que
-   inserta EN EL CURSOR y dispara `input` como una tecla de verdad. Hace falta
-   porque el fallo que se viene a vigilar solo aparece asi: el arbol se repinta en
-   cada tecla, y si el cursor no se puede devolver (un <input type=number> no deja
-   ni leerlo ni fijarlo en Firefox), el digito siguiente entra por el PRINCIPIO.
-   Con `teclear` —que escribe "1500" de una vez— ese fallo es invisible: por eso
-   estuvo ahi sin que ninguna prueba lo viera.
-   Devuelve el valor y el cursor finales. */
+/* Types DIGIT BY DIGIT with `execCommand("insertText")`, which is the only thing
+   that inserts AT THE CURSOR and fires `input` like a real key. It is needed
+   because the bug being watched only shows up this way: the tree repaints on
+   every key, and if the cursor cannot be restored (an <input type=number> lets you
+   neither read nor set it in Firefox), the next digit enters at the BEGINNING.
+   With `teclear` —which writes "1500" in one go— that bug is invisible: that is why
+   it stayed there without any test seeing it.
+   Returns the final value and cursor. */
 function teclearTecla(sel, texto){
   var vistos = [];
   for (var i = 0; i < texto.length; i++){
@@ -79,25 +80,25 @@ function teclearTecla(sel, texto){
 }
 
 try {
-  /* Arrancar de CERO. El perfil de Firefox conserva localStorage entre pasadas, y
-     sin esto la prueba hereda el inventario y «Mis criaturas» de la ejecucion
-     anterior y acaba midiendo otra cosa: paso, y una fila heredada hizo fallar la
-     comprobacion de que la lista empieza vacia. */
+  /* Start from ZERO. The Firefox profile keeps localStorage between runs, and
+     without this the test inherits the inventory and «Mis criaturas» from the
+     previous execution and ends up measuring something else: it happened, and an
+     inherited row made the check that the list starts empty fail. */
   localStorage.removeItem("jwa322.inventario");
   localStorage.removeItem("jwa322.mios");
   INV = {}; MIS = [];
 
-  log("=== 0. errores al cargar el script ===",
-      (window.__errores && window.__errores.length) ? window.__errores.join(" | ") : "ninguno");
+  log("=== 0. errors loading the script ===",
+      (window.__errores && window.__errores.length) ? window.__errores.join(" | ") : "none");
 
-  /* --- buscador: donde vive, y como se maneja con el teclado ---
-     Pedido por n30 (25-sep-2026): la busqueda sale del apartado 1 y sube a la
-     franja de las pestañas; la ficha sube a la par de los stats; y la lista se
-     recorre con las flechas y se elige con Enter.
-     Todo va dentro de una funcion para NO dejar nombres globales: los bloques
-     <script> comparten el ambito, y un `var` aqui que choque con un `let` de la
-     aplicacion deja este diagnostico sin compilar y sin ejecutar. Ver
-     `comprobar_scripts` en informe_browser.py. */
+  /* --- search box: where it lives, and how it is handled with the keyboard ---
+     Requested by n30 (25-sep-2026): the search leaves section 1 and moves up to
+     the strip of the tabs; the card moves up next to the stats; and the list is
+     traversed with the arrows and chosen with Enter.
+     Everything goes inside a function to NOT leave global names: the
+     <script> blocks share the scope, and a `var` here that collides with a `let` of
+     the application leaves this diagnostic uncompiled and unrun. See
+     `comprobar_scripts` in informe_browser.py. */
   (function(){
     var caja = document.getElementById("q"), drop = document.getElementById("lista");
     function tecla(k, shift){
@@ -110,152 +111,152 @@ try {
     function activa(){ var s = document.querySelector("section.on"); return s ? s.id : ""; }
 
     var barra = document.querySelector(".barra-sup");
-    ok("el buscador vive en la franja de las pestañas, FUERA de la calculadora",
+    ok("the search box lives in the tab strip, OUTSIDE the calculator",
        !!barra && !!barra.querySelector("#q") && !!barra.querySelector("nav") &&
        !document.getElementById("s-calc").contains(caja),
-       barra ? "franja con el buscador y " + barra.querySelectorAll("nav button").length + " pestañas"
-             : "(no hay franja)");
-    ok("la ficha sube a la par de los stats, dentro de la misma rejilla",
+       barra ? "strip with the search box and " + barra.querySelectorAll("nav button").length + " tabs"
+             : "(there is no strip)");
+    ok("the card moves up next to the stats, within the same grid",
        document.getElementById("filaElegir").contains(document.getElementById("elegida")) &&
        document.getElementById("filaElegir").contains(document.getElementById("panelStats")) &&
        document.getElementById("elegida").nextElementSibling === document.getElementById("panelStats"),
-       "ficha y stats son hermanos dentro de la rejilla");
+       "card and stats are siblings within the grid");
 
-    // --- la lista NO se abre sola al usar otras pestañas ---
-    ok("la lista arranca cerrada", !abierta(), "on=" + abierta());
+    // --- the list does NOT open by itself when using other tabs ---
+    ok("the list starts closed", !abierta(), "on=" + abierta());
     elegir("indoraptor");
     document.querySelector('nav button[data-t="arbol"]').click();
     var cb = document.querySelector('#arbolCuerpo input[data-campo="creado"]');
-    ok("hay una casilla en el arbol que tocar", !!cb, cb ? cb.dataset.u : "(sin casilla)");
+    ok("there is a checkbox in the tree to touch", !!cb, cb ? cb.dataset.u : "(no checkbox)");
     if (cb){ cb.checked = !cb.checked; ev(cb, "change"); }
-    ok("tocar una casilla del arbol NO despliega el buscador",
-       !!cb && !abierta(), "on=" + abierta() + " | pestaña " + activa());
+    ok("touching a checkbox in the tree does NOT unfold the search box",
+       !!cb && !abierta(), "on=" + abierta() + " | tab " + activa());
 
-    // --- teclado ---
+    // --- keyboard ---
     document.querySelector('nav button[data-t="calc"]').click();
     caja.focus();
     caja.value = "rex";
     ev(caja, "input");
     var nFilas = drop.querySelectorAll(".it").length;
-    ok("al escribir se despliega la lista", abierta() && nFilas > 1, nFilas + " filas");
-    ok("y no queda nada resaltado: Enter no debe llevar a ciegas", resaltado() === "", "«" + resaltado() + "»");
+    ok("typing unfolds the list", abierta() && nFilas > 1, nFilas + " rows");
+    ok("and nothing stays highlighted: Enter must not take you blindly", resaltado() === "", "«" + resaltado() + "»");
 
-    ok("ArrowDown se traga la tecla (si no, el cursor saltaria al final del texto)",
+    ok("ArrowDown swallows the key (otherwise the cursor would jump to the end of the text)",
        tecla("ArrowDown").defaultPrevented, "defaultPrevented");
     var s1 = resaltado();
-    ok("ArrowDown resalta la primera", s1 !== "" && s1 === drop.querySelector(".it").dataset.u, s1);
-    ok("y resalta UNA sola fila", drop.querySelectorAll(".it.sel").length === 1,
-       drop.querySelectorAll(".it.sel").length + " resaltadas");
+    ok("ArrowDown highlights the first one", s1 !== "" && s1 === drop.querySelector(".it").dataset.u, s1);
+    ok("and highlights ONE single row", drop.querySelectorAll(".it.sel").length === 1,
+       drop.querySelectorAll(".it.sel").length + " highlighted");
     tecla("ArrowDown");
     var s2 = resaltado();
-    ok("ArrowDown otra vez baja a la segunda", s2 !== "" && s2 !== s1, s1 + " -> " + s2);
+    ok("ArrowDown again goes down to the second", s2 !== "" && s2 !== s1, s1 + " -> " + s2);
     tecla("ArrowUp");
-    ok("ArrowUp vuelve a la primera", resaltado() === s1, resaltado() + " (esperado " + s1 + ")");
+    ok("ArrowUp goes back to the first", resaltado() === s1, resaltado() + " (expected " + s1 + ")");
     tecla("ArrowUp");
-    ok("ArrowUp en la primera no se sale de la lista", resaltado() === s1, resaltado());
-    ok("las flechas no han tocado el texto del campo", caja.value === "rex", caja.value);
-    ok("una tecla normal NO se traga", !tecla("a").defaultPrevented, "defaultPrevented=false");
+    ok("ArrowUp on the first does not leave the list", resaltado() === s1, resaltado());
+    ok("the arrows have not touched the field text", caja.value === "rex", caja.value);
+    ok("a normal key is NOT swallowed", !tecla("a").defaultPrevented, "defaultPrevented=false");
     for (var i = 0; i < 25; i++) tecla("ArrowDown");
     var elSel = drop.querySelector(".it.sel");
-    ok("tras bajar 25 veces el resaltado sigue A LA VISTA (la lista se desplaza sola)",
+    ok("after going down 25 times the highlight is still IN SIGHT (the list scrolls by itself)",
        !!elSel && elSel.offsetTop >= drop.scrollTop &&
        elSel.offsetTop + elSel.offsetHeight <= drop.scrollTop + drop.clientHeight,
        "scrollTop=" + drop.scrollTop + " offsetTop=" + (elSel ? elSel.offsetTop : "?") +
-       " alto=" + drop.clientHeight);
+       " height=" + drop.clientHeight);
 
-    // --- Enter lleva a la calculadora, desde cualquier pestaña ---
+    // --- Enter takes you to the calculator, from any tab ---
     var objetivo = resaltado();
     document.querySelector('nav button[data-t="arbol"]').click();
-    ok("antes de pulsar Enter estamos en el arbol", activa() === "s-arbol", activa());
+    ok("before pressing Enter we are in the tree", activa() === "s-arbol", activa());
     caja.focus();
     tecla("Enter");
-    ok("Enter lleva a la CALCULADORA aunque se pulse desde otra pestaña",
+    ok("Enter takes you to the CALCULATOR even if pressed from another tab",
        activa() === "s-calc", activa());
-    ok("y elige justo la criatura resaltada", elegido === objetivo,
-       "elegido=" + elegido + " | resaltado=" + objetivo);
-    ok("y cierra la lista", !abierta(), "on=" + abierta());
+    ok("and chooses exactly the highlighted creature", elegido === objetivo,
+       "chosen=" + elegido + " | highlighted=" + objetivo);
+    ok("and closes the list", !abierta(), "on=" + abierta());
 
-    // --- un clic desde otra pestaña tambien navega ---
+    // --- a click from another tab also navigates ---
     document.querySelector('nav button[data-t="mios"]').click();
     caja.focus();
     caja.value = "indoraptor";
     ev(caja, "input");
     var fila = drop.querySelector(".it");
     fila.dispatchEvent(new MouseEvent("click", {bubbles:true}));
-    ok("un clic en un resultado desde «Mis criaturas» lleva a la calculadora",
+    ok("a click on a result from «Mis criaturas» takes you to the calculator",
        activa() === "s-calc" && elegido === fila.dataset.u, activa() + " / " + elegido);
 
-    // --- Escape cierra sin elegir ---
+    // --- Escape closes without choosing ---
     caja.focus();
     caja.value = "rex";
     ev(caja, "input");
     var antesDeEscapar = elegido;
-    ok("la lista esta abierta antes de Escape", abierta(), "on=" + abierta());
+    ok("the list is open before Escape", abierta(), "on=" + abierta());
     tecla("Escape");
-    ok("Escape cierra la lista", !abierta(), "on=" + abierta());
-    ok("y no elige nada", elegido === antesDeEscapar, elegido);
+    ok("Escape closes the list", !abierta(), "on=" + abierta());
+    ok("and chooses nothing", elegido === antesDeEscapar, elegido);
 
-    // --- el estado de accesibilidad acompaña ---
+    // --- the accessibility state comes along ---
     caja.focus();
     caja.value = "rex";
     ev(caja, "input");
     tecla("ArrowDown");
-    ok("con la lista abierta y una fila resaltada, el aria lo dice",
+    ok("with the list open and a row highlighted, the aria says so",
        caja.getAttribute("aria-expanded") === "true" &&
        caja.getAttribute("aria-activedescendant") === "it-0",
        "expanded=" + caja.getAttribute("aria-expanded") +
        " activedescendant=" + caja.getAttribute("aria-activedescendant"));
     tecla("Escape");
-    ok("y al cerrar se limpian los dos",
+    ok("and on closing both are cleared",
        caja.getAttribute("aria-expanded") === "false" && !caja.hasAttribute("aria-activedescendant"),
        "expanded=" + caja.getAttribute("aria-expanded") +
        " activedescendant=" + caja.getAttribute("aria-activedescendant"));
 
-    // Estado limpio para lo que sigue: en la calculadora y con la lista cerrada.
+    // Clean state for what follows: in the calculator and with the list closed.
     irA("calc");
     cerrarLista();
   })();
 
-  // --- buscador con miniatura ---
+  // --- search box with thumbnail ---
   document.getElementById("q").value = "indoraptor";
   ev(document.getElementById("q"), "input");
   var it = document.querySelector("#lista .it");
-  ok("el buscador pinta miniatura", !!it && !!it.querySelector("img.mini"));
+  ok("the search box paints a thumbnail", !!it && !!it.querySelector("img.mini"));
   cerrarLista();
 
-  // --- Indoraptor 21 -> 30 con 1.000 ADN: hay deficit, luego hay arbol ---
+  // --- Indoraptor 21 -> 30 with 1.000 DNA: there is a deficit, hence there is a tree ---
   elegir("indoraptor");
   teclear(document.getElementById("nivelAct"), "21");
   teclear(document.getElementById("adnTengo"), "1000");
   document.getElementById("nivelObj").value = 30;
   ev(document.getElementById("nivelObj"), "input");
 
-  ok("la ficha tiene imagen grande", !!document.querySelector("#elegida img.grande"));
+  ok("the card has a large image", !!document.querySelector("#elegida img.grande"));
 
-  // --- nivel maximo bajo el nivel objetivo ---
+  // --- maximum level below the target level ---
   var mn = txt("maxNivel");
   log("--- maxNivel ---", mn);
   var mnm = /Nivel\s+(\d+)/.exec(mn);
   var nivelDicho = mnm ? Number(mnm[1]) : -1;
   var esp = nivelMaximo("unique", 21, 1000, true);
-  ok("el nivel maximo mostrado coincide con el motor", nivelDicho === esp.nivel,
-     "dice " + nivelDicho + ", el motor dice " + esp.nivel);
-  ok("el nivel maximo NO es 0 con 1.000 ADN", nivelDicho > 0);
-  ok("dice 'Ya te alcanza' solo cuando de verdad alcanza",
-     (esp.nivel >= 30) === /Ya te alcanza/.test(mn), "nivel=" + esp.nivel + " objetivo=30");
-  ok("no aparece ninguna cifra negativa en el bloque", !/-\d/.test(mn), mn.slice(-80));
+  ok("the maximum level shown matches the engine", nivelDicho === esp.nivel,
+     "it says " + nivelDicho + ", the engine says " + esp.nivel);
+  ok("the maximum level is NOT 0 with 1.000 DNA", nivelDicho > 0);
+  ok("it says 'Ya te alcanza' only when it really reaches",
+     (esp.nivel >= 30) === /Ya te alcanza/.test(mn), "level=" + esp.nivel + " target=30");
+  ok("no negative figure appears in the block", !/-\d/.test(mn), mn.slice(-80));
 
-  // --- el arbol ---
-  // Hay que ACTIVAR la pestaña antes de tocarla: un elemento dentro de una
-  // seccion en display:none no puede recibir el foco, asi que .focus() falla en
-  // silencio y cualquier prueba de foco da un falso fallo.
+  // --- the tree ---
+  // The tab must be ACTIVATED before touching it: an element inside a
+  // section in display:none cannot receive focus, so .focus() fails
+  // silently and any focus test gives a false failure.
   document.querySelector('nav button[data-t="arbol"]').click();
-  ok("la pestaña del arbol queda activa",
+  ok("the tree tab stays active",
      document.getElementById("s-arbol").classList.contains("on"));
 
   var nodos = document.querySelectorAll("#arbolCuerpo .nodo");
-  log("nodos en el arbol", nodos.length);
-  ok("el arbol baja a los ingredientes", nodos.length > 1, nodos.length + " nodos");
+  log("nodes in the tree", nodos.length);
+  ok("the tree goes down to the ingredients", nodos.length > 1, nodos.length + " nodes");
   var camposOk = 0, fotos = 0;
   nodos.forEach(function(n){
     if (n.querySelector("input[data-campo='nivel']") &&
@@ -263,25 +264,25 @@ try {
         n.querySelector("input[data-campo='creado']")) camposOk++;
     if (n.querySelector("img.foto")) fotos++;
   });
-  ok("todos los nodos tienen nivel+adn+creada", camposOk === nodos.length, camposOk + "/" + nodos.length);
-  ok("todos los nodos tienen foto", fotos === nodos.length, fotos + "/" + nodos.length);
+  ok("all nodes have level+dna+created", camposOk === nodos.length, camposOk + "/" + nodos.length);
+  ok("all nodes have a photo", fotos === nodos.length, fotos + "/" + nodos.length);
 
-  // --- escribir en un nodo ---
+  // --- writing in a node ---
   var ing = document.querySelector("#arbolCuerpo .nodo:not(.raiz) input[data-campo='adn']");
-  ok("hay un ingrediente editable", !!ing);
+  ok("there is an editable ingredient", !!ing);
   var uuidIng = ing.dataset.u;
   teclear(ing, "123456");
   var g = INV[uuidIng];
-  ok("el ADN escrito en el arbol se guarda", !!g && g.adn === 123456, JSON.stringify(g));
+  ok("the DNA written in the tree is saved", !!g && g.adn === 123456, JSON.stringify(g));
   var vuelto = document.querySelector("[data-u='"+uuidIng+"'][data-campo='adn']");
-  ok("el campo conserva el valor tecleado", vuelto.value === "123456", vuelto.value);
+  ok("the field keeps the typed value", vuelto.value === "123456", vuelto.value);
 
-  // --- tecleo DIGITO A DIGITO: el cursor no puede saltar al principio ---
-  // Este es el fallo que se colo: con <input type=number>, Firefox NO deja leer ni
-  // fijar el cursor (`setSelectionRange` lanza InvalidStateError y `selectionStart`
-  // es null), el arbol se repinta entero en cada tecla, y teclear "1500" acababa
-  // guardando 51 con "0051" en el campo. Se vigila tecleando de verdad, tecla a
-  // tecla: `teclear` —que escribe el valor entero de una vez— no lo ve.
+  // --- typing DIGIT BY DIGIT: the cursor must not jump to the beginning ---
+  // This is the bug that slipped in: with <input type=number>, Firefox does NOT let
+  // you read or set the cursor (`setSelectionRange` throws InvalidStateError and
+  // `selectionStart` is null), the tree is fully repainted on every key, and typing
+  // "1500" ended up saving 51 with "0051" in the field. It is watched by typing for
+  // real, key by key: `teclear` —which writes the whole value in one go— does not see it.
   var selAdn = "[data-u='"+uuidIng+"'][data-campo='adn']";
   var selNv  = "[data-u='"+uuidIng+"'][data-campo='nivel']";
   var relAdn = function(){ return document.querySelector(selAdn); };
@@ -289,169 +290,169 @@ try {
 
   teclear(relAdn(), "");
   var t1 = teclearTecla(relAdn, "1500");
-  ok("teclear 1500 digito a digito deja 1500", t1.valor === "1500",
-     "campo='" + t1.valor + "' pasos: " + t1.pasos.join(" "));
-  ok("y el cursor acaba al final, no al principio", t1.cursor === 4, "cursor=" + t1.cursor);
-  ok("y se guarda 1500, no 51", INV[uuidIng].adn === 1500, "guardado=" + INV[uuidIng].adn);
+  ok("typing 1500 digit by digit leaves 1500", t1.valor === "1500",
+     "field='" + t1.valor + "' steps: " + t1.pasos.join(" "));
+  ok("and the cursor ends up at the end, not at the beginning", t1.cursor === 4, "cursor=" + t1.cursor);
+  ok("and 1500 is saved, not 51", INV[uuidIng].adn === 1500, "saved=" + INV[uuidIng].adn);
 
   teclear(relNv(), "");
   var t2 = teclearTecla(relNv, "18");
-  ok("teclear el nivel digito a digito deja 18", t2.valor === "18",
-     "campo='" + t2.valor + "' pasos: " + t2.pasos.join(" "));
+  ok("typing the level digit by digit leaves 18", t2.valor === "18",
+     "field='" + t2.valor + "' steps: " + t2.pasos.join(" "));
 
-  // Insertar EN MEDIO del numero, no solo al final: es donde un cursor mal
-  // devuelto hace mas dano, porque el digito entra en el sitio equivocado.
+  // Insert IN THE MIDDLE of the number, not just at the end: that is where a
+  // badly restored cursor does the most damage, because the digit enters in the wrong place.
   teclear(relAdn(), "1000");
   var medio = relAdn();
   medio.focus(); medio.setSelectionRange(1, 1);
   document.execCommand("insertText", false, "9");
-  ok("insertar en medio respeta la posicion", relAdn().value === "19000",
-     "campo='" + relAdn().value + "'");
+  ok("inserting in the middle respects the position", relAdn().value === "19000",
+     "field='" + relAdn().value + "'");
 
-  // Lo que el <input type=number> filtraba solo (letras, signos) ahora lo limpia
-  // `limpiarNumero`, y sin mandar el cursor al final.
+  // What <input type=number> used to filter by itself (letters, signs) is now cleaned
+  // by `limpiarNumero`, and without sending the cursor to the end.
   teclear(relAdn(), "");
   var conLetras = relAdn();
   conLetras.focus();
   document.execCommand("insertText", false, "1a2");
-  ok("las letras no entran en un campo de ADN", relAdn().value === "12",
-     "campo='" + relAdn().value + "'");
-  ok("y el valor limpio es el que se guarda", invDe(uuidIng).adn === 12,
-     "guardado=" + invDe(uuidIng).adn);
+  ok("letters do not enter a DNA field", relAdn().value === "12",
+     "field='" + relAdn().value + "'");
+  ok("and the clean value is the one saved", invDe(uuidIng).adn === 12,
+     "saved=" + invDe(uuidIng).adn);
 
-  // --- escribir el NIVEL tambien ---
+  // --- writing the LEVEL too ---
   var campoNivel = document.querySelector("[data-u='"+uuidIng+"'][data-campo='nivel']");
   teclear(campoNivel, "17");
   var g4 = INV[uuidIng];
-  ok("el nivel escrito en el arbol se guarda", !!g4 && g4.nivel === 17, JSON.stringify(g4));
+  ok("the level written in the tree is saved", !!g4 && g4.nivel === 17, JSON.stringify(g4));
 
-  // --- destildar 'Creada' ---
+  // --- unchecking 'Creada' ---
   var chk = document.querySelector("[data-u='"+uuidIng+"'][data-campo='creado']");
-  ok("hay un checkbox 'Creada'", !!chk);
+  ok("there is a 'Creada' checkbox", !!chk);
   var m2 = minLv(C[uuidIng][1]);
   chk.checked = false; ev(chk, "change");
   var g2 = INV[uuidIng];
-  ok("destildar 'Creada' lo guarda como sin crear", !!g2 && g2.creado === false, JSON.stringify(g2));
-  ok("sin crear, el nivel queda en 0", g2 && g2.nivel === 0);
-  ok("el nodo avisa de 'sin crear'", /sin crear/.test(document.querySelector("#arbolCuerpo").innerText));
+  ok("unchecking 'Creada' saves it as not created", !!g2 && g2.creado === false, JSON.stringify(g2));
+  ok("when not created, the level stays at 0", g2 && g2.nivel === 0);
+  ok("the node warns of 'sin crear'", /sin crear/.test(document.querySelector("#arbolCuerpo").innerText));
   var chk2 = document.querySelector("[data-u='"+uuidIng+"'][data-campo='creado']");
   chk2.checked = true; ev(chk2, "change");
   var g3 = INV[uuidIng];
-  ok("al volver a crearla sube a su nivel de nacimiento (" + m2 + ")",
+  ok("creating it again raises it to its birth level (" + m2 + ")",
      !!g3 && g3.creado === true && g3.nivel === m2, JSON.stringify(g3));
 
-  // --- guardado ---
+  // --- saving ---
   var json = localStorage.getItem("jwa322.inventario");
-  ok("se escribio en localStorage", !!json && json.length > 20, (json||"").slice(0, 120));
+  ok("it was written to localStorage", !!json && json.length > 20, (json||"").slice(0, 120));
 
-  // --- Mis criaturas: SOLO lo que se guarda a proposito ---
-  // Regla pedida por n30 (25-sep-2026): teclear en el arbol sirve para el calculo,
-  // pero NO mete criaturas en la lista. Antes «Mis criaturas» era
-  // `Object.keys(INV)`, asi que editar el ADN de los ingredientes dejaba guardado
-  // el arbol genealogico entero, y pulsar «Guardar» no era la causa sino la
-  // confirmacion. La lista es `MIS`, y solo la escriben Guardar, la × y la
-  // importacion.
+  // --- Mis criaturas: ONLY what is saved on purpose ---
+  // Rule requested by n30 (25-sep-2026): typing in the tree is used for the calculation,
+  // but it does NOT put creatures into the list. Before, «Mis criaturas» was
+  // `Object.keys(INV)`, so editing the DNA of the ingredients left the whole
+  // genealogical tree saved, and pressing «Guardar» was not the cause but the
+  // confirmation. The list is `MIS`, and only Guardar, the × and the
+  // import write to it.
   pintarMios();
   var filas = document.querySelectorAll("#miosCuerpo tbody tr");
   var tocadas = Object.keys(INV).length;
-  ok("teclear en el arbol NO mete nada en «Mis criaturas»", filas.length === 0,
-     filas.length + " filas, con " + tocadas + " criaturas tocadas");
-  ok("pero los datos SI quedan, para que el arbol calcule con ellos",
+  ok("typing in the tree does NOT put anything into «Mis criaturas»", filas.length === 0,
+     filas.length + " rows, with " + tocadas + " creatures touched");
+  ok("but the data IS kept, so that the tree can calculate with it",
      tocadas > 0 && invDe(uuidIng).adn === 12,
-     tocadas + " criaturas; el ingrediente con " + invDe(uuidIng).adn + " ADN");
+     tocadas + " creatures; the ingredient with " + invDe(uuidIng).adn + " DNA");
 
-  // Guardar mete UNA: la elegida.
+  // Guardar inserts ONE: the chosen one.
   document.querySelector('nav button[data-t="calc"]').click();
   var btn = document.getElementById("btnGuardar");
-  ok("existe el boton de guardar", !!btn);
+  ok("the save button exists", !!btn);
   btn.click();
   pintarMios();
   var filas2 = document.querySelectorAll("#miosCuerpo tbody tr");
   var textoMios = document.querySelector("#miosCuerpo").innerText;
-  ok("Guardar mete EXACTAMENTE la criatura elegida", filas2.length === 1, filas2.length + " filas");
-  ok("y no cuela ningun ingrediente del arbol",
+  ok("Guardar inserts EXACTLY the chosen creature", filas2.length === 1, filas2.length + " rows");
+  ok("and no ingredient from the tree sneaks in",
      textoMios.toLowerCase().indexOf(C[uuidIng][0].toLowerCase()) === -1,
      C[uuidIng][0] + (textoMios.toLowerCase().indexOf(C[uuidIng][0].toLowerCase()) === -1
-                      ? " no aparece" : " SI aparece"));
-  ok("Mis criaturas tiene columna de nivel maximo", /Nivel máx/i.test(textoMios));
-  /* La columna de mejoras existe para que se VEA que los puntos se guardaron:
-     sin ella, el dato solo se podria comprobar abriendo la ficha, y no habria
-     forma de saber que sigue ahi. */
+                      ? " does not appear" : " DOES appear"));
+  ok("Mis criaturas has a maximum level column", /Nivel máx/i.test(textoMios));
+  /* The boosts column exists so that it can be SEEN that the points were saved:
+     without it, the datum could only be checked by opening the card, and there
+     would be no way to know it is still there. */
   var cabMios = Array.prototype.map.call(document.querySelectorAll("#miosCuerpo th"),
     function(t){ return t.textContent; }).join("|");
-  ok("y una columna de mejoras, para que se vea que se guardaron",
+  ok("and a boosts column, so that it can be seen that they were saved",
      /Mejoras/.test(cabMios), cabMios);
   btn.click();
   var filas3 = document.querySelectorAll("#miosCuerpo tbody tr");
-  ok("pulsar Guardar otra vez no duplica la fila", filas3.length === 1, filas3.length + " filas");
+  ok("pressing Guardar again does not duplicate the row", filas3.length === 1, filas3.length + " rows");
 
-  // La lista guardada se persiste aparte de los datos.
+  // The saved list is persisted separately from the data.
   var guardadoMios = JSON.parse(localStorage.getItem("jwa322.mios") || "null");
-  ok("la lista se guarda en su propia clave de localStorage",
+  ok("the list is saved in its own localStorage key",
      Array.isArray(guardadoMios) && guardadoMios.length === 1,
      JSON.stringify(guardadoMios));
 
-  // --- 3) lo pedido por n30 el 25-sep: tira de fotos, «Lleva a» completo,
-  //        informe sin columna «Rareza», y la zona en vez de «se recolecta» ---
-  /* Nada de esto se juzga mirando una captura: se pulsa y se lee el DOM. Y cada
-     comprobacion se hace contra el DATO del modelo o contra un calculo hecho
-     aqui, nunca contra el HTML que acabamos de pintar: comparar el pintado
-     con el pintado daria verde aunque las dos cosas estuvieran mal. */
+  // --- 3) what n30 asked for on 25-sep: photo strip, complete «Lleva a»,
+  //        report without a «Rareza» column, and the zone instead of «se recolecta» ---
+  /* None of this is judged by looking at a screenshot: it is pressed and the DOM is
+     read. And each check is made against the model DATA or against a calculation
+     done here, never against the HTML we have just painted: comparing the painted
+     with the painted would give green even if both things were wrong. */
 
-  // (a) la tira de fotos, arriba de «Elige la criatura»
+  // (a) the photo strip, above «Elige la criatura»
   var panel = document.getElementById("panelMisFotos");
   var tira  = document.getElementById("misFotos");
   MIS = ["indoraptor", "tyrannosaurus_rex"];
   pintarFotos();
   var fotos = tira.querySelectorAll("button[data-ir]");
-  ok("la tira de fotos sale cuando hay criaturas guardadas",
-     panel.style.display !== "none" && fotos.length === 2, fotos.length + " fotos");
+  ok("the photo strip shows up when there are saved creatures",
+     panel.style.display !== "none" && fotos.length === 2, fotos.length + " photos");
   var nombresTira = [];
   var coloresTiraBien = true;
   Array.prototype.forEach.call(fotos, function(b){
     var nm = b.querySelector(".tira-nm");
-    nombresTira.push(nm ? nm.textContent.trim() : "(sin nombre)");
+    nombresTira.push(nm ? nm.textContent.trim() : "(no name)");
     if (!nm || nm.className.indexOf("rc-" + CLASE[C[b.dataset.ir][1]]) === -1) coloresTiraBien = false;
   });
-  ok("cada foto lleva el nombre de su criatura, con el color de su rareza",
+  ok("each photo carries the name of its creature, with the colour of its rarity",
      coloresTiraBien && nombresTira.length === 2, nombresTira.join(" | "));
-  ok("y las fotos van ordenadas por nombre, igual que la tabla de la pestaña",
+  ok("and the photos are sorted by name, like the tab table",
      nombresTira[0] === "Indoraptor" && nombresTira[1] === "Tyrannosaurus Rex",
      nombresTira.join(" | "));
 
-  // el tope: con 12 guardadas solo se ensenan 10, y se dice cuantas hay
+  // the cap: with 12 saved only 10 are shown, and it says how many there are
   MIS = Object.keys(C).slice(0, 12);
   pintarFotos();
   var n10 = tira.querySelectorAll("button[data-ir]").length;
-  ok("la tira ensena como mucho 10 fotos", n10 === 10, n10 + " fotos de 12 guardadas");
-  ok("y avisa de cuantas ensena de cuantas hay",
+  ok("the strip shows at most 10 photos", n10 === 10, n10 + " photos out of 12 saved");
+  ok("and it warns how many it shows out of how many there are",
      /10 de 12/.test(document.getElementById("nMisFotos").textContent),
      document.getElementById("nMisFotos").textContent);
 
-  // pulsar una foto abre ESA criatura, no la que estuviera abierta
+  // pressing a photo opens THAT creature, not the one that was open
   MIS = ["indoraptor", "tyrannosaurus_rex"];
   pintarFotos();
   elegir("indoraptor");
   tira.querySelector("button[data-ir='tyrannosaurus_rex']").click();
-  ok("pulsar una foto abre esa criatura en la calculadora",
+  ok("pressing a photo opens that creature in the calculator",
      elegido === "tyrannosaurus_rex" && document.getElementById("s-calc").classList.contains("on"),
-     "elegido=" + elegido + ", pestaña calc=" +
+     "chosen=" + elegido + ", calc tab=" +
      document.getElementById("s-calc").classList.contains("on"));
 
-  // y sin criaturas guardadas el bloque no ocupa sitio
+  // and with no saved creatures the block takes up no room
   MIS = []; pintarFotos();
-  ok("sin criaturas guardadas la tira no ocupa sitio",
+  ok("with no saved creatures the strip takes up no room",
      panel.style.display === "none" && tira.querySelectorAll("button").length === 0,
      "display='" + panel.style.display + "'");
 
-  // (b) «Lleva a»: TODA la rama superior, no solo los hijos directos
-  /* El cierre transitivo se calcula AQUI, con codigo independiente del de la
-     pagina. Si la ficha ensenara solo los hijos directos, los numeros no
-     cuadrarian — y era exactamente el fallo: antes decia `c[6]`.
-     Se usa Nundasuchus, que es el caso que lo distingue de verdad: 5 niveles y
-     11 criaturas por encima, con solo 2 hijos directos. Con Indoraptor no se
-     puede comprobar nada, porque su rama superior es un unico hijo y el numero
-     sale igual por los dos caminos. */
+  // (b) «Lleva a»: the WHOLE upper branch, not just the direct children
+  /* The transitive closure is calculated HERE, with code independent from the
+     page's. If the card showed only the direct children, the numbers would not
+     add up — and that was exactly the bug: before it said `c[6]`.
+     Nundasuchus is used, which is the case that really distinguishes it: 5 levels and
+     11 creatures above, with only 2 direct children. With Indoraptor nothing can
+     be checked, because its upper branch is a single child and the number comes out
+     the same both ways. */
   function cierre(u){
     var vistos = {}, frente = [u], niv = [];
     while (frente.length){
@@ -473,80 +474,80 @@ try {
   var hijosDirectos = (C[U_LLEGA][6] || []).length;
   var enLleva = document.querySelectorAll("#elegida .lleva button.ir");
   var separadores = document.querySelectorAll("#elegida .lleva > span").length;
-  ok("«Lleva a» ensena TODA la rama superior, no solo los hijos directos",
+  ok("«Lleva a» shows the WHOLE upper branch, not just the direct children",
      enLleva.length === espTotal,
-     enLleva.length + " nombres; el cierre transitivo son " + espTotal +
-     " en " + espNiv.length + " niveles");
-  ok("y por eso son mas que los hijos directos", espTotal > hijosDirectos,
-     espTotal + " vs " + hijosDirectos + " hijos directos");
-  ok("y los agrupa por niveles, para que se vea que unas salen de otras",
+     enLleva.length + " names; the transitive closure is " + espTotal +
+     " in " + espNiv.length + " levels");
+  ok("and that is why there are more than the direct children", espTotal > hijosDirectos,
+     espTotal + " vs " + hijosDirectos + " direct children");
+  ok("and it groups them by levels, so that it can be seen that some come from others",
      separadores === espNiv.length - 1,
-     separadores + " separadores para " + espNiv.length + " niveles");
+     separadores + " separators for " + espNiv.length + " levels");
   var llevaMal = [], llevaU = [];
   Array.prototype.forEach.call(enLleva, function(b){
     llevaU.push(b.dataset.ir);
     if (b.className.indexOf("rc-" + CLASE[C[b.dataset.ir][1]]) === -1) llevaMal.push(C[b.dataset.ir][0]);
   });
-  ok("cada nombre de «Lleva a» lleva el color de SU rareza", llevaMal.length === 0,
-     enLleva.length + " nombres" + (llevaMal.length ? " | mal: " + llevaMal.join(", ") : ""));
-  ok("y no hay ninguno repetido, aunque el grafo tenga diamantes",
-     new Set(llevaU).size === llevaU.length, llevaU.length + " nombres, " +
-     new Set(llevaU).size + " distintos");
+  ok("each name in «Lleva a» carries the colour of ITS rarity", llevaMal.length === 0,
+     enLleva.length + " names" + (llevaMal.length ? " | bad: " + llevaMal.join(", ") : ""));
+  ok("and none is repeated, even if the graph has diamonds",
+     new Set(llevaU).size === llevaU.length, llevaU.length + " names, " +
+     new Set(llevaU).size + " distinct");
   var destino = enLleva[enLleva.length - 1].dataset.ir;
   enLleva[enLleva.length - 1].click();
-  ok("pulsar un nombre de «Lleva a» carga esa criatura en la calculadora",
-     elegido === destino, "elegido=" + elegido + ", esperado " + destino);
+  ok("pressing a name in «Lleva a» loads that creature in the calculator",
+     elegido === destino, "chosen=" + elegido + ", expected " + destino);
 
-  // (c) el informe del arbol: sin columna «Rareza», nombre pulsable y coloreado
+  // (c) the tree report: no «Rareza» column, clickable and coloured name
   elegir("indoraptor");
   var inf = document.getElementById("informeArbol");
   var cab = [];
   Array.prototype.forEach.call(inf.querySelectorAll("thead th"), function(th){
     cab.push(th.textContent.trim());
   });
-  ok("el informe ya no tiene columna «Rareza»", cab.indexOf("Rareza") === -1, cab.join(" | "));
-  /* La de «Veces» se retiro el 25-sep-2026 por peticion de n30: «no da
-     informacion util». Se comprueba que NO vuelve, igual que con «Rareza». */
-  ok("ni la de «Veces», retirada por no dar informacion util",
+  ok("the report no longer has a «Rareza» column", cab.indexOf("Rareza") === -1, cab.join(" | "));
+  /* The «Veces» one was removed on 25-sep-2026 at n30's request: «it gives no
+     useful information». It is checked that it does NOT come back, just like with «Rareza». */
+  ok("nor the «Veces» one, removed for giving no useful information",
      cab.indexOf("Veces") === -1, cab.join(" | "));
-  ok("y la primera columna sigue siendo la criatura", cab[0] === "Criatura", cab[0]);
-  /* La TABLA no puede llevar etiquetas: el color del nombre ya dice la rareza, y
-     una etiqueta al lado seria decir lo mismo dos veces. El desglose «ADN que hay
-     que ir a recolectar, por rareza» que va debajo SI las lleva, y es correcto:
-     ahi la etiqueta es la clave de la cifra, no un adorno del nombre. */
-  ok("la tabla del informe no pinta ninguna etiqueta de rareza",
+  ok("and the first column is still the creature", cab[0] === "Criatura", cab[0]);
+  /* The TABLE cannot carry tags: the colour of the name already says the rarity, and
+     a tag next to it would be saying the same thing twice. The breakdown «DNA that
+     has to be collected, by rarity» below DOES carry them, and that is correct:
+     there the tag is the key to the figure, not an ornament of the name. */
+  ok("the report table paints no rarity tag",
      inf.querySelector("table").querySelectorAll(".tag").length === 0,
-     inf.querySelector("table").querySelectorAll(".tag").length + " etiquetas en la tabla");
+     inf.querySelector("table").querySelectorAll(".tag").length + " tags in the table");
   var nomInf = inf.querySelectorAll("tbody tr button.ir");
   var infMal = [];
   Array.prototype.forEach.call(nomInf, function(b){
     if (b.className.indexOf("rc-" + CLASE[C[b.dataset.ir][1]]) === -1) infMal.push(C[b.dataset.ir][0]);
   });
-  ok("cada nombre del informe lleva el color de la rareza de SU criatura",
+  ok("each name in the report carries the colour of the rarity of ITS creature",
      nomInf.length > 0 && infMal.length === 0,
-     nomInf.length + " nombres" + (infMal.length ? " | mal: " + infMal.join(", ") : ""));
+     nomInf.length + " names" + (infMal.length ? " | bad: " + infMal.join(", ") : ""));
   var uInf = nomInf[1] ? nomInf[1].dataset.ir : null;
   nomInf[1].click();
-  ok("pulsar el nombre en el informe carga esa criatura",
-     !!uInf && elegido === uInf, "elegido=" + elegido + ", esperado " + uInf);
+  ok("pressing the name in the report loads that creature",
+     !!uInf && elegido === uInf, "chosen=" + elegido + ", expected " + uInf);
 
-  // (d) «se recolecta» ya no existe: en su lugar, la zona real de cada criatura
-  /* Se busca la PILDORA, no el texto: la prosa del informe dice «hasta las que
-     se recolectan», y buscando la cadena suelta el fallo era de la prueba. */
+  // (d) «se recolecta» no longer exists: instead, the real zone of each creature
+  /* The PILL is searched for, not the text: the report prose says «hasta las que
+     se recolectan», and searching for the loose string made the failure be the test's. */
   var pildorasRecolecta = 0;
   document.querySelectorAll(".pill").forEach(function(p){
     if (/^se recolecta$/i.test(p.textContent.trim())) pildorasRecolecta++;
   });
-  ok("la pildora «se recolecta» ya no existe en ninguna parte",
-     pildorasRecolecta === 0, pildorasRecolecta + " pildoras con ese texto");
+  ok("the «se recolecta» pill no longer exists anywhere",
+     pildorasRecolecta === 0, pildorasRecolecta + " pills with that text");
   document.querySelector('nav button[data-t="arbol"]').click();
   pintarArbol();
   var nodosArb = document.querySelectorAll("#arbolCuerpo .nodo");
   var zonasVistas = [], zonaMal = null, nodosConZona = 0, fuera = [];
-  /* Las etiquetas validas se sacan del MODELO, no de la pagina: si alguien
-     escribiera un texto a mano («cerca de tu casa»), no estaria aqui y la prueba
-     fallaria. Comparar contra `zonaDe` seria un espejo: el mismo malentendido
-     pasaria en verde por los dos lados. */
+  /* The valid tags are taken from the MODEL, not from the page: if someone
+     wrote a text by hand («near your house»), it would not be here and the test
+     would fail. Comparing against `zonaDe` would be a mirror: the same
+     misunderstanding would pass green on both sides. */
   var etiquetasValidas = {};
   Object.keys(M.locEtiquetas).forEach(function(k){
     etiquetasValidas[String(M.locEtiquetas[k]).replace(/\s*\|\s*All Day$/, "")] = 1;
@@ -559,9 +560,9 @@ try {
     nodosConZona++;
     var t = p.textContent.trim();
     zonasVistas.push(t);
-    // (1) el texto tiene que ser el que da el modelo para ESA criatura
+    // (1) the text has to be the one the model gives for THAT creature
     if (t !== zonaDe(inp.dataset.u, true)) zonaMal = inp.dataset.u;
-    // (2) y cada trozo tiene que ser una etiqueta del modelo, no texto inventado
+    // (2) and each piece has to be a model tag, not invented text
     if (t !== "sin fuente en el mapa" && t !== "solo en santuario"){
       t.split(/\s*·\s*/).forEach(function(trozo){
         if (trozo === "combate") return;
@@ -569,31 +570,31 @@ try {
       });
     }
   });
-  ok("los ingredientes del arbol ensenan su zona de recoleccion",
-     nodosConZona > 0, nodosConZona + " nodos con zona: " + zonasVistas.slice(0, 3).join(" | "));
-  ok("y la zona ensenada es la del modelo, criatura por criatura", !zonaMal,
-     zonaMal ? zonaMal + " dice '" + zonaDe(zonaMal, true) + "'" : "todas coinciden");
-  ok("y ningun trozo de la zona es texto inventado: todos salen del modelo",
+  ok("the tree ingredients show their collection zone",
+     nodosConZona > 0, nodosConZona + " nodes with zone: " + zonasVistas.slice(0, 3).join(" | "));
+  ok("and the zone shown is the model's, creature by creature", !zonaMal,
+     zonaMal ? zonaMal + " says '" + zonaDe(zonaMal, true) + "'" : "all match");
+  ok("and no piece of the zone is invented text: they all come from the model",
      fuera.length === 0, fuera.length ? fuera.slice(0, 3).join(" ;; ")
-                                      : "todos los trozos estan en el modelo");
-  /* El dato crudo trae la franja horaria pegada («Local Area 3 | All Day») y en la
-     pildora se quita: las siete zonas del mapa son las cuatro franjas, asi que
-     «All Day» no distingue nada y alargaba la pildora hasta 49 caracteres. */
-  ok("la pildora de la zona no arrastra la franja horaria redundante",
+                                      : "all the pieces are in the model");
+  /* The raw datum brings the time slot attached («Local Area 3 | All Day») and in the
+     pill it is removed: the seven map zones are the four slots, so
+     «All Day» distinguishes nothing and stretched the pill to 49 characters. */
+  ok("the zone pill does not drag along the redundant time slot",
      !zonasVistas.some(function(t){ return /All Day/.test(t); }),
      zonasVistas.slice(0, 3).join(" | "));
-  ok("la pildora de la zona va con el color de las pildoras de estado, no con uno de rareza",
+  ok("the zone pill goes with the colour of the status pills, not with a rarity one",
      (function(){
        var z = document.querySelector("#arbolCuerpo .nodo:not(.raiz) .cab .pill");
        var r = document.querySelector("#arbolCuerpo .nodo.raiz .cab .pill");   // «raíz»
        if (!z || !r) return false;
        return getComputedStyle(z).color === getComputedStyle(r).color;
-     })(), "comparada con la pildora «raíz» del nodo raíz");
+       })(), "compared with the «raíz» pill of the root node");
 
-  /* La ficha de la criatura elegida. La pildora de zona solo tiene que salir si
-     dice algo: en un hibrido su fuente es `none` (248 de las 518) y «sin fuente en
-     el mapa» es ruido — a un hibrido no se le busca, se fusiona. Se comprueba con
-     el criterio independiente: ingredientes vacios, o fuente real en el modelo. */
+  /* The card of the chosen creature. The zone pill only has to show up if it
+     says something: in a hybrid its source is `none` (248 of the 518) and «sin fuente en
+     el mapa» is noise — a hybrid is not searched for, it is fused. It is checked with
+     the independent criterion: empty ingredients, or a real source in the model. */
   var faltan = [], sobran = [], nBase = 0, nHib = 0;
   Object.keys(C).forEach(function(u){
     elegir(u);
@@ -606,137 +607,137 @@ try {
     if (deberia && !hay) faltan.push(u);
     if (!deberia && hay) sobran.push(u);
   });
-  ok("la pildora de zona no falta en ninguna que deba llevarla", faltan.length === 0,
-     faltan.length ? faltan.length + " sin pildora: " + faltan.slice(0, 6).join(", ") : "ninguna de " + nBase + " base");
-  ok("y no sobra en ningun hibrido sin fuente", sobran.length === 0,
-     sobran.length ? sobran.length + " con pildora de relleno: " + sobran.slice(0, 6).join(", ") : "ninguno de " + nHib + " hibridos");
-  ok("las 518 se reparten entre 270 sin ingredientes y 248 hibridos", nBase === 270 && nHib === 248,
-     nBase + " base + " + nHib + " hibridos = " + (nBase + nHib));
-  /* El caso concreto que motiva la regla: un hibrido sin fuente no debe decir
-     «sin fuente en el mapa». Se elige uno de verdad, no se supone. */
+  ok("the zone pill is missing in none that should carry it", faltan.length === 0,
+     faltan.length ? faltan.length + " without pill: " + faltan.slice(0, 6).join(", ") : "none of " + nBase + " base");
+  ok("and it is not superfluous in any hybrid without a source", sobran.length === 0,
+     sobran.length ? sobran.length + " with a filler pill: " + sobran.slice(0, 6).join(", ") : "none of " + nHib + " hybrids");
+  ok("the 518 split between 270 without ingredients and 248 hybrids", nBase === 270 && nHib === 248,
+     nBase + " base + " + nHib + " hybrids = " + (nBase + nHib));
+  /* The concrete case that motivates the rule: a hybrid without a source must not say
+     «sin fuente en el mapa». A real one is chosen, it is not assumed. */
   var hibSinFuente = Object.keys(C).filter(function(u){
     return (C[u][5] && C[u][5].length) && !(C[u][7] || []).some(function(x){
       return M.locDardeo.indexOf(x) >= 0 || M.locCombate.indexOf(x) >= 0; }); })[0];
   elegir(hibSinFuente);
-  ok("un hibrido sin fuente (" + C[hibSinFuente][0] + ") no dice «sin fuente en el mapa»",
+  ok("a hybrid without a source (" + C[hibSinFuente][0] + ") does not say «sin fuente en el mapa»",
      document.querySelector("#elegida").textContent.indexOf("sin fuente en el mapa") === -1,
-     "texto de la ficha buscado entero");
+     "card text searched whole");
   var hibConFuente = Object.keys(C).filter(function(u){
     return (C[u][5] && C[u][5].length) && (C[u][7] || []).some(function(x){
       return M.locDardeo.indexOf(x) >= 0 || M.locCombate.indexOf(x) >= 0; }); });
-  ok("y el hibrido que SI sale en el mapa conserva su pildora", hibConFuente.length >= 1,
-     hibConFuente.length ? hibConFuente.map(function(u){ return C[u][0]; }).join(", ") : "ninguno");
+  ok("and the hybrid that DOES appear on the map keeps its pill", hibConFuente.length >= 1,
+     hibConFuente.length ? hibConFuente.map(function(u){ return C[u][0]; }).join(", ") : "none");
   if (hibConFuente.length){
     elegir(hibConFuente[0]);
     var pz = document.querySelector("#elegida .pill.zona");
-    ok("  (" + C[hibConFuente[0]][0] + " ensena «" + (pz ? pz.textContent.trim() : "nada") + "»)", !!pz,
-       pz ? "con pildora" : "sin pildora");
+    ok("  (" + C[hibConFuente[0]][0] + " shows «" + (pz ? pz.textContent.trim() : "nothing") + "»)", !!pz,
+       pz ? "with pill" : "without pill");
   }
 
   // ======================================================================
-  //  Los stats del dino, donde estaba «Filtrar por rareza»
+  //  The dino's stats, where «Filtrar por rareza» used to be
   // ======================================================================
-  ok("el filtro por rareza ya no esta en la pagina",
+  ok("the rarity filter is no longer on the page",
      !document.getElementById("fRar") &&
      document.body.innerText.indexOf("Filtrar por rareza") < 0, "");
 
   var panelS = document.getElementById("panelStats");
   var fichas = panelS ? panelS.querySelectorAll(".st") : [];
-  ok("en su sitio hay un panel de stats con seis fichas", fichas.length === 6,
-     fichas.length + " fichas");
+  ok("in its place there is a stats panel with six cards", fichas.length === 6,
+     fichas.length + " cards");
   var nombresS = [], iconosS = [];
   fichas.forEach(function(f){
     nombresS.push(f.querySelector(".st-k").textContent);
     iconosS.push(f.querySelector("img").getAttribute("src"));
   });
-  ok("las seis fichas llevan su nombre, entero y en orden",
+  ok("the six cards carry their name, whole and in order",
      nombresS.join("|") === "Vida|Daño|Velocidad|Armadura|Crítico|Daño crít.",
      nombresS.join(" | "));
-  ok("y su icono, distinto en cada una", new Set(iconosS).size === 6, iconosS.join(" "));
-  ok("los iconos salen de la carpeta del proyecto, no de internet",
+  ok("and their icon, different in each one", new Set(iconosS).size === 6, iconosS.join(" "));
+  ok("the icons come from the project folder, not from the internet",
      iconosS.every(function(s){ return s.indexOf("img/stat/") === 0; }), iconosS.join(" "));
 
-  /* Los valores a NIVEL 26 tienen que ser EXACTAMENTE los del dato: a ese nivel
-     el multiplicador vale 1,000000 y no hay nada que escalar. Y los numeros de
-     la comparacion estan escritos AQUI, no leidos del modelo: son los que
-     paleo.gg ensena en su propia ficha cacheada de alacranix. Si la pagina se
-     inventara una escala, esto lo caza. */
+  /* The values at LEVEL 26 have to be EXACTLY those of the datum: at that level
+     the multiplier is 1.000000 and there is nothing to scale. And the numbers of
+     the comparison are written HERE, not read from the model: they are the ones
+     paleo.gg shows in its own cached alacranix card. If the page invented a
+     scale, this catches it. */
   function seis(){ return M.statsOrden.map(function(k){
     return document.getElementById("stV_" + k).textContent; }).join(" "); }
-  /* Deja la criatura a un nivel concreto y a cero de todo. El nivel es un
-     PARAMETRO y no una constante: dar por hecho un nivel fue el error de la
-     primera version de estas pruebas, que daba por bueno el 30 despues de haber
-     puesto el 26 y fallaba senalando al sitio equivocado. */
+  /* Leaves the creature at a specific level and at zero in everything. The level is a
+     PARAMETER and not a constant: taking a level for granted was the mistake of the
+     first version of these tests, which accepted 30 after having set 26 and
+     failed pointing at the wrong place. */
   function cero(u, niv){
     fijar(u, "nivel", niv); fijar(u, "adn", 0);
     ["bVida","bDano","bVel","mejora"].forEach(function(c){ fijar(u, c, 0); });
   }
   elegir("alacranix"); cero("alacranix", 26); pintarStats();
   var a26 = seis();
-  ok("a nivel 26 los stats son los del dato, sin escala ninguna",
+  ok("at level 26 the stats are the datum's, with no scaling at all",
      a26 === "4,250 1,650 115 40% 15% 125%", a26);
 
-  /* El nivel escala VIDA y DANO y nada mas. Es una comprobacion de ESTRUCTURA,
-     no de la tabla: no depende de que el multiplicador sea el correcto. */
+  /* The level scales HEALTH and DAMAGE and nothing else. It is a STRUCTURE
+     check, not a table one: it does not depend on the multiplier being correct. */
   fijar("alacranix", "nivel", 30); pintarStats();
   var a30 = seis().split(" ");
   var b26 = a26.split(" ");
-  ok("subir de nivel sube la vida y el dano",
+  ok("levelling up raises health and damage",
      a30[0] !== b26[0] && a30[1] !== b26[1],
-     "nivel 26: " + b26[0] + "/" + b26[1] + "  ->  nivel 30: " + a30[0] + "/" + a30[1]);
-  ok("y NO toca velocidad, armadura ni criticos",
+     "level 26: " + b26[0] + "/" + b26[1] + "  ->  level 30: " + a30[0] + "/" + a30[1]);
+  ok("and it does NOT touch speed, armor or crits",
      a30[2] === b26[2] && a30[3] === b26[3] && a30[4] === b26[4] && a30[5] === b26[5],
      a30.slice(2).join(" "));
 
-  // --- los puntos de mejora: se guardan, suman y se acotan ---
+  // --- the boost points: they are saved, added up and capped ---
   cero("alacranix", 30); pintarStats();
   var vel0 = Number(document.getElementById("stV_velocidad").textContent);
   var masV = document.querySelector('#panelStats [data-boost="bVel"][data-paso="1"]');
   var menV = document.querySelector('#panelStats [data-boost="bVel"][data-paso="-1"]');
-  ok("con cero puntos, el mando de restar esta apagado y el de sumar no",
+  ok("with zero points, the minus control is off and the plus one is not",
      menV.disabled === true && masV.disabled === false, "");
   for (var i1 = 0; i1 < 5; i1++) masV.click();
-  ok("cinco puntos de velocidad suben la velocidad en 10 (2 por punto)",
+  ok("five speed points raise speed by 10 (2 per point)",
      Number(document.getElementById("stV_velocidad").textContent) === vel0 + 10,
      vel0 + " -> " + document.getElementById("stV_velocidad").textContent);
-  ok("y quedan guardados en el inventario, no solo en pantalla",
+  ok("and they remain saved in the inventory, not only on screen",
      INV["alacranix"] && INV["alacranix"].bVel === 5, JSON.stringify(INV["alacranix"]));
-  ok("el contador ensena los puntos sobre el tope",
+  ok("the counter shows the points out of the cap",
      /Puntos\s*5\s*de\s*30/.test(document.getElementById("stNota").innerText.replace(/\s+/g, " ")),
      document.getElementById("stNota").innerText.replace(/\s+/g, " "));
   menV.click();
-  ok("y el mando de restar quita un punto de verdad", INV["alacranix"].bVel === 4,
+  ok("and the minus control really removes one point", INV["alacranix"].bVel === 4,
      JSON.stringify(INV["alacranix"]));
 
-  /* El tope es del CONJUNTO de los tres stats, no de cada uno: 20 por stat Y
-     la suma sin pasar del tope. Se comprueba por el camino de la interfaz. */
+  /* The cap is for the SET of the three stats, not for each one: 20 per stat AND
+     the sum without exceeding the cap. It is checked through the interface path. */
   fijar("alacranix", "bVida", 20); pintarStats();
-  ok("un stat solo no pasa de 20 puntos",
+  ok("a single stat does not go over 20 points",
      document.querySelector('#panelStats [data-boost="bVida"][data-paso="1"]').disabled === true, "");
-  /* El recorte del conjunto NO es alcanzable desde los mandos —el de sumar se
-     apaga antes de pasarse—, asi que se prueba por donde si entra: una escritura
-     directa, que es el camino de la IMPORTACION. */
+  /* The trimming of the set is NOT reachable from the controls —the plus one
+     turns off before exceeding—, so it is tested through where it does enter: a direct
+     write, which is the IMPORT path. */
   fijar("alacranix", "bDano", 20); fijar("alacranix", "bVel", 20); pintarStats();
   var mAl = mejDe("alacranix"), sumaAl = mAl.bVida + mAl.bDano + mAl.bVel;
-  ok("una importacion que se pase del tope se recorta, y se guarda recortada",
-     sumaAl === mAl.tope && sumaAl === 30, sumaAl + " de " + mAl.tope +
+  ok("an import that goes over the cap is trimmed, and it is saved trimmed",
+     sumaAl === mAl.tope && sumaAl === 30, sumaAl + " of " + mAl.tope +
      "  " + JSON.stringify(INV["alacranix"]));
 
-  /* La pista de mejoras. Y aqui esta lo que una SUPOSICION mia tenia mal: el
-     orden de los pasos NO es el mismo en Unica y en Apex. En Apex el boost_max
-     es el paso 3 y vale 2; en Unica es el paso 4 y vale 1. Estos dos casos se
-     escribieron despues de verlo en una captura, porque el codigo los lee del
-     dato y yo los habia dado por iguales. */
+  /* The enhancement track. And here is what a SUPPOSITION of mine had wrong: the
+     order of the steps is NOT the same in Unique and in Apex. In Apex the boost_max
+     is step 3 and is worth 2; in Unique it is step 4 and is worth 1. These two cases
+     were written after seeing it in a screenshot, because the code reads them from
+     the datum and I had taken them for equal. */
   elegir("alacranix"); cero("alacranix", 30); pintarStats();
-  ok("sin pista puesta, el tope de puntos es el nivel", topePuntos("alacranix") === 30,
+  ok("with no track set, the point cap is the level", topePuntos("alacranix") === 30,
      "" + topePuntos("alacranix"));
   for (var i2 = 0; i2 < 3; i2++) cambiarMejora("alacranix", "mejora", 1);
-  ok("en el Apex el paso 3 ya da +2 al tope (su boost_max vale 2)",
+  ok("in Apex step 3 already gives +2 to the cap (its boost_max is worth 2)",
      topePuntos("alacranix") === 32, "" + topePuntos("alacranix"));
-  /* Los iconos de los catalizadores y las monedas solo aparecen en la linea de
-     coste, y esa linea solo existe con una pista y un paso por delante: se
-     recogen AQUI para que la comprobacion de "todas las imagenes cargan" los
-     cubra. Sin esto, los tres catalizadores no se comprobaban en ningun sitio. */
+  /* The catalyst and coin icons only appear in the cost line, and that line only
+     exists with a track and a step ahead: they are collected HERE so that the
+     "all images load" check covers them. Without this, the three catalysts were
+     not checked anywhere. */
   document.querySelectorAll("#stCoste img").forEach(function(im){
     var s2 = im.getAttribute("src");
     if (!CLONES.some(function(c){ return c.src === s2; })){
@@ -749,44 +750,44 @@ try {
 
   elegir("indoraptor"); cero("indoraptor", 30);
   for (var i3 = 0; i3 < 3; i3++) cambiarMejora("indoraptor", "mejora", 1);
-  ok("en la Unica el paso 3 NO toca el tope: su boost_max esta en el 4",
+  ok("in Unique step 3 does NOT touch the cap: its boost_max is at 4",
      topePuntos("indoraptor") === 30, "" + topePuntos("indoraptor"));
   cambiarMejora("indoraptor", "mejora", 1);
-  ok("y el paso 4 da +1, no +2", topePuntos("indoraptor") === 31, "" + topePuntos("indoraptor"));
+  ok("and step 4 gives +1, not +2", topePuntos("indoraptor") === 31, "" + topePuntos("indoraptor"));
 
-  /* La pista solo existe a partir del nivel 30, y al bajar se GUARDA a 0: lo que
-     se ve tiene que ser lo que se guarda, o al recargar apareceria otra cosa. */
+  /* The track only exists from level 30 on, and on going down it is SAVED as 0: what
+     is seen has to be what is saved, or on reloading something else would appear. */
   fijar("indoraptor", "nivel", 29); pintarStats();
-  ok("por debajo del nivel 30 el mando de mejoras esta apagado",
+  ok("below level 30 the enhancement control is off",
      document.querySelector('#panelStats [data-boost="mejora"][data-paso="1"]').disabled === true, "");
-  ok("y la pista se recorta a 0 TAMBIEN en el inventario",
+  ok("and the track is trimmed to 0 ALSO in the inventory",
      INV["indoraptor"].mejora === 0 && document.getElementById("stP_mejora").textContent === "0",
      JSON.stringify(INV["indoraptor"]));
-  ok("el tope de puntos vuelve a ser el nivel, sin bono",
+  ok("the point cap is the level again, with no bonus",
      document.getElementById("stNota").innerText.indexOf("tope = nivel 29") > 0,
      document.getElementById("stNota").innerText.replace(/\s+/g, " "));
 
-  /* Una criatura sin pista no debe ensenar el mando, ni dejar tocarlo. */
+  /* A creature without a track must not show the control, nor let it be touched. */
   elegir("tyrannosaurus_rex"); pintarStats();
-  ok("una criatura sin pista no ensena el mando de mejoras",
+  ok("a creature without a track does not show the enhancement control",
      document.getElementById("stFilaMej").style.display === "none",
      "display=" + document.getElementById("stFilaMej").style.display);
-  ok("y no se le puede poner una pista por mucho que se pulse",
+  ok("and a track cannot be set on it no matter how much it is pressed",
      cambiarMejora("tyrannosaurus_rex", "mejora", 1) === false &&
      (INV["tyrannosaurus_rex"] || {}).mejora === undefined, "");
 
   // ======================================================================
-  //  El tema, y el icono de la pestana
+  //  The theme, and the tab icon
   // ======================================================================
   var selT = document.getElementById("tema");
   var opsT = selT ? Array.prototype.map.call(selT.options, function(o){ return o.value; }) : [];
-  ok("hay un desplegable de tema con «default» y «yellow»",
+  ok("there is a theme dropdown with «default» and «yellow»",
      opsT.join(",") === "default,yellow", opsT.join(","));
 
-  /* La prueba que de verdad importa: los colores de RAREZA no pueden cambiar
-     entre temas. Si cambiaran, el tema nuevo seria exactamente la confusion que
-     n30 pidio evitar. Se miran los valores COMPUTADOS, no el texto del CSS:
-     leer el fichero solo demuestra que la linea esta escrita. */
+  /* The test that really matters: the RARITY colours cannot change
+     between themes. If they did, the new theme would be exactly the confusion that
+     n30 asked to avoid. The COMPUTED values are looked at, not the CSS text:
+     reading the file only proves that the line is written. */
   var raiz = document.documentElement;
   var claves = ["--r-comun","--r-rara","--r-epica","--r-legendaria","--r-unica",
                 "--r-apex","--r-omega","--verde","--ambar","--rojo","--azul",
@@ -798,85 +799,85 @@ try {
   ponerTema("yellow");
   var colY = colores(), marcaY = getComputedStyle(raiz).getPropertyValue("--marca").trim();
   var bgY = getComputedStyle(document.body).backgroundColor;
-  ok("el tema cambia el color de marca y el fondo",
+  ok("the theme changes the brand colour and the background",
      marcaD !== marcaY && bgD !== bgY, marcaD + " -> " + marcaY + " · " + bgD + " -> " + bgY);
   var distintas = [];
   claves.forEach(function(k, i){ if (colD[i] !== colY[i]) distintas.push(k); });
-  ok("y NO toca ninguno de los colores de rareza ni los semanticos",
+  ok("and it does NOT touch any of the rarity colours or the semantic ones",
      distintas.length === 0,
-     distintas.length ? "cambiarian: " + distintas.join(", ")
-                      : "los " + claves.length + " intactos");
-  ok("el tema se aplica como atributo en <html>",
+     distintas.length ? "would change: " + distintas.join(", ")
+                      : "the " + claves.length + " intact");
+  ok("the theme is applied as an attribute on <html>",
      raiz.getAttribute("data-tema") === "yellow", "" + raiz.getAttribute("data-tema"));
-  ok("y se guarda para la proxima vez",
+  ok("and it is saved for next time",
      localStorage.getItem("jwa322.tema") === "yellow", "" + localStorage.getItem("jwa322.tema"));
   ponerTema("default");
-  ok("volver a «default» quita el atributo, no lo deja en «default»",
+  ok("going back to «default» removes the attribute, it does not leave it at «default»",
      raiz.getAttribute("data-tema") === null, "" + raiz.getAttribute("data-tema"));
-  ok("y el desplegable sigue al tema", selT.value === "default", selT.value);
+  ok("and the dropdown follows the theme", selT.value === "default", selT.value);
 
-  /* El icono de la pestana: lo unico que se ve cuando el foco esta en otra
-     pestana. Que exista el <link> no prueba nada —que la imagen CARGUE, si. */
+  /* The tab icon: the only thing seen when the focus is on another
+     tab. That the <link> exists proves nothing — that the image LOADS, yes. */
   var ico = document.querySelector('link[rel="icon"]');
-  ok("hay un icono de pestana, y va en linea para no depender de un fichero",
+  ok("there is a tab icon, and it is inline so as not to depend on a file",
      !!ico && ico.href.indexOf("data:image/svg+xml") === 0,
-     ico ? ico.href.slice(0, 44) + "…" : "no hay <link rel=icon>");
+     ico ? ico.href.slice(0, 44) + "…" : "there is no <link rel=icon>");
   if (ico){
     var ci = new Image();
     ci.src = ico.href;
     ci.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px";
     document.body.appendChild(ci);
-    CLONES.push({src: "(favicon de la pestana)", el: ci});
+    CLONES.push({src: "(tab favicon)", el: ci});
   }
   log("", "");
 
-  // --- 2) clones ansiosos de cada imagen, para que bloqueen `load` ---
+  // --- 2) eager clones of each image, so that they block `load` ---
   var srcs = [];
   document.querySelectorAll("img").forEach(function(im){
     var s = im.getAttribute("src");
     if (s && srcs.indexOf(s) < 0) srcs.push(s);
   });
-  log("imagenes distintas referenciadas", srcs.length);
+  log("distinct images referenced", srcs.length);
   srcs.forEach(function(s){
     var c = new Image();
     c.src = s;
     c.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px";
-    document.body.appendChild(c);      // ansioso por defecto: bloquea load
+    document.body.appendChild(c);      // eager by default: blocks load
     CLONES.push({src: s, el: c});
   });
 
-  // --- el foco se comprueba en `load`, no aqui ---
-  // La pagina recoloca el foco en el siguiente turno (setTimeout 0), asi que
-  // comprobarlo en el mismo tick daria un falso fallo.
-  // Y hay que VOLVER a la pestaña del arbol: el apartado anterior deja la
-  // calculadora activa, y un campo dentro de una seccion en display:none no puede
-  // recibir el foco — .focus() falla en silencio y activeElement se queda en BODY.
-  /* Y hay que ELEGIR una criatura con ingredientes: el arbol solo tiene nodos
-     hijos si la elegida se fusiona. Depender de la que dejo el bloque anterior
-     hacia que esta prueba se cayera —con un `el is null`— en cuanto alguien
-     tocara el orden de las comprobaciones. */
+  // --- the focus is checked on `load`, not here ---
+  // The page repositions the focus on the next turn (setTimeout 0), so
+  // checking it on the same tick would give a false failure.
+  // And you have to GO BACK to the tree tab: the previous section leaves the
+  // calculator active, and a field inside a section in display:none cannot
+  // receive focus — .focus() fails silently and activeElement stays on BODY.
+  /* And a creature with ingredients has to be CHOSEN: the tree only has child
+     nodes if the chosen one is fused. Depending on the one the previous block left
+     made this test fall over —with an `el is null`— as soon as someone
+     touched the order of the checks. */
   elegir("indoraptor");
   document.querySelector('nav button[data-t="arbol"]').click();
   pintarArbol();
   var ingFoco = document.querySelector("#arbolCuerpo .nodo:not(.raiz) input[data-campo='adn']");
   FOCO_U = ingFoco ? ingFoco.dataset.u : null;
   teclear(ingFoco, "777");
-  ok("el valor tecleado sobrevive al repintado",
+  ok("the typed value survives the repaint",
      !!INV[FOCO_U] && INV[FOCO_U].adn === 777, JSON.stringify(INV[FOCO_U]));
 } catch (e) {
-  log("!! EXCEPCION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+  log("!! EXCEPTION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
 }
 
-// --- 3) el informe, ya con las imagenes resueltas ---
+// --- 3) the report, now with the images resolved ---
 window.addEventListener("load", function(){
-  // el foco, ya con la recolocacion asincrona de la pagina hecha
+  // the focus, now with the page's asynchronous repositioning done
   if (FOCO_U){
     var ae = document.activeElement;
-    ok("el arbol se repinta sin perder el foco",
+    ok("the tree repaints without losing focus",
        ae && ae.dataset && ae.dataset.u === FOCO_U && ae.dataset.campo === "adn",
-       "esperado u=" + FOCO_U + " campo=adn | real: " + (ae ? ae.tagName : "nada") +
+       "expected u=" + FOCO_U + " field=adn | real: " + (ae ? ae.tagName : "nothing") +
        " u=" + (ae && ae.dataset ? ae.dataset.u : "?") +
-       " campo=" + (ae && ae.dataset ? ae.dataset.campo : "?"));
+       " field=" + (ae && ae.dataset ? ae.dataset.campo : "?"));
   }
 
   var bien = 0, mal = [];
@@ -884,10 +885,10 @@ window.addEventListener("load", function(){
     if (c.el.complete && c.el.naturalWidth > 0) bien++; else mal.push(c.src);
   });
   if (CLONES.length){
-    ok("todos los ficheros de imagen cargan y decodifican", mal.length === 0,
-       bien + "/" + CLONES.length + " ok" + (mal.length ? "  fallan: " + mal.slice(0,3).join(", ") : ""));
+    ok("all the image files load and decode", mal.length === 0,
+       bien + "/" + CLONES.length + " ok" + (mal.length ? "  fail: " + mal.slice(0,3).join(", ") : ""));
     var una = CLONES[0].el;
-    log("ejemplo de imagen", una.naturalWidth + "x" + una.naturalHeight + "  " + una.src.split("/").pop());
+    log("example image", una.naturalWidth + "x" + una.naturalHeight + "  " + una.src.split("/").pop());
   }
   log("", "");
   log(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===", "");
@@ -904,24 +905,24 @@ __ENTREGA__
 
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
-# las imagenes se referencian como img/<uuid>.webp, relativas al HTML
+# the images are referenced as img/<uuid>.webp, relative to the HTML
 enlace = os.path.join(DIR, "img")
 if os.path.islink(enlace):
     if os.readlink(enlace) != IMG:
-        os.unlink(enlace)          # os.remove lo intercepta el shim del sistema
+        os.unlink(enlace)          # os.remove is intercepted by the system shim
 elif os.path.isdir(enlace):
     shutil.rmtree(enlace, ignore_errors=True)
 if not os.path.exists(enlace):
     os.symlink(IMG, enlace)
 
-# Un cazador de errores ANTES del script principal: si el script revienta al
-# cargar, todo lo que define deja de existir y el sintoma es "X is not defined",
-# que no dice nada. Esto da el error de verdad.
+# An error hunter BEFORE the main script: if the script blows up on
+# loading, everything it defines stops existing and the symptom is "X is not defined",
+# which says nothing. This gives the real error.
 CAZA = r"""
 <script>
 window.__errores = [];
 window.addEventListener("error", function(e){
-  window.__errores.push((e.message || "?") + "  @@ linea " + (e.lineno||"?") +
+  window.__errores.push((e.message || "?") + "  @@ line " + (e.lineno||"?") +
                         ":" + (e.colno||"?"));
 });
 </script>
@@ -935,17 +936,17 @@ html = open(HTML, encoding="utf-8").read()
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
 if "<head>" not in html:
-    raise SystemExit("no encuentro <head> para fijar el idioma")
+    raise SystemExit("I cannot find <head> to pin the language")
 html = html.replace("<head>", "<head>\n" + PIN, 1)
-# El visor puede dejar atributos en <body> (data-page-node-id), asi que no
-# vale buscar "<body>" a secas.
+# The viewer may leave attributes on <body> (data-page-node-id), so it is no
+# good searching for "<body>" as is.
 m = re.search(r"<body[^>]*>", html)
 if not m:
-    raise SystemExit("el HTML no tiene <body>")
+    raise SystemExit("the HTML has no <body>")
 html = html[:m.end()] + CAZA + html[m.end():]
-# Antes de abrir el navegador: si el diagnostico no compila junto a la aplicacion
-# —colision de nombres en el ambito global—, la prueba se quedaria sin correr y
-# el sintoma seria «no entrego el informe», que no dice nada. Ver informe_browser.
+# Before opening the browser: if the diagnostic does not compile together with the
+# application —name collision in the global scope—, the test would be left unrun and
+# the symptom would be «it did not deliver the report», which says nothing. See informe_browser.
 _ok_scripts, _msg_scripts = comprobar_scripts(html + DIAG, "probar_ui.py")
 print(_msg_scripts)
 if not _ok_scripts:
@@ -968,7 +969,7 @@ srv.parar()
 informe = srv.texto().strip()
 TXT = os.path.join(DIR, "ui.txt")
 open(TXT, "w", encoding="utf-8").write(informe + "\n")
-print("informe:", TXT)
+print("report:", TXT)
 print("-" * 72)
 print(informe)
 print("-" * 72)
@@ -978,23 +979,23 @@ for l in lineas:
 
 
 # ---------------------------------------------------------------------------
-# SEGUNDA PASADA: la tira de fotos, en el ARRANQUE REAL.
+# SECOND RUN: the photo strip, on the REAL STARTUP.
 #
-# No cabe en la pasada de arriba, y no es un capricho: la de arriba pinta la
-# tira DESDE DENTRO del evento `load`, asi que sus <img> se insertan cuando el
-# evento ya paso y siempre salen a medio cargar. Medido: daba 0x0 con `lazy` y
-# 0x0 tambien con `eager`, o sea que no distinguia nada.
+# It does not fit in the run above, and it is not a whim: the one above paints the
+# strip FROM INSIDE the `load` event, so its <img> are inserted when the
+# event has already passed and always come out half loaded. Measured: it gave 0x0 with `lazy` and
+# 0x0 also with `eager`, that is, it distinguished nothing.
 #
-# Aqui se siembra `localStorage` ANTES del script principal, de modo que el
-# `pintarFotos()` del arranque ya encuentra la lista: ese es el camino del
-# usuario. Y se mide lo que de verdad importa —que la imagen se vea—, no si el
-# atributo dice `lazy` o `eager`.
+# Here `localStorage` is seeded BEFORE the main script, so that the
+# `pintarFotos()` of the startup already finds the list: that is the user's
+# path. And what really matters is measured —that the image is visible—, not whether the
+# attribute says `lazy` or `eager`.
 #
-# Este es el fallo que caza: con `loading="lazy"`, las fotos de la tira NO se
-# cargaban nunca en el arranque (naturalWidth 0 en las tres), aunque los
-# ficheros estuvieran bien — clones ansiosos de las MISMAS direcciones cargaban
-# sin problema— y el texto alternativo salia en su lugar. Con `eager` cargan
-# (207x250). Por eso la tira va ansiosa y el arbol sigue vago.
+# This is the bug it catches: with `loading="lazy"`, the photos of the strip were
+# NEVER loaded on startup (naturalWidth 0 in all three), even though the
+# files were fine — eager clones of the SAME addresses loaded
+# without a problem— and the alternative text came out in their place. With `eager` they load
+# (207x250). That is why the strip is eager and the tree is still lazy.
 # ---------------------------------------------------------------------------
 def pasada_tira():
     DIR2 = "/tmp/jwa-ui-tira"
@@ -1018,17 +1019,17 @@ def pasada_tira():
     PIN = ('<script>window.__lang = "es";'
            'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
     if "<head>" not in html:
-        raise SystemExit("no encuentro <head> para fijar el idioma")
+        raise SystemExit("I cannot find <head> to pin the language")
     html = html.replace("<head>", "<head>\n" + PIN, 1)
     LISTA = '["indoraptor","tyrannosaurus_rex","velociraptor"]'
     SEMILLA = (
         "<script>\n"
-        "/* ANTES del script principal: el pintado del arranque ya encuentra la lista. */\n"
+        "/* BEFORE the main script: the startup painting already finds the list. */\n"
         "try { localStorage.setItem('jwa322.mios', JSON.stringify(" + LISTA + ")); } catch(e){}\n"
         "</script>\n")
     marca = '<script>\n"use strict";'
     if marca not in html:
-        raise SystemExit("no encuentro el script principal para sembrar antes")
+        raise SystemExit("I cannot find the main script to seed before")
     html = html.replace(marca, SEMILLA + marca, 1)
 
     srv2 = arrancar()
@@ -1039,26 +1040,26 @@ window.addEventListener("load", function(){
   function ok(k, c, d){ if (!c) FALLOS++; RES.push((c ? "OK   " : "FALLO") + " " + k + ": " + (d===undefined?"":d)); }
   try {
     var imgs = document.querySelectorAll("#misFotos img");
-    ok("el arranque pinta la tira con la lista guardada", imgs.length === 3, imgs.length + " fotos");
+    ok("the startup paints the strip with the saved list", imgs.length === 3, imgs.length + " photos");
     var malas = [], vistas = [];
     imgs.forEach(function(im){
       vistas.push(im.getAttribute("src") + " " + im.naturalWidth + "x" + im.naturalHeight);
       if (!(im.naturalWidth > 0)) malas.push(im.getAttribute("src"));
     });
-    ok("y las fotos estan CARGADAS al terminar el arranque, no a medias",
+    ok("and the photos are LOADED when the startup finishes, not half-way",
        imgs.length > 0 && malas.length === 0,
-       malas.length ? "sin cargar: " + malas.join(", ") : vistas.join(" | "));
-    // y se ven de verdad: una imagen cargada pero con visibility:hidden no sirve
+       malas.length ? "not loaded: " + malas.join(", ") : vistas.join(" | "));
+    // and they are really visible: an image loaded but with visibility:hidden is no good
     var ocultas = 0;
     imgs.forEach(function(im){ if (getComputedStyle(im).visibility !== "visible") ocultas++; });
-    ok("y ninguna esta oculta por un fallo de carga", ocultas === 0, ocultas + " ocultas");
-    // el arbol si puede seguir siendo vago: 518 ficheros de golpe no
+    ok("and none is hidden because of a load failure", ocultas === 0, ocultas + " hidden");
+    // the tree can still be lazy: 518 files at once, no
     var vagas = document.querySelectorAll('#arbolCuerpo img[loading="lazy"]').length;
-    RES.push("   (informativo) imagenes vagas en el arbol: " + vagas);
-  } catch(e){ RES.push("!! EXCEPCION " + e.message); FALLOS++; }
-  /* El marcador no es decorativo: `veredicto()` da por buena la pasada SOLO si
-     lo encuentra, y si no la declara fallida. Sin esta linea, la pasada salia
-     con 0 fallos y el script terminaba en 1 igualmente. */
+    RES.push("   (informational) lazy images in the tree: " + vagas);
+  } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
+  /* The marker is not decorative: `veredicto()` accepts the run ONLY if
+     it finds it, and otherwise declares it failed. Without this line, the run came out
+     with 0 failures and the script ended in 1 all the same. */
   RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
   var p = document.createElement("pre"); p.id = "__diag";
   p.style.cssText = "position:fixed;inset:0;z-index:999999;background:#fff;color:#000;" +
@@ -1070,7 +1071,7 @@ __ENTREGA__
     open(FUERA2, "w", encoding="utf-8").write(html)
     with open(FUERA2, "a", encoding="utf-8") as f:
         f.write(diag.replace("__ENTREGA__", srv2.js("__diag")))
-    _ok2, _msg2 = comprobar_scripts(html + diag, "probar_ui.py (la tira)")
+    _ok2, _msg2 = comprobar_scripts(html + diag, "probar_ui.py (the strip)")
     print(_msg2)
     if not _ok2:
         raise SystemExit("!! " + _msg2)
@@ -1084,7 +1085,7 @@ __ENTREGA__
     srv2.parar()
     info2 = srv2.texto().strip()
     print("-" * 72)
-    print("=== la tira de fotos, en el arranque real ===")
+    print("=== the photo strip, on the real startup ===")
     print(info2)
     c2, lineas2 = veredicto(info2)
     for l in lineas2:

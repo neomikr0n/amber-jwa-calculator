@@ -1,117 +1,123 @@
 #!/usr/bin/env python3
 """
-Modelo de costes de Jurassic World Alive 3.22 — verificado.
+Cost model for Jurassic World Alive 3.22 — verified.
 
-Todo lo que hay aqui ha sido contrastado contra fuentes independientes.
-El campo `confianza` de cada bloque dice de donde sale y con cuanta seguridad.
+Everything in here has been checked against independent sources.
+The `confianza` field of each block says where it comes from and how safe it is.
 
-Validacion principal: este modelo reproduce EXACTAMENTE los tres numeros que
-paleo.gg muestra en su propio calculador (ADN del hibrido, monedas de subida,
-monedas de fusion) en las 221 fichas de hibrido descargadas. Cero discrepancias.
+Main validation: this model reproduces EXACTLY the three numbers that paleo.gg
+shows in its own calculator (hybrid DNA, level-up coins, fusion coins) on the
+221 downloaded hybrid entries. Zero discrepancies.
 
-    python3 modelo.py          # ejecuta la autocomprobacion
+    python3 modelo.py          # runs the self-check
 """
 
 from math import ceil
 
 VERSION = "3.22"
 
-# Nombre de la herramienta. Vive aqui, y no escrito a mano en la plantilla,
-# porque aparece en TRES sitios que tienen que decir lo mismo: el <title> de la
-# pestana, el <h1> de la cabecera y el pie. `build.py` lo sustituye por
-# `__NOMBRE__`. Cambiar el nombre es cambiar esta linea.
-NOMBRE = "Ámbar"
+# Tool name. It lives here, and not hard-written in the template, because it
+# appears in TWO places that have to say the same thing: the <title> of the tab
+# and the <h1> of the header. `build.py` replaces it by `__NOMBRE__`. Changing
+# the name is changing this line.
+#
+# An earlier version of this comment said THREE places and included the footer.
+# It was false: counting the occurrences in the delivered HTML gives two, and
+# the footer carries no name. The claim was corrected in the LEEME and left
+# standing here; it is corrected here too.
+NOMBRE = "Amber"
 
 # --------------------------------------------------------------------------
-# 1. Escalera de ADN
+# 1. DNA ladder
 # --------------------------------------------------------------------------
-# Una SOLA escalera compartida por todas las rarezas. El indice k es el coste
-# de ALCANZAR el nivel k+1 para una criatura Common:
-#     L[0] = crear (nivel 1), L[1] = nivel 2, ... L[29] = nivel 30
-# Para cualquier otra rareza, el coste de alcanzar el nivel n es L[n - min_lv].
+# A SINGLE ladder shared by all rarities. The index k is the cost of REACHING
+# level k+1 for a Common creature:
+#     L[0] = create (level 1), L[1] = level 2, ... L[29] = level 30
+# For any other rarity, the cost of reaching level n is L[n - min_lv].
 #
-# Confianza: ALTA. Reproduce los 14 totales conocidos (7 rarezas x 2 tramos).
+# Confidence: HIGH. Reproduces the 14 known totals (7 rarities x 2 ranges).
 L = [50, 100, 150, 200, 250, 300, 350, 400, 500, 750,
      1000, 1250, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 7500,
      10000, 12500, 15000, 20000, 25000, 30000, 35000, 40000, 50000, 75000]
 
-# Coste de ADN para CREAR. NO va incluido en el coste de subir de nivel:
-# paleo.gg calcula "de 16 a 20" sin contar la creacion.
-# Confianza: ALTA. Coincide con la wiki (jurassic-world-alive.fandom.com/Rarity).
+# DNA cost to CREATE. It is NOT included in the level-up cost:
+# paleo.gg computes "from 16 to 20" without counting the creation.
+# Confidence: HIGH. Matches the wiki (jurassic-world-alive.fandom.com/Rarity).
 CREACION = {"common": 50, "rare": 100, "epic": 150,
             "legendary": 200, "unique": 250, "apex": 300}
 
-# Nivel al que nace cada rareza. Es tambien el nivel minimo que deben tener
-# los INGREDIENTES menos uno (ver NIVEL_MIN_INGREDIENTE).
+# Level at which each rarity is born. It is also the minimum level that the
+# INGREDIENTS must have, minus one (see NIVEL_MIN_INGREDIENTE).
 MIN_LV = {"common": 1, "rare": 6, "epic": 11,
           "legendary": 16, "unique": 21, "apex": 26}
 
-# Tramo 31-35: coste plano por nivel.
-# Confianza: ALTA (comunicado oficial de la 3.22).
+# Range 31-35: flat cost per level.
+# Confidence: HIGH (official 3.22 announcement).
 ADN_31_35 = {"common": 100000, "rare": 30000, "epic": 10000,
              "legendary": 3000, "unique": 1000, "apex": 400}
 NIVEL_MAX = 35
 
 # --------------------------------------------------------------------------
-# 2. Monedas
+# 2. Coins
 # --------------------------------------------------------------------------
-# Una sola escalera, indexada por nivel ABSOLUTO (no por rareza).
-# COINR[n-1] = monedas para ALCANZAR el nivel n.
-# Confianza: ALTA. Reproduce los totales 1->30 de las 5 rarezas.
+# A single ladder, indexed by ABSOLUTE level (not by rarity).
+# COINR[n-1] = coins to REACH level n.
+# Confidence: HIGH. Reproduces the 1->30 totals of the 5 rarities.
 COINR = [0, 5, 10, 25, 50, 100, 200, 400, 600, 800,
          1000, 2000, 4000, 6000, 8000, 10000, 15000, 20000, 30000, 40000,
          50000, 60000, 70000, 80000, 90000, 100000, 120000, 150000, 200000, 250000]
 
-COIN_31_35 = 250000        # por nivel, plano
-COIN_OMEGA_31_35 = 400000  # por nivel, plano
+COIN_31_35 = 250000        # per level, flat
+COIN_OMEGA_31_35 = 400000  # per level, flat
 
 # --------------------------------------------------------------------------
 # 3. Fusion
 # --------------------------------------------------------------------------
-# El coste de ADN por fusion depende SOLO del salto de rareza:
-#     salto = tier(hibrido) - tier(ingrediente)
-# Verificado sin ambiguedad en 191 hibridos: cada combinacion observada da un
-# unico valor. La tabla de abajo es unanime.
+# The DNA cost per fusion depends ONLY on the rarity jump:
+#     salto = tier(hybrid) - tier(ingredient)
+# Verified unambiguously in 191 hybrids: every observed combination gives a
+# single value. The table below is unanimous.
 #
-#   salto 1 -> 50      (common->rare, rare->epic, epic->legendary, legendary->unique, unique->apex)
-#   salto 2 -> 200     (common->epic, rare->legendary, epic->unique, legendary->apex)
-#   salto 3 -> 500     (common->legendary, rare->unique, epic->apex)
-#   salto 4 -> 2000    (common->unique, rare->apex)
+#   jump 1 -> 50      (common->rare, rare->epic, epic->legendary, legendary->unique, unique->apex)
+#   jump 2 -> 200     (common->epic, rare->legendary, epic->unique, legendary->apex)
+#   jump 3 -> 500     (common->legendary, rare->unique, epic->apex)
+#   jump 4 -> 2000    (common->unique, rare->apex)
 #
-# OJO: el codigo de la app (jurassic-journal) devuelve 0 para el salto 4.
-# Es un bug de la app; paleo.gg confirma 2.000 (Indoraptor <- Velociraptor).
+# WARNING: the app code (jurassic-journal) returns 0 for the jump 4.
+# It is an app bug; paleo.gg confirms 2,000 (Indoraptor <- Velociraptor).
 TIER = {"common": 0, "rare": 1, "epic": 2, "legendary": 3, "unique": 4, "apex": 5}
 ADN_POR_FUSION = {1: 50, 2: 200, 3: 500, 4: 2000}
 
-# Monedas por fusion, segun la rareza del HIBRIDO.
-# Confianza: ALTA. Coincide con paleo.gg y con fuseCoinCostForRarity() de la app.
+# Coins per fusion, depending on the rarity of the HYBRID.
+# Confidence: HIGH. Matches paleo.gg and the app's fuseCoinCostForRarity().
 MONEDAS_FUSION = {"common": 20, "rare": 20, "epic": 100,
                   "legendary": 200, "unique": 1000, "apex": 2000}
 
-# ADN que da cada fusion, en promedio. Es una MEDIA, no un valor fijo:
-# la cantidad real es aleatoria.
-#   - paleo.gg lo usa literalmente ("Assuming an average of 22 DNA per fuse").
-#   - La tabla de probabilidades de la wiki da una esperanza de 22,228
-#     (desviacion del 1,03% respecto a 22).
-#   - Dato aportado por n30: 22.
-# Confianza: ALTA en la media; NULA en el valor de una fusion concreta.
+# DNA that each fusion gives, on average. It is an AVERAGE, not a fixed value:
+# the real amount is random.
+#   - paleo.gg uses it literally ("Assuming an average of 22 DNA per fuse").
+#   - The wiki probability table gives an expectation of 22.228
+#     (deviation of 1.03% with respect to 22).
+#   - Data contributed by n30: 22.
+# Confidence: HIGH on the average; NULL on the value of a specific fusion.
 ADN_POR_FUSION_MEDIA = 22
 
-# Nivel minimo de los ingredientes. Regla general: uno menos que el nivel de
-# creacion del hibrido.
-# Confianza: ALTA (wiki /Rarity, texto explicito).
+# Minimum level of the ingredients. General rule: one less than the creation
+# level of the hybrid.
+# Confidence: HIGH (wiki /Rarity, explicit text).
 NIVEL_MIN_INGREDIENTE = {r: MIN_LV[r] - 1 for r in MIN_LV}
 
 # --------------------------------------------------------------------------
 # 4. Omega
 # --------------------------------------------------------------------------
-# El Omega nace en nivel 1 y NO se fusiona en hibridos. Tiene escalera propia.
-# Indice k = coste de ALCANZAR el nivel k+1 (k=0 es la creacion).
+# Omega is born at level 1 and is NOT fused into hybrids. It has its own ladder.
+# Index k = cost of REACHING level k+1 (k=0 is the creation).
 #
-# Confianza: MEDIA-ALTA. Viene de game_database.db (jurassic-journal) con UNA
-# correccion: la base de datos pone 1.000 en el salto 15->16, pero el patron
-# esta bloqueado en 1.500 cinco veces seguidas, y solo con 1.500 el total 1->30
-# cuadra en 41.700 (cifra que confirma la fuente secundaria idgt902).
+# Confidence: MEDIUM-HIGH. It comes from game_database.db (jurassic-journal)
+# with ONE correction: the database puts 1.000 in the 15->16 jump, but the
+# pattern is blocked at 1.500 five times in a row, and only with 1.500 does the
+# 1->30 total square at 41.700 (a figure confirmed by the secondary source
+# idgt902).
 OMEGA_L = [100, 100, 100, 100, 500, 500, 500, 500, 500,
            1000, 1000, 1000, 1000, 1000,
            1500, 1500, 1500, 1500, 1500,
@@ -119,16 +125,16 @@ OMEGA_L = [100, 100, 100, 100, 500, 500, 500, 500, 500,
            2700, 2700, 2700, 2700, 2700, 2800]
 OMEGA_31_35 = [3500, 4000, 4500, 5000, 5500]
 
-# Monedas Omega para alcanzar cada nivel (indice n-1).
+# Omega coins to reach each level (index n-1).
 OMEGA_COINR = [0, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 7000,
                8000, 10000, 12000, 15000, 20000, 25000, 30000, 35000, 45000, 50000,
                65000, 80000, 95000, 120000, 150000, 180000, 210000, 250000, 300000, 350000]
 
 # --------------------------------------------------------------------------
-# 5. Topes de inventario de ADN
+# 5. DNA inventory caps
 # --------------------------------------------------------------------------
-# Confianza: ALTA. Fuente OFICIAL (jurassicworldalive.com/news/dna-cap-changes/,
-# 31-ago-2026) y coincide exactamente con Rarity.maxDna() del codigo de la app.
+# Confidence: HIGH. OFFICIAL source (jurassicworldalive.com/news/dna-cap-changes/,
+# 31-Aug-2026) and it matches exactly Rarity.maxDna() of the app code.
 TOPES_ADN = {"common": 850000, "rare": 250000, "epic": 85000,
              "legendary": 25000, "unique": 8000, "apex": 3000, "omega": 60000}
 
@@ -177,19 +183,19 @@ MULT_NIVEL = [
 BOOST_VELOCIDAD = 2
 BOOST_FRACCION = 0.025
 
-# Tope de puntos por stat, y el total: nivel de la criatura + lo que sumen las
-# mejoras ya aplicadas (`v = (capBoostByLevel ? level : 35) + capBoostIncrease`).
+# Cap of points per stat, and the total: level of the creature + whatever the
+# already applied boosts add up to (`v = (capBoostByLevel ? level : 35) + capBoostIncrease`).
 TOPE_BOOST_STAT = 20
 
-# Las mejoras («Enhancements») son una pista de 5 pasos, solo para Unica y Apex.
-# Exigen nivel 30 o mas. El ORDEN de los pasos NO es el mismo en las dos, y eso
-# se descubrio mirando una captura, no el codigo: se habia dado por supuesto un
-# unico orden y era falso.
-#     Unica (92): vida x1,10 · dano x1,10 · +2 velocidad · boost_max +1 · reactivo
-#     Apex  (55): +2 velocidad · vida x1,10 · boost_max +2 · dano x1,10 · reactivo
-# El navegador NO usa esta tabla: lee el tipo de cada paso de los propios datos,
-# paso a paso. Esto esta aqui como documentacion, y `verificar_stats.py` lo
-# comprueba contra el JSON para que no se quede desactualizado en silencio.
+# The enhancements («Enhancements») are a 5-step track, only for Unique and Apex.
+# They require level 30 or more. The ORDER of the steps is NOT the same in the
+# two, and that was discovered by looking at a screenshot, not the code: a
+# single order had been taken for granted and it was false.
+#     Unique (92): health x1.10 · damage x1.10 · +2 speed · boost_max +1 · reactive
+#     Apex  (55): +2 speed · health x1.10 · boost_max +2 · damage x1.10 · reactive
+# The browser does NOT use this table: it reads the type of each step from the
+# data itself, step by step. This is here as documentation, and `verificar_stats.py`
+# checks it against the JSON so that it does not silently go stale.
 MEJORA_ORDEN = {
     "unique": ("health", "damage", "speed", "boost_max", "moves_reactive"),
     "apex":   ("speed", "health", "boost_max", "damage", "moves_reactive"),
@@ -199,21 +205,24 @@ MEJORA_PASOS = 5
 
 
 # --------------------------------------------------------------------------
-# 7. Donde se consigue cada criatura
+# 7. Where each creature is obtained
 # --------------------------------------------------------------------------
-# Confianza: ALTA. Cada criatura trae su lista de fuentes en `fuentes_adn`
-# (campo `loc`), y la ETIQUETA de cada codigo se lee del bloque «DNA Source»
-# del cache de paleo.gg, que es la fuente. No estan escritas a mano: las
-# vuelve a extraer `verificar_fuentes.py` del cache y falla si no coinciden.
+# Confidence: HIGH. Each creature carries its list of sources in `fuentes_adn`
+# (field `loc`), and the LABEL of each code is read from the «DNA Source»
+# block of the paleo.gg cache, which is the source. They are not written by
+# hand: `verificar_fuentes.py` extracts them again from the cache and fails if
+# they do not match.
 #
-# Ojo con la distincion, porque NO son lo mismo:
-#   - DARDEO: la cazas con el dardo en el mapa. Es lo que n30 pidio ensenar.
-#   - COMBATE: su ADN sale de luchar (Arena, Torres de Asalto, Incursion,
-#     Misiones de Alianza). No es una zona de dardear y no se puede
-#     presentar como si lo fuera.
-#   - SANTUARIO: colocacion pasiva, ni dardeo ni combate. NINGUNA de las 518
-#     lo tiene como unica fuente (medido), asi que se omite sin perder nada.
-#   - `none`: no aparece en el mapa. Son omega y criaturas de evento.
+# Watch out for the distinction, because they are NOT the same thing:
+#   - DARTING: you hunt it with the dart on the map. This is what n30 asked to
+#     show.
+#   - COMBAT: its DNA comes from fighting (Arena, Strike Towers, Raid,
+#     Alliance Missions). It is not a darting zone and it cannot be presented
+#     as if it were one.
+#   - SANCTUARY: passive placement, neither darting nor combat. NONE of the 518
+#     has it as its only source (measured), so it is omitted without losing
+#     anything.
+#   - `none`: it does not appear on the map. They are omega and event creatures.
 LOC_DARDEO = ("local_area_1", "local_area_2", "local_area_3", "local_area_4",
               "park", "short_range", "everywhere",
               "continent_NA/SA/US", "continent_EU/US", "continent_AF/AN/AS/OC/US")
@@ -238,14 +247,14 @@ LOC_ETIQUETAS = {
 
 
 # ==========================================================================
-#  Funciones
+#  Functions
 # ==========================================================================
 
 def coste_adn(rareza, desde, hasta, incluir_creacion=False):
-    """ADN para subir una criatura de `desde` a `hasta`.
+    """DNA to level up a creature from `desde` to `hasta`.
 
-    No incluye el coste de creacion salvo que se pida explicitamente.
-    Si `desde` es el nivel de creacion y `incluir_creacion=True`, lo suma.
+    It does not include the creation cost unless it is explicitly requested.
+    If `desde` is the creation level and `incluir_creacion=True`, it adds it.
     """
     if hasta <= desde:
         return 0
@@ -254,9 +263,10 @@ def coste_adn(rareza, desde, hasta, incluir_creacion=False):
     if rareza not in MIN_LV:
         return 0
     m = MIN_LV[rareza]
-    # OJO: hay que acotar `desde` al nivel de creacion. Si no, con desde=0 los
-    # indices L[n-m] salen NEGATIVOS y Python da la vuelta a la lista en
-    # silencio (L[-20] es un elemento del final), devolviendo cifras absurdas.
+    # WARNING: `desde` has to be clamped to the creation level. Otherwise, with
+    # desde=0 the indices L[n-m] come out NEGATIVE and Python wraps the list
+    # around silently (L[-20] is an element from the end), returning absurd
+    # figures.
     a = max(desde, m)
     t = sum(L[n - m] for n in range(a + 1, min(hasta, 30) + 1))
     if hasta > 30:
@@ -276,11 +286,11 @@ def _omega_adn(desde, hasta, incluir_creacion=False):
 
 
 def coste_monedas(rareza, desde, hasta):
-    """Monedas para subir una criatura de `desde` a `hasta`."""
+    """Coins to level up a creature from `desde` to `hasta`."""
     if hasta <= desde:
         return 0
     m = 1 if rareza == "omega" else MIN_LV.get(rareza, 1)
-    a = max(desde, m)          # no se puede subir por debajo del nivel de creacion
+    a = max(desde, m)          # you cannot level up below the creation level
     if rareza == "omega":
         t = sum(OMEGA_COINR[n - 1] for n in range(a + 1, min(hasta, 30) + 1))
         if hasta > 30:
@@ -293,7 +303,7 @@ def coste_monedas(rareza, desde, hasta):
 
 
 def adn_por_fusion(rareza_ingrediente, rareza_hibrido):
-    """ADN que consume UNA fusion de ese ingrediente hacia ese hibrido."""
+    """DNA that ONE fusion of that ingredient into that hybrid consumes."""
     a, b = TIER.get(rareza_ingrediente), TIER.get(rareza_hibrido)
     if a is None or b is None:
         return 0
@@ -301,25 +311,26 @@ def adn_por_fusion(rareza_ingrediente, rareza_hibrido):
 
 
 # --------------------------------------------------------------------------
-#  Nivel maximo alcanzable con el ADN que se tiene
+#  Maximum level reachable with the DNA you have
 # --------------------------------------------------------------------------
 
 def nivel_creacion(rareza):
-    """Nivel al que NACE la criatura. Por debajo de el, no existe."""
+    """Level at which the creature is BORN. Below it, it does not exist."""
     return 1 if rareza == "omega" else MIN_LV.get(rareza, 1)
 
 
 def coste_creacion(rareza):
-    """ADN que cuesta crear la criatura (traerla a su nivel de nacimiento)."""
+    """DNA it costs to create the creature (bring it to its birth level)."""
     return OMEGA_L[0] if rareza == "omega" else CREACION.get(rareza, 0)
 
 
 def coste_paso(rareza, nivel_destino):
-    """ADN que cuesta pasar de `nivel_destino - 1` a `nivel_destino`.
+    """DNA it costs to move from `nivel_destino - 1` to `nivel_destino`.
 
-    Es el ladrillo del que esta hecho coste_adn: sumar coste_paso desde
-    `desde+1` hasta `hasta` da exactamente coste_adn. Se expone aparte porque
-    el calculo de nivel maximo necesita ir paso a paso, no de golpe.
+    It is the brick that coste_adn is made of: adding coste_paso from
+    `desde+1` up to `hasta` gives exactly coste_adn. It is exposed separately
+    because the maximum level calculation needs to go step by step, not in one
+    go.
     """
     if nivel_destino <= 0:
         return 0
@@ -338,14 +349,14 @@ def coste_paso(rareza, nivel_destino):
 
 
 def nivel_maximo(rareza, desde, adn, creado=None, tope=NIVEL_MAX):
-    """Hasta que nivel se puede subir con `adn`, partiendo de `desde`.
+    """Up to which level it can be raised with `adn`, starting from `desde`.
 
-    `creado` = si la criatura ya existe. Si es False, el primer pago es el de
-    creacion y la criatura aparece en su nivel de nacimiento. Si es None se
-    deduce de `desde >= nivel_creacion(rareza)`.
+    `creado` = whether the creature already exists. If it is False, the first
+    payment is the creation one and the creature appears at its birth level. If
+    it is None it is deduced from `desde >= nivel_creacion(rareza)`.
 
-    Devuelve (nivel, adn_gastado, adn_sobrante). Si no alcanza ni para crear,
-    devuelve (0, 0, adn) — nivel 0 significa "no existe".
+    Returns (level, adn_spent, adn_left_over). If it is not even enough to
+    create, it returns (0, 0, adn) — level 0 means "it does not exist".
     """
     if adn is None or adn < 0:
         adn = 0
@@ -404,7 +415,7 @@ def _comprobar():
         if obtenido != esperado:
             fallos.append(f"{nombre}: {obtenido} != {esperado}")
 
-    # --- totales 1->30 de ADN (los 14 conocidos) ---
+    # --- 1->30 DNA totals (the 14 known ones) ---
     eq("common 1->30", coste_adn("common", 1, 30, True), 346800)
     eq("rare 1->30", coste_adn("rare", 6, 30, True), 116850)
     eq("epic 1->30", coste_adn("epic", 11, 30, True), 34400)
@@ -413,12 +424,12 @@ def _comprobar():
     eq("apex 1->30", coste_adn("apex", 26, 30, True), 1000)
     eq("omega 1->30", coste_adn("omega", 1, 30, True), 41700)
 
-    # --- tramo 31-35 ---
+    # --- 31-35 range ---
     for r in ("common", "rare", "epic", "legendary", "unique", "apex"):
         eq(f"{r} 30->35", coste_adn(r, 30, 35), ADN_31_35[r] * 5)
     eq("omega 30->35", coste_adn("omega", 30, 35), 22500)
 
-    # --- totales de monedas 1->30 ---
+    # --- 1->30 coin totals ---
     eq("mon common 1->30", coste_monedas("common", 1, 30), 1308190)
     eq("mon rare 1->30", coste_monedas("rare", 6, 30), 1308000)
     eq("mon epic 1->30", coste_monedas("epic", 11, 30), 1305000)
@@ -426,7 +437,7 @@ def _comprobar():
     eq("mon unique 1->30", coste_monedas("unique", 21, 30), 1120000)
     eq("mon 30->35", coste_monedas("common", 30, 35), 1250000)
 
-    # --- los tres numeros que enseña paleo.gg (rango por defecto de cada rareza) ---
+    # --- the three numbers paleo.gg shows (default range of each rarity) ---
     DEFECTO = [("rare", 6, 10), ("epic", 11, 15), ("legendary", 16, 20),
                ("unique", 21, 30), ("apex", 26, 30)]
     ESPERADO = {"rare": 700, "epic": 700, "legendary": 700, "unique": 3000, "apex": 700}
@@ -437,7 +448,7 @@ def _comprobar():
            {"rare": 640, "epic": 3200, "legendary": 6400,
             "unique": 137000, "apex": 64000}[r])
 
-    # --- coste de fusion por salto de rareza ---
+    # --- fusion cost per rarity jump ---
     eq("common->rare", adn_por_fusion("common", "rare"), 50)
     eq("common->epic", adn_por_fusion("common", "epic"), 200)
     eq("common->legendary", adn_por_fusion("common", "legendary"), 500)
@@ -452,16 +463,16 @@ def _comprobar():
     eq("legendary->apex", adn_por_fusion("legendary", "apex"), 200)
     eq("unique->apex", adn_por_fusion("unique", "apex"), 50)
 
-    # --- caso concreto con nombre propio: Indoraptor ---
-    # Velociraptor (common) -> Indoraptor (unique): 2.000 por fusion.
+    # --- specific case with its own name: Indoraptor ---
+    # Velociraptor (common) -> Indoraptor (unique): 2,000 per fusion.
     eq("Indoraptor <- Velociraptor", adn_por_fusion("common", "unique"), 2000)
     eq("nivel min ingrediente unique", NIVEL_MIN_INGREDIENTE["unique"], 20)
 
-    # --- nivel maximo: invariantes, no valores sueltos ---
-    # El test que vale aqui es el de ida y vuelta: si `nivel_maximo` dice que
-    # llegas al nivel N con ese ADN, entonces coste_adn(...,N) tiene que caber
-    # y coste_adn(...,N+1) no. Eso caza cualquier desajuste entre las dos
-    # funciones, que es donde estaria el error de verdad.
+    # --- maximum level: invariants, not loose values ---
+    # The test that is worth it here is the round trip: if `nivel_maximo` says
+    # that you reach level N with that DNA, then coste_adn(...,N) has to fit
+    # and coste_adn(...,N+1) must not. That catches any mismatch between the
+    # two functions, which is where the real error would be.
     casos_nm = 0
     for r in ("common", "rare", "epic", "legendary", "unique", "apex", "omega"):
         m = nivel_creacion(r)
@@ -476,23 +487,23 @@ def _comprobar():
                 nec = coste_adn(r, desde, n, not creado)
                 if nec > adn:
                     fallos.append(
-                        f"nivel_maximo {r} desde={desde} adn={adn}: dice nivel {n} "
-                        f"pero cuesta {nec}, mas de lo que hay")
+                        f"nivel_maximo {r} desde={desde} adn={adn}: says level {n} "
+                        f"but it costs {nec}, more than there is")
                 if n < NIVEL_MAX:
                     sig = coste_adn(r, desde, n + 1, not creado)
                     if sig <= adn:
                         fallos.append(
-                            f"nivel_maximo {r} desde={desde} adn={adn}: se queda en {n} "
-                            f"pero el nivel {n+1} costaba {sig}, que si alcanzaba")
+                            f"nivel_maximo {r} desde={desde} adn={adn}: it stays at {n} "
+                            f"but level {n+1} cost {sig}, which was reachable")
                 if gastado + sobra != adn:
                     fallos.append(
                         f"nivel_maximo {r} desde={desde} adn={adn}: "
-                        f"gastado {gastado} + sobra {sobra} != {adn}")
+                        f"spent {gastado} + left over {sobra} != {adn}")
                 if n < desde:
                     fallos.append(
-                        f"nivel_maximo {r} desde={desde} adn={adn}: baja a {n}")
+                        f"nivel_maximo {r} desde={desde} adn={adn}: drops to {n}")
 
-    # --- coste_paso tiene que reconstruir coste_adn exactamente ---
+    # --- coste_paso has to reconstruct coste_adn exactly ---
     for r in ("common", "rare", "epic", "legendary", "unique", "apex", "omega"):
         m = nivel_creacion(r)
         for desde in (m, m + 5, 28):
@@ -503,27 +514,27 @@ def _comprobar():
                 eq(f"coste_paso suma {r} {desde}->{hasta}", sumado,
                    coste_adn(r, desde, hasta))
 
-    # --- casos con nombre propio de nivel maximo ---
-    # Apex sin crear (nivel 26): crear cuesta 300. Con 300 justos, nivel 26.
+    # --- named cases of maximum level ---
+    # Apex not created (level 26): creating costs 300. With exactly 300, level 26.
     eq("apex sin crear con 300", nivel_maximo("apex", 0, 300, False), (26, 300, 0))
     eq("apex sin crear con 299", nivel_maximo("apex", 0, 299, False), (0, 0, 299))
-    # Unique ya creada en 21, con 0 ADN: se queda en 21.
+    # Unique already created at 21, with 0 DNA: it stays at 21.
     eq("unique 21 con 0", nivel_maximo("unique", 21, 0, True), (21, 0, 0))
-    # Common ya creada en 1: el 1->30 SIN creacion cuesta 346.750 (el total
-    # 346.800 incluye los 50 de crear). Con uno menos, se queda en 29.
+    # Common already created at 1: the 1->30 WITHOUT creation costs 346,750 (the
+    # 346,800 total includes the 50 for creating). With one less, it stays at 29.
     eq("common 1 con 346749", nivel_maximo("common", 1, 346749, True)[0], 29)
     eq("common 1 con 346750", nivel_maximo("common", 1, 346750, True)[0], 30)
-    # Omega: crear cuesta 100 y deja en nivel 1.
+    # Omega: creating costs 100 and leaves it at level 1.
     eq("omega sin crear con 100", nivel_maximo("omega", 0, 100, False), (1, 100, 0))
     eq("omega sin crear con 99", nivel_maximo("omega", 0, 99, False), (0, 0, 99))
 
     if fallos:
-        print(f"FALLOS ({len(fallos)}):")
+        print(f"FAILURES ({len(fallos)}):")
         for f in fallos:
             print("  -", f)
         return 1
-    print(f"Autocomprobacion: 40/40 correctas + {casos_nm} casos de nivel maximo "
-          f"(invariantes de ida y vuelta).")
+    print(f"Self-check: 40/40 correct + {casos_nm} maximum level cases "
+          f"(round-trip invariants).")
     return 0
 
 

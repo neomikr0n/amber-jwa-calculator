@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Verificacion del ARBOL DE FUSION. Igual que verificar_motor.py, extrae el
-motor REAL del HTML entregable y lo ejecuta en Node, pero aqui ademas se
-ejercita `plan` y `totales` con inventarios simulados.
+Verification of the FUSION TREE. Like verificar_motor.py, it extracts the REAL
+engine from the deliverable HTML and runs it in Node, but here it also
+exercises `plan` and `totales` with simulated inventories.
 
-Se comparan los DOS criterios:
-  - contarSubida = true   -> coste real (incluye subir los ingredientes)
-  - contarSubida = false  -> criterio de paleo.gg (solo lo que se fusiona)
+The TWO criteria are compared:
+  - contarSubida = true   -> real cost (includes leveling up the ingredients)
+  - contarSubida = false  -> paleo.gg's criterion (only what gets fused)
 
-Y los dos estados de cada criatura:
-  - creada = false -> se suma el ADN de creacion
-  - creada = true  -> se parte del nivel que tenga
+And the two states of each creature:
+  - creado = false -> the creation DNA is added
+  - creado = true  -> it starts from whatever level it has
 
-Compara el arbol nodo por nodo y los totales, contra un espejo en Python
-que usa modelo.py. Si algo difiere, sale con codigo 1.
+It compares the tree node by node and the totals, against a Python mirror
+that uses modelo.py. If anything differs, it exits with code 1.
 
-Uso:  python3 verificar_arbol.py
+Usage:  python3 verificar_arbol.py
 """
 import json, math, os, re, subprocess, sys
 
@@ -52,12 +52,12 @@ def bloque_llaves(texto, pos):
                 if prof == 0:
                     return texto[pos:i + 1]
         i += 1
-    raise RuntimeError("llaves sin cerrar")
+    raise RuntimeError("unclosed braces")
 
 
 def bloque_cuerpo(texto, pos_llave):
-    """Las funciones terminan en '}', no en '};'. Buscar '};' corta el bloque
-    a medias y Node falla con 'Unexpected end of input'."""
+    """Functions end in '}', not in '};'. Searching for '};' cuts the block
+    in half and Node fails with 'Unexpected end of input'."""
     prof, i, cad, esc = 0, pos_llave, False, False
     while i < len(texto):
         ch = texto[i]
@@ -75,7 +75,7 @@ def bloque_cuerpo(texto, pos_llave):
                 if prof == 0:
                     return texto[pos_llave:i + 1]
         i += 1
-    raise RuntimeError("cuerpo de funcion sin cerrar")
+    raise RuntimeError("unclosed function body")
 
 
 def extraer(html):
@@ -88,14 +88,14 @@ def extraer(html):
     for nec in ("costeADN", "costeMon", "adnFus", "nFus", "plan", "totales",
                 "invDe", "fijar", "nivelMaximo"):
         if nec not in cuerpo:
-            raise RuntimeError("falta " + nec + " en el bloque extraido")
+            raise RuntimeError("missing " + nec + " in the extracted block")
     if cuerpo.count("{") != cuerpo.count("}"):
-        raise RuntimeError("bloque desequilibrado: %d vs %d"
+        raise RuntimeError("unbalanced block: %d vs %d"
                            % (cuerpo.count("{"), cuerpo.count("}")))
     return datos, cuerpo
 
 
-# ---------------- espejo en Python ----------------
+# ---------------- mirror in Python ----------------
 def coste_adn(r, desde, hasta, crear):
     if hasta <= desde:
         return 0
@@ -138,7 +138,8 @@ def n_fus(d):
 
 
 def inv_de(cri, inv, u):
-    """Espejo de `invDe`: `creado` es explicito y, si falta, se deduce del nivel."""
+    """Mirror of `invDe`: `creado` is explicit and, if missing, it is inferred
+    from the level."""
     v = inv.get(u, {})
     r = cri[u]["rareza"] if u in cri else "common"
     m = nivel_creacion(r)
@@ -187,10 +188,10 @@ def plan(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida):
 
 
 def totales(n):
-    """Suma el arbol SIN contar dos veces a la misma criatura.
+    """It adds up the tree WITHOUT counting the same creature twice.
 
-    Un ingrediente compartido es UNA sola reserva de ADN: lo que consume se suma
-    (son fusiones distintas), pero lo que tienes se resta UNA vez.
+    A shared ingredient is ONE single DNA pool: what it consumes is added
+    (they are different fusions), but what you have is subtracted ONCE.
     """
     acc = {"porUuid": {}, "nodos": 0, "hojas": 0, "repetidas": 0, "fus": 0,
            "monFus": 0, "mon": 0, "adn": 0, "adnNec": 0, "tengo": 0, "recolectar": 0}
@@ -223,9 +224,9 @@ def totales(n):
 
     rec(n)
     for p in acc["porUuid"].values():
-        # Solo se paga la escalera si esa criatura cuenta su subida. `plan` ya lo
-        # decide nodo a nodo; sumarla siempre hacia que el informe ignorase el
-        # interruptor de «subir los ingredientes».
+        # The ladder is only paid if that creature counts its level-up. `plan`
+        # already decides it node by node; always adding it made the report
+        # ignore the «level up the ingredients» switch.
         p["escalera"] = (coste_adn(p["rareza"], p["desde"], p["objetivo"], p["sinCrear"])
                          if p["cuentaSubir"] else 0)
         p["mon"] = (coste_mon(p["rareza"], p["desde"], p["objetivo"])
@@ -250,36 +251,36 @@ def aplanar(n, ruta, salida):
     return salida
 
 
-# ---------------- casos ----------------
-# (criatura, objetivo, nivel raiz, adn raiz, creada raiz, contar_subida, inventario)
-# `creada raiz = None` significa "no mandamos el campo": tiene que deducirlo.
+# ---------------- cases ----------------
+# (creature, target, root level, root dna, root created, contar_subida, inventory)
+# `root created = None` means "we do not send the field": it has to infer it.
 CASOS = [
-    # Alankydactylus: el arbol que se comparo contra paleo.gg
+    # Alankydactylus: the tree that was compared against paleo.gg
     ("alankydactylus", 30, 26, 0, True, False, {}),
     ("alankydactylus", 30, 26, 0, True, True, {}),
     ("alankydactylus", 30, 0, 0, False, True, {}),
     ("alankydactylus", 30, 0, 0, False, True,
      {"dreadactylus": {"nivel": 15, "adn": 900, "creado": True}}),
-    # Raiz sin crear pero con ADN de sobra para crear
+    # Root not created but with DNA to spare for creating
     ("indoraptor", 35, 0, 5000, False, True, {}),
-    # Raiz creada y con un ingrediente a medias
+    # Root created and with an ingredient halfway through
     ("indoraptor", 35, 21, 100000, True, True,
      {"velociraptor": {"nivel": 20, "adn": 50000, "creado": True}}),
     ("indoraptor", 30, 21, 0, True, True,
      {"velociraptor": {"nivel": 20, "adn": 50000, "creado": True},
       "indominus_rex": {"nivel": 0, "adn": 1200, "creado": False}}),
-    # Ingrediente que ya cumple de sobra: no debe generar rama
+    # Ingredient that already meets it with room to spare: must not branch
     ("trykosaurus", 30, 26, 0, True, True,
      {"tyrannosaurus_rex": {"nivel": 20, "adn": 999999, "creado": True}}),
-    # Omega (escalera distinta)
+    # Omega (different ladder)
     ("93_classic_t_rex", 35, 0, 0, False, True, {}),
     ("93_classic_t_rex", 35, 20, 3000, True, True, {}),
     ("93_classic_t_rex", 30, 0, 250, False, True, {}),
-    # Cadenas largas y rarezas bajas
+    # Long chains and low rarities
     ("ankylocodon", 30, 0, 0, False, True, {}),
     ("paralidactylus", 35, 0, 0, False, False, {}),
     ("rajadorixis", 30, 10, 20000, True, True, {}),
-    # Dato heredado sin el campo `creado`
+    # Inherited datum without the `creado` field
     ("diplotator", 30, 15, 4000, None, True,
      {"diplocaulus": {"nivel": 15, "adn": 100}}),
 ]
@@ -297,7 +298,7 @@ def main():
 
     for caso in CASOS:
         if caso[0] not in cri:
-            print("FALLO: la criatura %r no esta en el dataset" % caso[0])
+            print("FAIL: creature %r is not in the dataset" % caso[0])
             return 1
 
     esperado = {}
@@ -311,7 +312,7 @@ def main():
         esperado[clave_caso(u, obj, niv, adn, creado, cuenta)] = {
             "nodos": aplanar(t, [u], {}), "tot": totales(t)}
 
-    # ---- arnes de Node ----
+    # ---- Node harness ----
     arnes = """
 const fs = require("fs");
 const datos = %s;
@@ -346,7 +347,7 @@ process.stdout.write(JSON.stringify(salida));
     open(ruta_js, "w", encoding="utf-8").write(arnes)
     res = subprocess.run(["node", ruta_js], capture_output=True, text=True, timeout=180)
     if res.returncode != 0:
-        print("FALLO: el motor del arbol no se ejecuto en Node.")
+        print("FAIL: the tree engine did not run in Node.")
         print(res.stderr[:3000])
         return 1
     obtenido = json.loads(res.stdout)
@@ -356,11 +357,11 @@ process.stdout.write(JSON.stringify(salida));
     for clave, esp in esperado.items():
         obt = obtenido.get(clave)
         if obt is None:
-            fallos.append((clave, "sin resultado"))
+            fallos.append((clave, "no result"))
             continue
         en, on = esp["nodos"], obt["nodos"]
         if set(en) != set(on):
-            fallos.append((clave, "nodos distintos: solo-Python=%s solo-JS=%s"
+            fallos.append((clave, "different nodes: Python-only=%s JS-only=%s"
                            % (sorted(set(en) - set(on))[:4],
                               sorted(set(on) - set(en))[:4])))
         for ruta in sorted(set(en) & set(on)):
@@ -375,7 +376,7 @@ process.stdout.write(JSON.stringify(salida));
             if esp["tot"][campo] != obt["tot"][campo]:
                 fallos.append((clave, "total %s: JS=%r Python=%r"
                                % (campo, obt["tot"][campo], esp["tot"][campo])))
-        # y la criatura por criatura, que es lo que agrega el informe
+        # and creature by creature, which is what the report aggregates
         if esp["tot"]["porUuid"] != obt["tot"]["porUuid"]:
             ej = []
             for k in sorted(set(esp["tot"]["porUuid"]) | set(obt["tot"]["porUuid"])):
@@ -383,34 +384,34 @@ process.stdout.write(JSON.stringify(salida));
                 b = obt["tot"]["porUuid"].get(k)
                 if a != b:
                     ej.append("%s: JS=%r Python=%r" % (k, b, a))
-            fallos.append((clave, "por criatura: " + " | ".join(ej[:3])))
+            fallos.append((clave, "per creature: " + " | ".join(ej[:3])))
 
-    print("Arboles: %d casos, %d nodos comparados (%d campos por nodo)."
+    print("Trees: %d cases, %d nodes compared (%d fields per node)."
           % (len(CASOS), nodos_total, len(CAMPOS)))
     print()
     if fallos:
-        print("DISCREPANCIAS: %d" % len(fallos))
+        print("DISCREPANCIES: %d" % len(fallos))
         for clave, det in fallos[:30]:
             print("  %-46s %s" % (clave, det))
         print()
-        print("RESULTADO: FALLO")
+        print("RESULT: FAIL")
         return 1
-    print("RESULTADO: %d nodos y %d totales identicos entre el arbol del HTML "
-          "y el espejo Python." % (nodos_total, len(CASOS)))
+    print("RESULT: %d nodes and %d totals identical between the HTML tree "
+          "and the Python mirror." % (nodos_total, len(CASOS)))
     print()
-    # Se dice en voz alta para que nadie lea este verde como una prueba de que
-    # el resultado es CORRECTO. Este verificador compara el HTML contra un
-    # espejo escrito desde la misma lectura del problema: si las dos partes
-    # entienden mal lo mismo, coinciden y las dos se equivocan. Paso con el
-    # interruptor de «subir los ingredientes»: `totales` sumaba la escalera de
-    # todas las criaturas pasara lo que pasara, y el espejo hacia lo mismo, asi
-    # que los 15 totales coincidian siendo falsos. Lo que se comprueba aqui es
-    # que las dos implementaciones NO se han separado, no que sean correctas.
-    print("Alcance: esto comprueba que el HTML y el espejo NO se han separado, no")
-    print("que sean correctos. Un malentendido comun a los dos pasa en verde.")
-    print("El comportamiento se juzga en probar_estres.py, contra la pagina real.")
+    # It is said out loud so that nobody reads this green as proof that the
+    # result is CORRECT. This verifier compares the HTML against a mirror
+    # written from the same reading of the problem: if both sides
+    # misunderstand the same thing, they agree and both are wrong. It happened
+    # with the «level up the ingredients» switch: `totales` added the ladder of
+    # every creature no matter what, and the mirror did the same, so the 15
+    # totals agreed while being false. What is checked here is that the two
+    # implementations have NOT drifted apart, not that they are correct.
+    print("Scope: this checks that the HTML and the mirror have NOT drifted apart,")
+    print("not that they are correct. A misunderstanding common to both passes green.")
+    print("The behaviour is judged in probar_estres.py, against the real page.")
     print()
-    print("Muestra (criterio paleo.gg, Alankydactylus 26->30):")
+    print("Sample (paleo.gg criterion, Alankydactylus 26->30):")
     for ruta, v in sorted(esperado["alankydactylus|30|26|0|true|false"]["nodos"].items()):
         print("  %-52s deficit=%-8s fus=%-6s" % (ruta, v["deficit"], v["fusiones"]))
     return 0

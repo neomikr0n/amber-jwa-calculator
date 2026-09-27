@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Descarga el dinodex completo de paleo.gg para Jurassic World Alive.
+Downloads the complete dinodex from paleo.gg for Jurassic World Alive.
 
-paleo.gg es Next.js: sirve todos los datos dentro de <script id="__NEXT_DATA__">.
-No hace falta navegador. Una peticion normal basta.
+paleo.gg is Next.js: it serves all the data inside <script id="__NEXT_DATA__">.
+No browser is needed. A normal request is enough.
 
-Uso:
-    python3 scrape_paleo.py            # usa la cache, solo baja lo que falte
-    python3 scrape_paleo.py --refetch  # vuelve a bajar todo
+Usage:
+    python3 scrape_paleo.py            # uses the cache, only downloads what is missing
+    python3 scrape_paleo.py --refetch  # downloads everything again
 
-Salida:
-    cache/dinodex.html          indice
-    cache/<uuid>.html           ficha cruda de cada criatura
-    data/jwa-3.22.json          dataset normalizado
+Output:
+    cache/dinodex.html          index
+    cache/<uuid>.html           raw card of each creature
+    data/jwa-3.22.json          normalized dataset
 """
 
 import json
@@ -33,12 +33,12 @@ UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
 )
-RETARDO = 0.25       # segundos entre peticiones, por educacion
+RETARDO = 0.25       # seconds between requests, out of politeness
 REINTENTOS = 3
 
 
 def bajar(url, destino, refetch=False):
-    """Descarga url a destino. Si ya existe y no se pide refetch, no toca la red."""
+    """Downloads url to destino. If it already exists and refetch is not asked for, it does not touch the network."""
     if os.path.exists(destino) and not refetch and os.path.getsize(destino) > 5000:
         with open(destino, encoding="utf-8") as f:
             return f.read()
@@ -55,13 +55,13 @@ def bajar(url, destino, refetch=False):
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             ultimo = e
             time.sleep(1.5 * (intento + 1))
-    raise RuntimeError(f"no se pudo bajar {url}: {ultimo}")
+    raise RuntimeError(f"could not download {url}: {ultimo}")
 
 
 def next_data(html):
     m = re.search(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
     if not m:
-        raise RuntimeError("sin __NEXT_DATA__ (paleo.gg ha cambiado el HTML)")
+        raise RuntimeError("no __NEXT_DATA__ (paleo.gg has changed the HTML)")
     return json.loads(m.group(1))
 
 
@@ -70,15 +70,15 @@ def main():
     os.makedirs(CACHE, exist_ok=True)
     os.makedirs(DATA, exist_ok=True)
 
-    print("[1/3] indice del dinodex...")
+    print("[1/3] dinodex index...")
     idx_html = bajar(BASE, os.path.join(CACHE, "dinodex.html"), refetch)
     nd = next_data(idx_html)
     dex = nd["props"]["pageProps"]["dex"]
     items = dex["items"]
     meta = nd["props"]["pageProps"]["meta"]
-    print(f"      {len(items)} criaturas. paleo.gg actualizado: {meta['lastModifiedDate']}")
+    print(f"      {len(items)} creatures. paleo.gg updated: {meta['lastModifiedDate']}")
 
-    print("[2/3] fichas de cada criatura...")
+    print("[2/3] cards of each creature...")
     criaturas = {}
     fallos = []
     for i, it in enumerate(items, 1):
@@ -115,27 +115,27 @@ def main():
             print(f"      [{i}/{len(items)}]")
 
     if fallos:
-        print(f"      ATENCION: {len(fallos)} fichas fallaron")
+        print(f"      WARNING: {len(fallos)} cards failed")
 
-    # indice inverso: quien usa a quien
-    print("[3/3] verificando el grafo y escribiendo el dataset...")
+    # reverse index: who uses whom
+    print("[3/3] verifying the graph and writing the dataset...")
     problemas = []
     for uuid, c in criaturas.items():
         for ing in c["ingredientes"]:
             if ing not in criaturas:
-                problemas.append(f"{uuid}: ingrediente desconocido '{ing}'")
+                problemas.append(f"{uuid}: unknown ingredient '{ing}'")
         for h in c["hijos"]:
             if h not in criaturas:
-                problemas.append(f"{uuid}: hijo desconocido '{h}'")
+                problemas.append(f"{uuid}: unknown child '{h}'")
         if c["tipo"] != "non_hybrid" and not c["ingredientes"]:
-            problemas.append(f"{uuid}: es hibrido pero no tiene ingredientes")
+            problemas.append(f"{uuid}: it is a hybrid but it has no ingredients")
 
-    # deteccion de ciclos
+    # cycle detection
     color = {}
 
     def visita(u, pila):
         if color.get(u) == 1:
-            problemas.append(f"ciclo detectado: {' -> '.join(pila + [u])}")
+            problemas.append(f"cycle detected: {' -> '.join(pila + [u])}")
             return
         if color.get(u) == 2:
             return
@@ -164,16 +164,16 @@ def main():
     with open(destino, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
     kb = os.path.getsize(destino) / 1024
-    print(f"      escrito {destino} ({kb:.0f} KB)")
+    print(f"      wrote {destino} ({kb:.0f} KB)")
 
     if problemas:
-        print(f"\nPROBLEMAS EN EL GRAFO ({len(problemas)}):")
+        print(f"\nPROBLEMS IN THE GRAPH ({len(problemas)}):")
         for p in problemas[:30]:
             print("  -", p)
     else:
-        print("\nGrafo integro: sin referencias rotas, sin huerfanos, sin ciclos.")
+        print("\nGraph intact: no broken references, no orphans, no cycles.")
 
-    print(f"\ncriaturas: {len(criaturas)}   hibridos: "
+    print(f"\ncreatures: {len(criaturas)}   hybrids: "
           f"{sum(1 for c in criaturas.values() if c['tipo'] != 'non_hybrid')}")
 
 

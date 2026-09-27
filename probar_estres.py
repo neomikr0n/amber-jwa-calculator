@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-Prueba de ESTRES y de las zonas que quedaron sin tocar desde los cambios.
+STRESS test and test of the areas that were left untouched since the changes.
 
-Cubre lo que las otras pruebas no:
-  - El arbol mas grande del juego (Rajadorixis, 15 nodos): que pinte entero, con
-    que profundidad REAL de anidamiento, y cuanto TARDA. El arbol se repinta en
-    cada tecla, asi que el tiempo importa.
-  - Techo de ADN: que avise cuando el deficit supera el tope de inventario.
-  - Las cifras del modelo (fusion, topes, niveles, monedas) contra los valores
-    DOCUMENTADOS. Antes se comprobaban leyendo las tablas de la pestana
-    «Referencia», que se quito el 25-sep-2026: la comprobacion se reescribio para
-    no perderla. (La version anterior de esta prueba usaba regexes del tipo /35/
-    sobre el texto de toda la pestana: eso lo cumple hasta una tabla vacia. No
-    medía nada.)
-  - El bloque de nivel maximo de cada nodo, contrastado con nivelMaximo().
-  - Exportar / borrar / importar PULSANDO LOS BOTONES DE VERDAD, no replicando
-    su logica dentro de la prueba.
+It covers what the other tests do not:
+  - The largest tree in the game (Rajadorixis, 15 nodes): that it paints in full,
+    with what REAL nesting depth, and how long it TAKES. The tree is repainted on
+    every keystroke, so time matters.
+  - DNA cap: that it warns when the deficit exceeds the inventory cap.
+  - The figures of the model (Fusions, caps, Levels, Coins) against the
+    DOCUMENTED values. They used to be checked by reading the tables of the
+    «Referencia» tab, which was removed on 25-sep-2026: the check was rewritten
+    so as not to lose it. (The previous version of this test used regexes of the
+    /35/ kind over the text of the whole tab: even an empty table satisfies that.
+    It measured nothing.)
+  - The maximum Level block of each node, contrasted with nivelMaximo().
+  - Export / delete / import by PRESSING THE REAL BUTTONS, not replicating
+    their logic inside the test.
 
-Todo es sincrono a proposito: Firefox hace la captura justo despues del evento
-`load`, asi que si el informe se pintase tras un `await` la captura saldria en
-blanco. Por eso el FileReader de la pagina se sustituye por un doble sincrono
-(lo que se dobla es la API del navegador, no la logica de la pagina).
+Everything is synchronous on purpose: Firefox takes the screenshot right after
+the `load` event, so if the report were painted after an `await` the screenshot
+would come out blank. That is why the page's FileReader is replaced with a
+synchronous double (what is doubled is the browser API, not the page's logic).
 
-Uso:  python3 probar_estres.py
+Usage:  python3 probar_estres.py
 """
 import os, re, shutil, subprocess
 import informe_browser
@@ -36,14 +36,14 @@ PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "estres.html")
 SHOT = os.path.join(DIR, "estres.png")
 
-# El informe viaja por aqui, no por una captura que hay que leer a ojo.
+# The report travels through here, not through a screenshot that has to be read by eye.
 srv = arrancar()
 
 CAZA = r"""
 <script>
 window.__errores = [];
 window.addEventListener("error", function(e){
-  window.__errores.push((e.message || "?") + " @ linea " + (e.lineno||"?"));
+  window.__errores.push((e.message || "?") + " @ line " + (e.lineno||"?"));
 });
 </script>
 """
@@ -54,9 +54,9 @@ var RES = [], FALLOS = 0, CLONES = [], NOTAS = [];
 var ALERTAS = [], BLOB = null, ANCLA = null, ENTRADA = null, TEXTO_BLOB = null;
 function log(k, v){ RES.push(k + ": " + (v === undefined ? "" : v)); }
 function ok(k, cond, detalle){ if (!cond) FALLOS++; log((cond ? "OK   " : "FALLO") + " " + k, detalle); }
-function txt(id){ var e = document.getElementById(id); return e ? e.innerText.replace(/\s+/g," ").trim() : "(falta "+id+")"; }
-function txc(id){ var e = document.getElementById(id); return e ? e.textContent.replace(/\s+/g," ").trim() : "(falta "+id+")"; }
-/* Las cifras de un panel, en orden, sin el formato de miles. */
+function txt(id){ var e = document.getElementById(id); return e ? e.innerText.replace(/\s+/g," ").trim() : "(missing "+id+")"; }
+function txc(id){ var e = document.getElementById(id); return e ? e.textContent.replace(/\s+/g," ").trim() : "(missing "+id+")"; }
+/* The figures of a panel, in order, without the thousands format. */
 function cifrasDe(id){
   return Array.prototype.map.call(document.querySelectorAll("#" + id + " .cifra .v"), function(e){
     return Number(e.textContent.replace(/[^\d]/g, "")) || 0;
@@ -67,24 +67,24 @@ function etiquetasDe(id){
     return e.textContent.trim();
   });
 }
-/* Indice de una cifra por su rotulo, tolerando que el rotulo se alargue.
-   `indexOf` sobre el array exige coincidencia EXACTA: en cuanto el informe paso
-   de «ADN que falta» a «ADN que falta en total», la busqueda devolvio -1 y la
-   comprobacion fallo diciendo «cifra undefined». El fallo estaba en la prueba,
-   no en la pagina. */
+/* Index of a figure by its label, tolerating the label getting longer.
+   `indexOf` over the array demands an EXACT match: as soon as the report went
+   from «ADN que falta» to «ADN que falta en total», the search returned -1 and
+   the check failed saying «figure undefined». The fault was in the test,
+   not in the page. */
 function indiceEtiqueta(id, patron){
   return etiquetasDe(id).findIndex(function(t){ return patron.test(t); });
 }
-/* --- Leer una celda por el NOMBRE de su columna, no por su posicion ---
-   Dos comprobaciones de esta prueba leian `tr.querySelectorAll("td")[5]` y
-   `[6]` dando por hecho el ancho de la tabla de «Mis criaturas». Cuando esa
-   tabla gano la columna «Mejoras» (25-sep-2026) las dos siguieron pasando por
-   los mismos indices y empezaron a comparar OTRA cosa: la de «Nivel max. hoy»
-   leia el ADN (4,321 contra 31) y la del «Objetivo» leia la columna de al
-   lado. La prueba no fallaba por el cambio de columnas: fallaba porque
-   preguntaba «la sexta celda» cuando queria preguntar «la celda del nivel
-   maximo». Ahora se pregunta por el nombre, y si la columna no existe lo dice
-   en vez de devolver un numero de otra. */
+/* --- Read a cell by the NAME of its column, not by its position ---
+   Two checks of this test read `tr.querySelectorAll("td")[5]` and
+   `[6]` taking the width of the «Mis criaturas» table for granted. When that
+   table gained the «Mejoras» column (25-sep-2026) both kept going through the
+   same indices and started comparing SOMETHING ELSE: the «Nivel max. hoy» one
+   read the DNA (4,321 versus 31) and the «Objetivo» one read the column next
+   to it. The test did not fail because of the column change: it failed because
+   it was asking for «the sixth cell» when it meant to ask for «the cell of the
+   maximum level». Now it asks by name, and if the column does not exist it says
+   so instead of returning a number from another one. */
 function sinTildes(s){
   return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "")
          .toLowerCase().replace(/\s+/g, " ").trim();
@@ -95,27 +95,27 @@ function colDe(tabla, cabecera){
   for (var i = 0; i < ths.length; i++) if (sinTildes(ths[i].textContent) === q) return i;
   return -1;
 }
-/* Devuelve el texto de la celda de `tr` que cae bajo la columna `cabecera`.
-   Si la columna no existe, o la fila tiene menos celdas que la cabecera (un
-   colspan la desplaza), devuelve un texto que NO es un numero y que se lee en
-   el detalle del fallo: asi el fallo dice que se rompio, y por que. */
+/* Returns the text of the `tr` cell that falls under the `cabecera` column.
+   If the column does not exist, or the row has fewer cells than the header (a
+   colspan shifts it), it returns a text that is NOT a number and that is read in
+   the detail of the failure: that way the failure says what broke, and why. */
 function celdaDe(tr, cabecera){
   var tabla = tr.closest("table");
-  if (!tabla) return "(la fila no esta en una tabla)";
+  if (!tabla) return "(the row is not in a table)";
   var i = colDe(tabla, cabecera);
-  if (i < 0) return "(no hay columna «" + cabecera + "»)";
+  if (i < 0) return "(there is no «" + cabecera + "» column)";
   var tds = tr.querySelectorAll("td");
   if (tds.length !== tabla.querySelectorAll("thead th").length)
-    return "(la fila tiene " + tds.length + " celdas y la cabecera " +
-           tabla.querySelectorAll("thead th").length + ": hay un colspan)";
+    return "(the row has " + tds.length + " cells and the header " +
+           tabla.querySelectorAll("thead th").length + ": there is a colspan)";
   return tds[i].textContent.trim();
 }
 function ev(el, t){ el.dispatchEvent(new Event(t, {bubbles:true})); }
-/* ¿La celda «Nivel» del informe ensena un RANGO de niveles («16 → 20»)?
-   Se busca la firma completa —numero, flecha, numero— y no la flecha a secas,
-   porque desde el 25-sep-2026 la flecha se usa para DOS cosas: el rango y el
-   boton de criar («criar → 20», que es una accion y no un rango). Buscar el
-   simbolo suelto confundiria las dos. */
+/* Does the «Nivel» cell of the report show a RANGE of levels («16 → 20»)?
+   The full signature is looked for —number, arrow, number— and not the arrow on
+   its own, because since 25-sep-2026 the arrow is used for TWO things: the range
+   and the breed button («criar → 20», which is an action and not a range).
+   Looking for the loose symbol would confuse the two. */
 function esRangoNivel(t){ return /^\d+\s*→\s*\d+/.test(String(t).trim()); }
 function teclear(el, v){ el.focus(); el.value = v; ev(el, "input"); }
 function medir(f, n){
@@ -124,24 +124,24 @@ function medir(f, n){
   for (var i = 0; i < n; i++) f();
   return (performance.now() - t0) / n;
 }
-/* Profundidad real de anidamiento de un nodo: cuantos .rama lo envuelven. */
+/* Real nesting depth of a node: how many .rama wrap it. */
 function profundidad(nodo){
   var d = 0, el = nodo.parentElement;
   while (el){ if (el.classList && el.classList.contains("rama")) d++; el = el.parentElement; }
   return d;
 }
 
-/* Estado de partida determinista: el perfil de Firefox persiste entre
-   ejecuciones, asi que sin esto la prueba arranca con lo que dejo la anterior.
-   Hay que limpiar LAS DOS cosas: `INV` (los datos) y `MIS` («Mis criaturas»).
-   Olvidar `MIS` hacia que el numero de fallos cambiara de una pasada a otra. */
+/* Deterministic starting state: the Firefox profile persists between
+   runs, so without this the test starts with whatever the previous one left.
+   BOTH things have to be cleared: `INV` (the data) and `MIS` («Mis criaturas»).
+   Forgetting `MIS` made the number of failures change from one run to the next. */
 INV = {}; MIS = []; guardar();
 
 try {
-  log("=== errores al cargar ===",
-      (window.__errores && window.__errores.length) ? window.__errores.join(" | ") : "ninguno");
+  log("=== errors on load ===",
+      (window.__errores && window.__errores.length) ? window.__errores.join(" | ") : "none");
 
-  // ---------- 1. EL ARBOL MAS GRANDE: Rajadorixis (15 nodos) ----------
+  // ---------- 1. THE LARGEST TREE: Rajadorixis (15 nodes) ----------
   elegir("rajadorixis");
   teclear(document.getElementById("nivelAct"), "0");
   teclear(document.getElementById("adnTengo"), "0");
@@ -150,8 +150,8 @@ try {
   document.querySelector('nav button[data-t="arbol"]').click();
 
   var nodos = document.querySelectorAll("#arbolCuerpo .nodo");
-  log("Rajadorixis: nodos pintados", nodos.length);
-  ok("el arbol mas grande se pinta entero", nodos.length >= 12, nodos.length + " nodos");
+  log("Rajadorixis: nodes painted", nodos.length);
+  ok("the largest tree paints in full", nodos.length >= 12, nodos.length + " nodes");
 
   var camposOk = 0, fotos = 0, sinMax = 0;
   nodos.forEach(function(n){
@@ -161,17 +161,17 @@ try {
     if (n.querySelector("img.foto")) fotos++;
     if (!n.querySelector(".maxn")) sinMax++;
   });
-  ok("todos los nodos del arbol grande tienen sus campos", camposOk === nodos.length,
+  ok("all the nodes of the large tree have their fields", camposOk === nodos.length,
      camposOk + "/" + nodos.length);
-  ok("todos los nodos del arbol grande tienen foto", fotos === nodos.length,
+  ok("all the nodes of the large tree have a photo", fotos === nodos.length,
      fotos + "/" + nodos.length);
-  ok("todos los nodos del arbol grande ensenan su nivel maximo", sinMax === 0,
+  ok("all the nodes of the large tree show their maximum level", sinMax === 0,
      (nodos.length - sinMax) + "/" + nodos.length);
 
   var profMax = 0;
   nodos.forEach(function(n){ profMax = Math.max(profMax, profundidad(n)); });
-  ok("el arbol grande tiene anidamiento real, no es plano", profMax >= 2,
-     "profundidad maxima " + profMax);
+  ok("the large tree has real nesting, it is not flat", profMax >= 2,
+     "maximum depth " + profMax);
 
   var caja = document.querySelector("#arbolCuerpo").getBoundingClientRect();
   var salidos = 0, peor = 0;
@@ -181,144 +181,147 @@ try {
     if (sob > 1) salidos++;
     if (sob > peor) peor = sob;
   });
-  ok("ningun nodo se sale del arbol por la derecha", salidos === 0,
-     salidos + " se salen; peor exceso " + Math.round(peor) + " px");
+  ok("no node overflows the tree on the right", salidos === 0,
+     salidos + " overflow; worst excess " + Math.round(peor) + " px");
 
-  // ---------- 2. TIEMPO DE REPINTADO ----------
+  // ---------- 2. REPAINT TIME ----------
   var tPintar = medir(function(){ pintarArbol(); }, 20);
-  log("pintarArbol() en el arbol de 15 nodos", tPintar.toFixed(1) + " ms");
-  ok("repintar el arbol grande es rapido (<120 ms)", tPintar < 120, tPintar.toFixed(1) + " ms");
+  log("pintarArbol() on the 15-node tree", tPintar.toFixed(1) + " ms");
+  ok("repainting the large tree is fast (<120 ms)", tPintar < 120, tPintar.toFixed(1) + " ms");
 
-  // el caso real: teclear en un campo del fondo del arbol.
-  // OJO: hay que VOLVER A BUSCAR el campo en cada vuelta. Al repintarse el arbol
-  // el elemento anterior queda suelto del DOM, su evento ya no sube al contenedor
-  // y las siguientes pulsaciones no hacen nada: se mide una de verdad y catorce
-  // de mentira, y la media sale falsamente buena.
+  // the real case: typing in a field at the bottom of the tree.
+  // WATCH OUT: the field has to be LOOKED UP AGAIN on every pass. When the tree
+  // is repainted the previous element is left detached from the DOM, its event
+  // no longer bubbles up to the container and the following keystrokes do
+  // nothing: one is measured for real and fourteen are fake, and the average
+  // comes out falsely good.
   function teclearFondo(){
     var f = document.querySelectorAll("#arbolCuerpo .nodo:not(.raiz) input[data-campo='adn']");
     teclear(f[f.length - 1], String(Math.random()*1000|0));
   }
   var tTecla = medir(teclearFondo, 15);
-  log("una tecla en un campo del fondo", tTecla.toFixed(1) + " ms");
-  ok("teclear sigue siendo fluido (<150 ms por tecla)", tTecla < 150, tTecla.toFixed(1) + " ms");
+  log("one keystroke in a field at the bottom", tTecla.toFixed(1) + " ms");
+  ok("typing is still fluid (<150 ms per keystroke)", tTecla < 150, tTecla.toFixed(1) + " ms");
 
-  // La tecla en el arbol ahora repinta tambien la calculadora y el informe del
-  // arbol entero, asi que hay que volver a medirlo. Y una tecla en la CALCULADORA
-  // repinta el arbol: es el otro sentido de la misma ida y vuelta.
+  // A keystroke in the tree now also repaints the calculator and the report of
+  // the whole tree, so it has to be measured again. And a keystroke in the
+  // CALCULATOR repaints the tree: it is the other direction of the same round trip.
   //
-  // OJO: hay que forzar ADN 0 en la raiz. Con ADN de sobra la poda deja el arbol
-  // reducido a la raiz sola, y entonces la medida sale buenísima y no vale nada.
+  // WATCH OUT: DNA 0 has to be forced at the root. With DNA to spare the pruning
+  // leaves the tree reduced to the root alone, and then the measurement comes out
+  // great and is worth nothing.
   elegir("rajadorixis");
   teclear(document.getElementById("adnTengo"), "0");
   document.getElementById("nivelObj").value = 35;
   ev(document.getElementById("nivelObj"), "input");
   document.querySelector('nav button[data-t="arbol"]').click();
   var nodosR = document.querySelectorAll("#arbolCuerpo .nodo").length;
-  ok("la medida de tiempo se hace con el arbol grande de verdad", nodosR >= 12, nodosR + " nodos");
+  ok("the time measurement is done with the real large tree", nodosR >= 12, nodosR + " nodes");
   var fondo2 = document.querySelectorAll("#arbolCuerpo .nodo:not(.raiz) input[data-campo='adn']");
-  ok("y con campos del fondo donde teclear", fondo2.length > 0, fondo2.length + " campos");
+  ok("and with fields at the bottom to type in", fondo2.length > 0, fondo2.length + " fields");
   var tTecla2 = medir(teclearFondo, 15);
-  log("una tecla en el arbol, con la calculadora y el informe detras", tTecla2.toFixed(1) + " ms");
-  ok("sigue siendo fluido (<150 ms por tecla)", tTecla2 < 150, tTecla2.toFixed(1) + " ms");
+  log("one keystroke in the tree, with the calculator and the report behind it", tTecla2.toFixed(1) + " ms");
+  ok("it is still fluid (<150 ms per keystroke)", tTecla2 < 150, tTecla2.toFixed(1) + " ms");
 
-  // Y el otro sentido: teclear en la calculadora repinta el arbol de 15 nodos.
-  // Valores bajos a proposito, para que el arbol no se pode mientras se mide.
+  // And the other direction: typing in the calculator repaints the 15-node tree.
+  // Low values on purpose, so that the tree is not pruned while it is measured.
   elegir("rajadorixis");
   document.querySelector('nav button[data-t="calc"]').click();
   var tCalc = medir(function(){ teclear(document.getElementById("adnTengo"), String(Math.random()*99|0)); }, 15);
-  log("una tecla en la calculadora, con el arbol detras", tCalc.toFixed(1) + " ms");
-  ok("y en la calculadora tambien (<150 ms por tecla)", tCalc < 150, tCalc.toFixed(1) + " ms");
-  ok("al medir la calculadora el arbol sigue entero",
+  log("one keystroke in the calculator, with the tree behind it", tCalc.toFixed(1) + " ms");
+  ok("and in the calculator too (<150 ms per keystroke)", tCalc < 150, tCalc.toFixed(1) + " ms");
+  ok("when measuring the calculator the tree is still whole",
      document.querySelectorAll("#arbolCuerpo .nodo").length >= 12,
-     document.querySelectorAll("#arbolCuerpo .nodo").length + " nodos");
+     document.querySelectorAll("#arbolCuerpo .nodo").length + " nodes");
   var tInforme = medir(function(){ calcular(); }, 20);
-  log("calcular() entero, con el informe del arbol de " +
-      document.querySelectorAll("#arbolCuerpo .nodo").length + " nodos", tInforme.toFixed(1) + " ms");
-  ok("recalcular la calculadora es rapido (<120 ms)", tInforme < 120, tInforme.toFixed(1) + " ms");
+  log("calcular() in full, with the report of the tree of " +
+      document.querySelectorAll("#arbolCuerpo .nodo").length + " nodes", tInforme.toFixed(1) + " ms");
+  ok("recalculating the calculator is fast (<120 ms)", tInforme < 120, tInforme.toFixed(1) + " ms");
 
-  // Desglose, para saber donde se va el tiempo de una pulsacion.
+  // Breakdown, to know where the time of a keystroke goes.
   var tMios = medir(function(){ pintarMios(); }, 20);
   var tLista = medir(function(){ pintarLista(); }, 20);
   document.getElementById("lista").classList.remove("on");
-  log("desglose por repintado",
-      "arbol " + medir(function(){ pintarArbol(); }, 20).toFixed(1) +
-      " | calcular " + tInforme.toFixed(1) +
+  log("repaint breakdown",
+      "tree " + medir(function(){ pintarArbol(); }, 20).toFixed(1) +
+      " | calculate " + tInforme.toFixed(1) +
       " | mios " + tMios.toFixed(1) +
-      " | lista " + tLista.toFixed(1) + " ms");
+      " | list " + tLista.toFixed(1) + " ms");
 
-  // ---------- 3. TECHO DE ADN ----------
-  elegir("93_classic_t_rex");   // omega: tope 60.000, escalera 1->30 = 41.700
+  // ---------- 3. DNA CAP ----------
+  elegir("93_classic_t_rex");   // omega: cap 60.000, ladder 1->30 = 41.700
   teclear(document.getElementById("nivelAct"), "0");
   teclear(document.getElementById("adnTengo"), "0");
   document.getElementById("nivelObj").value = 35;
   ev(document.getElementById("nivelObj"), "input");
   var res = txt("resultado");
-  ok("avisa del techo de ADN cuando el deficit lo supera",
+  ok("it warns about the DNA cap when the deficit exceeds it",
      /tope de ADN/i.test(res) && /tandas/i.test(res), res.slice(0, 170));
-  ok("el tope que cita es el del omega (60.000)", /60,000/.test(res), res.slice(0, 200));
+  ok("the cap it quotes is the omega's (60.000)", /60,000/.test(res), res.slice(0, 200));
 
-  // ---------- 4. LAS CIFRAS DEL MODELO ----------
-  /* Aqui estaba la comprobacion de la pestaña «Referencia», celda por celda
-     contra el modelo. La pestaña se quito el 25-sep-2026 a peticion de n30, y con
-     ella las cuatro tablas. Aquellas comprobaciones hacian DOS cosas a la vez:
-     verificar que la tabla pintada coincidia con `M`, y que `M` tenia los valores
-     buenos. Lo primero ya no existe (no hay tabla que mirar); lo segundo se queda
-     aqui, contra las cifras DOCUMENTADAS, para que quitar la pestaña no se lleve
-     por delante la verificacion sin que nadie se entere.
-     Estos valores no se re-derivan: son los del comunicado oficial y paleo.gg,
-     escritos a mano. Si el modelo cambia, esta prueba tiene que protestar. */
-  /* `adnFus` indexa por el SALTO de rareza, no por la rareza: dos consecutivas
-     (common→rare) saltan 1 y valen 50. Los 200/500/2000 son saltos de 2, 3 y 4,
-     asi que hay que elegir los pares por su salto, no al azar. La primera
-     version de esta comprobacion pedia 50/200/500/2000 a cuatro pares
-     consecutivos y daba 50/50/50/50: el fallo era de la prueba. */
-  ok("el coste por fusion es 50/200/500/2000 segun el SALTO de rareza",
+  // ---------- 4. THE FIGURES OF THE MODEL ----------
+  /* Here was the check of the «Referencia» tab, cell by cell, against the model.
+     The tab was removed on 25-sep-2026 at n30's request, and with it the four
+     tables. Those checks did TWO things at once: verify that the painted table
+     matched `M`, and that `M` had the right values. The first no longer exists
+     (there is no table to look at); the second stays here, against the
+     DOCUMENTED figures, so that removing the tab does not take the verification
+     down with it without anyone noticing.
+     These values are not re-derived: they are the ones from the official
+     announcement and paleo.gg, written by hand. If the model changes, this test
+     has to protest. */
+  /* `adnFus` indexes by the Rarity JUMP, not by the Rarity: two consecutive ones
+     (common→rare) jump 1 and are worth 50. The 200/500/2000 are jumps of 2, 3
+     and 4, so the pairs have to be chosen by their jump, not at random. The first
+     version of this check asked four consecutive pairs for 50/200/500/2000 and
+     gave 50/50/50/50: the fault was in the test. */
+  ok("the cost per Fusion is 50/200/500/2000 according to the Rarity JUMP",
      adnFus("common","rare") === 50 && adnFus("common","epic") === 200 &&
      adnFus("common","legendary") === 500 && adnFus("common","unique") === 2000 &&
      adnFus("rare","epic") === 50,
      [adnFus("common","rare"), adnFus("common","epic"), adnFus("common","legendary"),
-      adnFus("common","unique")].join(" / ") + "  (saltos 1/2/3/4)");
-  ok("el salto de rareza (tier) va de 0 a 5 en orden",
+      adnFus("common","unique")].join(" / ") + "  (jumps 1/2/3/4)");
+  ok("the Rarity jump (tier) goes from 0 to 5 in order",
      M.tier.common === 0 && M.tier.rare === 1 && M.tier.epic === 2 &&
      M.tier.legendary === 3 && M.tier.unique === 4 && M.tier.apex === 5,
      JSON.stringify(M.tier));
-  ok("los topes de ADN son los oficiales del 31-ago-2026",
+  ok("the DNA caps are the official ones of 31-ago-2026",
      M.topes.common === 850000 && M.topes.rare === 250000 && M.topes.epic === 85000 &&
      M.topes.legendary === 25000 && M.topes.unique === 8000 && M.topes.apex === 3000,
      JSON.stringify(M.topes));
-  ok("el tope del omega que usa el motor es 60.000", M.topes.omega === 60000,
+  ok("the omega cap used by the engine is 60.000", M.topes.omega === 60000,
      "M.topes.omega = " + nf(M.topes.omega));
-  ok("los niveles de nacimiento son 1/6/11/16/21/26",
+  ok("the birth Levels are 1/6/11/16/21/26",
      minLv("common") === 1 && minLv("rare") === 6 && minLv("epic") === 11 &&
      minLv("legendary") === 16 && minLv("unique") === 21 && minLv("apex") === 26,
      ["common","rare","epic","legendary","unique","apex"].map(minLv).join(" / "));
-  ok("el nivel minimo de ingredientes es uno menos que el de nacimiento",
+  ok("the minimum Ingredient Level is one less than the birth one",
      ["common","rare","epic","legendary","unique","apex"].every(function(r){
        return M.minIngrediente[r] === minLv(r) - 1;
      }),
      JSON.stringify(M.minIngrediente));
-  ok("el ADN para crear es 50/100/150/200/250/300",
+  ok("the DNA to create is 50/100/150/200/250/300",
      M.creacion.common === 50 && M.creacion.rare === 100 && M.creacion.epic === 150 &&
      M.creacion.legendary === 200 && M.creacion.unique === 250 && M.creacion.apex === 300,
      JSON.stringify(M.creacion));
-  ok("las monedas por fusion son 20/20/100/200/1000/2000",
+  ok("the Coins per Fusion are 20/20/100/200/1000/2000",
      M.monedasFusion.common === 20 && M.monedasFusion.rare === 20 &&
      M.monedasFusion.epic === 100 && M.monedasFusion.legendary === 200 &&
      M.monedasFusion.unique === 1000 && M.monedasFusion.apex === 2000,
      JSON.stringify(M.monedasFusion));
 
-  /* La pestana «Referencia» se quito a peticion de n30. Se comprueba que NO
-     vuelve: si alguien la reintroduce, esto falla y se entera. Se mira tanto el
-     boton como la seccion, porque quitar solo uno deja una pestana que no se
-     puede abrir. */
-  ok("ya no existe la pestana «Referencia»",
+  /* The «Referencia» tab was removed at n30's request. It is checked that it does
+     NOT come back: if someone reintroduces it, this fails and they find out. Both
+     the button and the section are looked at, because removing only one leaves a
+     tab that cannot be opened. */
+  ok("the «Referencia» tab no longer exists",
      !document.querySelector('nav button[data-t="ref"]') && !document.getElementById("s-ref"),
-     "botones: " + Array.from(document.querySelectorAll("nav button")).map(function(b){ return b.dataset.t; }).join(", "));
-  ok("quedan las cuatro pestanas de verdad", document.querySelectorAll("nav button").length === 4,
-     document.querySelectorAll("nav button").length + " botones y " +
-     document.querySelectorAll("section").length + " secciones");
+     "buttons: " + Array.from(document.querySelectorAll("nav button")).map(function(b){ return b.dataset.t; }).join(", "));
+  ok("the four real tabs remain", document.querySelectorAll("nav button").length === 4,
+     document.querySelectorAll("nav button").length + " buttons and " +
+     document.querySelectorAll("section").length + " sections");
 
-  // ---------- 5. CATALIZADORES ----------
+  // ---------- 5. CATALYSTS ----------
   document.querySelector('nav button[data-t="cat"]').click();
   document.getElementById("cComun").value = 20000;
   document.getElementById("cRara").value = 0;
@@ -326,49 +329,49 @@ try {
   document.getElementById("cLegend").value = 500;
   document.getElementById("btnCat").click();
   var cat = txt("catSalida");
-  ok("el planificador de catalizadores responde", cat.length > 20, cat.slice(0, 110));
+  ok("the catalyst planner responds", cat.length > 20, cat.slice(0, 110));
   // 20000*1 + 2000*15 + 500*50 = 20.000 + 30.000 + 25.000 = 75.000
-  // OJO: innerText devuelve el texto YA transformado por CSS (.cifra .k va en
-  // mayusculas), asi que "Sobran" se lee "SOBRAN". De ahi el /i.
-  ok("los puntos del tanque salen 75.000", /75,000/.test(cat), cat.slice(0, 130));
-  ok("con 75.000 puntos no falta nada", /Sobran/i.test(cat) && /Sobran\s*0/i.test(cat.replace(/\s+/g," ")),
+  // WATCH OUT: innerText returns the text ALREADY transformed by CSS (.cifra .k
+  // is uppercase), so "Sobran" reads as "SOBRAN". Hence the /i.
+  ok("the tank points come out to 75.000", /75,000/.test(cat), cat.slice(0, 130));
+  ok("with 75.000 points nothing is missing", /Sobran/i.test(cat) && /Sobran\s*0/i.test(cat.replace(/\s+/g," ")),
      cat.slice(0, 130));
-  // y con menos tiene que decir cuanto falta: 1000 + 2000*15 + 500*50 = 56.000
+  // and with less it has to say how much is missing: 1000 + 2000*15 + 500*50 = 56.000
   document.getElementById("cComun").value = 1000;
   document.getElementById("btnCat").click();
   var cat2 = txt("catSalida");
-  ok("con 1.000 comunes y el resto igual dice que faltan 19.000 (75.000-56.000)",
+  ok("with 1.000 commons and the rest the same it says 19.000 are missing (75.000-56.000)",
      /Faltan/i.test(cat2) && /19,000/.test(cat2), cat2.slice(0, 130));
 } catch (e) {
-  log("!! EXCEPCION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+  log("!! EXCEPTION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
 }
 
-/* ---------- 6, 7 y 8: en `load`, para que la captura los pille ---------- */
+/* ---------- 6, 7 and 8: in `load`, so the screenshot catches them ---------- */
 window.addEventListener("load", function(){
   try {
-    // ---------- 6. EXPORTAR / BORRAR / IMPORTAR CON LOS BOTONES DE VERDAD ----------
+    // ---------- 6. EXPORT / DELETE / IMPORT WITH THE REAL BUTTONS ----------
     window.alert = function(m){ ALERTAS.push(String(m)); };
     window.confirm = function(){ return true; };
     var clickAncla = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function(){ ANCLA = this; };   // no descargamos: solo miramos
+    HTMLAnchorElement.prototype.click = function(){ ANCLA = this; };   // we do not download: we only look
     var clickInput = HTMLInputElement.prototype.click;
     HTMLInputElement.prototype.click = function(){
-      if (this.type === "file"){ ENTRADA = this; return; }             // no abrimos dialogo
+      if (this.type === "file"){ ENTRADA = this; return; }             // we do not open a dialog
       return clickInput.apply(this, arguments);
     };
-    /* El handler pasa el Blob a URL.createObjectURL para fabricar el enlace de
-       descarga: interceptarlo es quedarse con el fichero que se guardaria. */
+    /* The handler passes the Blob to URL.createObjectURL to build the download
+       link: intercepting it is keeping the file that would be saved. */
     var crearURL = URL.createObjectURL;
     URL.createObjectURL = function(b){ BLOB = b; return crearURL.apply(URL, arguments); };
-    /* El Blob que el handler entrega al navegador es el fichero que se guarda:
-       capturar la cadena que recibe el constructor es capturar el fichero. */
+    /* The Blob that the handler hands to the browser is the file that gets
+       saved: capturing the string the constructor receives is capturing the file. */
     var BlobReal = window.Blob;
     window.Blob = function(partes, opciones){
       TEXTO_BLOB = partes.join("");
       return new BlobReal(partes, opciones);
     };
-    /* Doble sincrono del FileReader: se dobla la API del navegador, no la logica
-       de la pagina (que es la que se esta probando). */
+    /* Synchronous double of the FileReader: what is doubled is the browser API,
+       not the page's logic (which is the one being tested). */
     var TEXTO_A_IMPORTAR = "";
     window.FileReader = function(){
       var self = this;
@@ -376,98 +379,98 @@ window.addEventListener("load", function(){
       self.readAsText = function(){ self.result = TEXTO_A_IMPORTAR; if (self.onload) self.onload(); };
     };
 
-    // inventario conocido: indoraptor a nivel 24 con 4321 de ADN, y una de sus
-    // ramas destildada de "creada" para que el campo tenga que sobrevivir.
+    // known inventory: indoraptor at level 24 with 4321 DNA, and one of its
+    // branches unchecked from "creada" so that the field has to survive.
     elegir("indoraptor");
     teclear(document.getElementById("nivelAct"), "24");
     teclear(document.getElementById("adnTengo"), "4321");
     document.querySelector('nav button[data-t="arbol"]').click();
     var chk = document.querySelector("#arbolCuerpo .nodo:not(.raiz) input[data-campo='creado']");
     if (chk){ chk.checked = false; ev(chk, "change"); }
-    /* Guardar la elegida. Ademas de dejar el fichero exportado con lista, de paso se
-       comprueba la regla pedida por n30: guardar mete UNA criatura, no el arbol que
-       cuelga de ella — por muy tocados que esten sus ingredientes. */
+    /* Save the chosen one. Besides leaving the exported file with a list, this also
+       checks the rule requested by n30: saving puts ONE creature in, not the tree
+       hanging from it — no matter how touched its ingredients are. */
     document.querySelector('nav button[data-t="calc"]').click();
     document.getElementById("btnGuardar").click();
-    ok("Guardar mete en la lista SOLO la criatura elegida",
+    ok("Guardar puts ONLY the chosen creature in the list",
        MIS.length === 1 && MIS[0] === "indoraptor",
-       MIS.length + " en la lista (" + MIS.join(", ") + ") con " + Object.keys(INV).length +
-       " criaturas tocadas en el arbol");
+       MIS.length + " in the list (" + MIS.join(", ") + ") with " + Object.keys(INV).length +
+       " creatures touched in the tree");
     var antes = JSON.parse(JSON.stringify(INV));
     var listaAntes = MIS.slice();
-    log("criaturas antes de exportar", Object.keys(antes).length);
+    log("creatures before exporting", Object.keys(antes).length);
 
-    // --- exportar ---
+    // --- export ---
     document.getElementById("btnExport").click();
-    ok("Exportar entrega un Blob de tipo application/json",
-       !!BLOB && BLOB.type === "application/json", BLOB ? BLOB.type + " / " + BLOB.size + " bytes" : "(sin blob)");
-    ok("el fichero exportado se llama jwa322-mis-criaturas.json",
+    ok("Exportar delivers a Blob of type application/json",
+       !!BLOB && BLOB.type === "application/json", BLOB ? BLOB.type + " / " + BLOB.size + " bytes" : "(no blob)");
+    ok("the exported file is called jwa322-mis-criaturas.json",
        !!ANCLA && ANCLA.download === "jwa322-mis-criaturas.json",
-       ANCLA ? ANCLA.download : "(no se pulso)");
-    /* El fichero lleva DOS cosas desde el 25-sep-2026: los datos y la lista. Antes
-       solo llevaba los datos, porque la lista era «las claves de los datos». */
+       ANCLA ? ANCLA.download : "(not pressed)");
+    /* The file carries TWO things since 25-sep-2026: the data and the list. Before
+       it only carried the data, because the list was «the keys of the data». */
     var ida = JSON.parse(TEXTO_BLOB);
-    ok("el JSON exportado lleva el inventario entero",
+    ok("the exported JSON carries the whole inventory",
        !!ida.inventario && JSON.stringify(ida.inventario) === JSON.stringify(antes),
-       Object.keys((ida && ida.inventario) || {}).length + " criaturas, " +
-       (TEXTO_BLOB||"").length + " caracteres");
-    ok("y lleva la lista de «Mis criaturas» aparte",
+       Object.keys((ida && ida.inventario) || {}).length + " creatures, " +
+       (TEXTO_BLOB||"").length + " characters");
+    ok("and it carries the «Mis criaturas» list separately",
        Array.isArray(ida.mios) && JSON.stringify(ida.mios) === JSON.stringify(listaAntes),
        JSON.stringify(ida.mios));
     var conCreado = 0;
     Object.keys(ida.inventario).forEach(function(k){ if (ida.inventario[k].creado !== undefined) conCreado++; });
-    ok("el campo 'creado' sale en el fichero exportado", conCreado === Object.keys(ida.inventario).length,
+    ok("the 'creado' field comes out in the exported file", conCreado === Object.keys(ida.inventario).length,
        conCreado + "/" + Object.keys(ida.inventario).length);
 
-    // --- borrar ---
+    // --- delete ---
     document.getElementById("btnBorrar").click();
-    ok("Borrar todo vacia el inventario", Object.keys(INV).length === 0, Object.keys(INV).length + "");
-    ok("Borrar todo tambien limpia lo guardado en el navegador",
+    ok("Borrar todo empties the inventory", Object.keys(INV).length === 0, Object.keys(INV).length + "");
+    ok("Borrar todo also clears what is stored in the browser",
        !localStorage.getItem(CLAVE) || localStorage.getItem(CLAVE) === "{}",
        JSON.stringify(localStorage.getItem(CLAVE)));
-    ok("y la lista de Mis criaturas queda vacia",
+    ok("and the Mis criaturas list is left empty",
        /Todav\u00eda no has guardado/.test(txt("miosCuerpo")), txt("miosCuerpo").slice(0, 70));
 
-    // --- importar ---
+    // --- import ---
     TEXTO_A_IMPORTAR = TEXTO_BLOB;
     document.getElementById("btnImport").click();
-    ok("Importar abre un selector de fichero .json",
+    ok("Importar opens a .json file picker",
        !!ENTRADA && ENTRADA.type === "file" && ENTRADA.accept === ".json",
-       ENTRADA ? (ENTRADA.type + " " + ENTRADA.accept) : "(no se creo)");
+       ENTRADA ? (ENTRADA.type + " " + ENTRADA.accept) : "(not created)");
     var dt = new DataTransfer();
     dt.items.add(new File([TEXTO_BLOB], "jwa322-mis-criaturas.json", {type:"application/json"}));
     ENTRADA.files = dt.files;
     ENTRADA.dispatchEvent(new Event("change"));
 
-    ok("la importacion recupera las mismas criaturas",
+    ok("the import recovers the same creatures",
        Object.keys(INV).length === Object.keys(antes).length,
-       Object.keys(INV).length + " de " + Object.keys(antes).length);
+       Object.keys(INV).length + " of " + Object.keys(antes).length);
     var sinCreado = 0;
     Object.keys(INV).forEach(function(k){ if (INV[k].creado === undefined) sinCreado++; });
-    ok("el campo 'creado' sobrevive a la ida y vuelta", sinCreado === 0,
-       (Object.keys(INV).length - sinCreado) + " con creado, " + sinCreado + " sin el");
-    ok("el nivel y el ADN sobreviven",
+    ok("the 'creado' field survives the round trip", sinCreado === 0,
+       (Object.keys(INV).length - sinCreado) + " with creado, " + sinCreado + " without it");
+    ok("the level and the DNA survive",
        INV["indoraptor"] && INV["indoraptor"].nivel === 24 && INV["indoraptor"].adn === 4321,
        JSON.stringify(INV["indoraptor"]));
-    ok("el aviso dice cuantas importo",
+    ok("the notice says how many it imported",
        /Importadas \d+ criaturas/.test(ALERTAS.join(" | ")), ALERTAS.join(" | "));
-    ok("lo importado se ve en Mis criaturas", /Indoraptor/i.test(txt("miosCuerpo")),
+    ok("what was imported is visible in Mis criaturas", /Indoraptor/i.test(txt("miosCuerpo")),
        txt("miosCuerpo").slice(0, 70));
 
-    // la tabla de Mis criaturas tiene que ensenar el mismo nivel maximo que el motor
+    // the Mis criaturas table has to show the same maximum level as the engine
     var filasMios = document.querySelectorAll("#miosCuerpo tbody tr");
     var filaInd = null;
     filasMios.forEach(function(tr){ if (/Indoraptor/i.test(tr.innerText)) filaInd = tr; });
-    /* Por NOMBRE de columna, no por indice: ver `celdaDe`. */
+    /* By column NAME, not by index: see `celdaDe`. */
     var celdaMax = filaInd ? celdaDe(filaInd, "Nivel máx. hoy") : null;
     var invInd = invDe("indoraptor");
     var espInd = nivelMaximo("unique", invInd.creado ? Math.max(invInd.nivel, 1) : 0,
                              invInd.adn, invInd.creado).nivel;
-    ok("la columna 'Nivel max. hoy' de Mis criaturas coincide con el motor",
+    ok("the 'Nivel max. hoy' column of Mis criaturas matches the engine",
        celdaMax !== null && Number(celdaMax) === espInd,
-       "pagina " + celdaMax + " vs motor " + espInd);
+       "page " + celdaMax + " vs engine " + espInd);
 
-    // --- un fichero que no vale ---
+    // --- a file that is no good ---
     var antesMalo = Object.keys(INV).length;
     TEXTO_A_IMPORTAR = "[1,2,3]";
     document.getElementById("btnImport").click();
@@ -475,17 +478,17 @@ window.addEventListener("load", function(){
     dt2.items.add(new File(["[1,2,3]"], "basura.json", {type:"application/json"}));
     ENTRADA.files = dt2.files;
     ENTRADA.dispatchEvent(new Event("change"));
-    ok("un JSON que no es un objeto se rechaza con aviso",
-       /no vale/.test(ALERTAS.join(" | ")), ALERTAS.slice(-1)[0] || "(sin aviso)");
-    ok("y no toca el inventario que ya habia",
-       Object.keys(INV).length === antesMalo, Object.keys(INV).length + " de " + antesMalo);
+    ok("a JSON that is not an object is rejected with a notice",
+       /no vale/.test(ALERTAS.join(" | ")), ALERTAS.slice(-1)[0] || "(no notice)");
+    ok("and it does not touch the inventory that was already there",
+       Object.keys(INV).length === antesMalo, Object.keys(INV).length + " of " + antesMalo);
 
     HTMLAnchorElement.prototype.click = clickAncla;
     HTMLInputElement.prototype.click = clickInput;
     window.Blob = BlobReal;
     URL.createObjectURL = crearURL;
 
-    // ---------- 7. el nivel maximo de la raiz, contra nivelMaximo() ----------
+    // ---------- 7. the maximum level of the root, against nivelMaximo() ----------
     elegir("indoraptor");
     teclear(document.getElementById("nivelAct"), "10");
     teclear(document.getElementById("adnTengo"), "100000");
@@ -495,16 +498,16 @@ window.addEventListener("load", function(){
     var dicho = mm ? (mm.innerHTML.match(/llega al <b>nivel (\d+)<\/b>/) || [])[1] : null;
     var rareza = C["indoraptor"][1];
     var espMax = nivelMaximo(rareza, 10, 100000, true, M.nivelMax);
-    ok("el nivel maximo que ensena la raiz es el que calcula el motor",
+    ok("the maximum level the root shows is the one the engine calculates",
        dicho !== null && Number(dicho) === espMax.nivel,
-       "pagina " + dicho + " vs motor " + espMax.nivel + " (" + rareza + ", 100.000 ADN)");
-    ok("y avisa de que ya cumple el objetivo",
-       mm && /ya cumple el objetivo 35/.test(mm.innerHTML), mm ? mm.innerText.slice(0, 80) : "(sin bloque)");
+       "page " + dicho + " vs engine " + espMax.nivel + " (" + rareza + ", 100.000 DNA)");
+    ok("and it warns that it already meets the target",
+       mm && /ya cumple el objetivo 35/.test(mm.innerHTML), mm ? mm.innerText.slice(0, 80) : "(no block)");
 
-    // ---------- 8. un clic en Mis criaturas lleva a la calculadora ----------
-    // Se guarda por el boton de verdad, que es el unico que apunta el objetivo.
-    // El nivel tiene que estar por encima del de nacimiento: una unica nace en
-    // 21, y por debajo de ahi la criatura no puede estar creada.
+    // ---------- 8. a click in Mis criaturas takes you to the calculator ----------
+    // It is saved through the real button, which is the only one that records the target.
+    // The level has to be above the birth one: a unique one is born at
+    // 21, and below that the creature cannot be created.
     var nace = minLv(C["indoraptor"][1]);
     var lvOk = nace + 3;
     elegir("indoraptor");
@@ -514,20 +517,20 @@ window.addEventListener("load", function(){
     ev(document.getElementById("nivelObj"), "input");
     document.getElementById("btnGuardar").click();
     var guardado = INV["indoraptor"];
-    ok("el boton Guardar apunta tambien el objetivo",
+    ok("the Guardar button also records the target",
        guardado && guardado.objetivo === 28 && guardado.nivel === lvOk, JSON.stringify(guardado));
 
-    // el tropiezo que me costo un rato: un nivel por debajo del de nacimiento
+    // the stumble that cost me a while: a level below the birth one
     elegir("indoraptor");
     teclear(document.getElementById("nivelAct"), String(nace - 3));
     ev(document.getElementById("nivelAct"), "change");
     var invAbajo = invDe("indoraptor");
-    ok("un nivel por debajo del de nacimiento deja la criatura sin crear",
+    ok("a level below the birth one leaves the creature not created",
        invAbajo.creado === false && invAbajo.nivel === 0, JSON.stringify(invAbajo));
-    ok("y el campo se corrige, para que se vea lo mismo que se guarda",
+    ok("and the field is corrected, so that what is seen is what is saved",
        document.getElementById("nivelAct").value === "0", document.getElementById("nivelAct").value);
 
-    // se vuelve a dejar como estaba
+    // it is put back the way it was
     elegir("indoraptor");
     teclear(document.getElementById("nivelAct"), String(lvOk));
     teclear(document.getElementById("adnTengo"), "7777");
@@ -535,170 +538,172 @@ window.addEventListener("load", function(){
     ev(document.getElementById("nivelObj"), "input");
     document.getElementById("btnGuardar").click();
 
-    // nos vamos a otra criatura y a otra pestaña, para que el salto tenga que deshacer algo
+    // we go to another creature and another tab, so that the jump has to undo something
     elegir("rajadorixis");
     document.getElementById("nivelObj").value = 35;
     ev(document.getElementById("nivelObj"), "input");
-    /* Se guarda TAMBIEN esta. La prueba de la × necesita dos criaturas en la lista, y
-       antes las habia por accidente: todo lo que se tocaba acababa en «Mis criaturas».
-       Ahora hay que guardarlas a proposito, que es justo la regla nueva. */
+    /* This one is saved TOO. The × test needs two creatures in the list, and
+       before they were there by accident: everything that was touched ended up in
+       «Mis criaturas». Now they have to be saved on purpose, which is precisely
+       the new rule. */
     document.getElementById("btnGuardar").click();
     irA("mios");
-    ok("estamos en Mis criaturas",
+    ok("we are in Mis criaturas",
        document.getElementById("s-mios").classList.contains("on") &&
        !document.getElementById("s-calc").classList.contains("on"), "s-mios visible");
 
-    // que la pagina vuelva arriba de verdad. La ventana de la prueba (2200 px)
-    // es mas alta que el documento, asi que sin relleno no habria nada que
-    // desplazar y la comprobacion pasaria sin medir nada.
+    // that the page really goes back to the top. The test window (2200 px)
+    // is taller than the document, so without padding there would be nothing to
+    // scroll and the check would pass without measuring anything.
     var relleno = document.createElement("div");
     relleno.style.height = "1600px";
     document.body.appendChild(relleno);
 
     var scrollOriginal = window.scrollTo;
-    window.scrollTo(0, 500);                     // punto de partida: abajo
+    window.scrollTo(0, 500);                     // starting point: at the bottom
     var yAntes = window.scrollY;
-    ok("la prueba empieza con la pagina desplazada (si no, no mediria nada)",
-       yAntes > 0, "scrollY de partida " + yAntes);
+    ok("the test starts with the page scrolled (otherwise it would measure nothing)",
+       yAntes > 0, "starting scrollY " + yAntes);
     var pedidos = [];
     window.scrollTo = function(){
       pedidos.push(Array.prototype.slice.call(arguments));
-      return scrollOriginal.apply(window, arguments);   // y que lo haga de verdad
+      return scrollOriginal.apply(window, arguments);   // and that it really does it
     };
 
     var fila = null;
     document.querySelectorAll("#miosCuerpo tbody tr").forEach(function(tr){
       if (tr.dataset.ir === "indoraptor") fila = tr;
     });
-    ok("la fila de la criatura lleva su identificador", !!fila, fila ? fila.dataset.ir : "(no hay fila)");
-    ok("el nombre y la foto son <button> de verdad (teclado y lector de pantalla)",
+    ok("the creature row carries its identifier", !!fila, fila ? fila.dataset.ir : "(no row)");
+    ok("the name and the photo are real <button>s (keyboard and screen reader)",
        fila && fila.querySelectorAll("button.ir").length === 2,
-       fila ? fila.querySelectorAll("button.ir").length + " botones" : "0");
+       fila ? fila.querySelectorAll("button.ir").length + " buttons" : "0");
 
     fila.querySelector("button.ir:not(.foto-btn)").click();
 
-    ok("el clic lleva a la pestana Calculadora",
+    ok("the click takes you to the Calculadora tab",
        document.getElementById("s-calc").classList.contains("on") &&
        !document.getElementById("s-mios").classList.contains("on"), "s-calc visible");
-    ok("y deja elegida esa criatura",
+    ok("and it leaves that creature chosen",
        elegido === "indoraptor" && /Indoraptor/.test(txt("elegida")),
        "elegido=" + elegido + " | " + txt("elegida").slice(0, 40));
-    ok("con el nivel que tenia guardado (" + lvOk + ")",
+    ok("with the level it had saved (" + lvOk + ")",
        document.getElementById("nivelAct").value === String(lvOk),
        document.getElementById("nivelAct").value);
-    ok("con el ADN que tenia guardado (7.777)",
+    ok("with the DNA it had saved (7.777)",
        document.getElementById("adnTengo").value === "7777", document.getElementById("adnTengo").value);
-    ok("y con su nivel objetivo guardado (28), no el de la criatura anterior",
+    ok("and with its saved target level (28), not the previous creature's",
        document.getElementById("nivelObj").value === "28", document.getElementById("nivelObj").value);
-    ok("la pagina pide volver arriba", pedidos.length > 0 && Number(pedidos[0][1]) === 0,
+    ok("the page asks to go back to the top", pedidos.length > 0 && Number(pedidos[0][1]) === 0,
        JSON.stringify(pedidos));
-    ok("y de verdad queda arriba", window.scrollY === 0,
-       "scrollY " + window.scrollY + " (antes " + yAntes + ")");
+    ok("and it really ends up at the top", window.scrollY === 0,
+       "scrollY " + window.scrollY + " (before " + yAntes + ")");
     window.scrollTo = scrollOriginal;
     document.body.removeChild(relleno);
 
-    // clic en una celda del medio (no en el nombre): tambien tiene que navegar
+    // click on a middle cell (not on the name): it also has to navigate
     irA("mios");
     fila = null;
     document.querySelectorAll("#miosCuerpo tbody tr").forEach(function(tr){
       if (tr.dataset.ir === "indoraptor") fila = tr;
     });
     fila.querySelectorAll("td")[4].click();
-    ok("clic en cualquier celda de la fila tambien navega",
+    ok("a click on any cell of the row also navigates",
        document.getElementById("s-calc").classList.contains("on") && elegido === "indoraptor",
        "elegido=" + elegido);
 
-    // y la × borra SIN llevarte a la calculadora
+    // and the × deletes WITHOUT taking you to the calculator
     irA("mios");
     var antesN = Object.keys(INV).length;
     var otra = null;
     document.querySelectorAll("#miosCuerpo tbody tr").forEach(function(tr){
       if (tr.dataset.ir !== "indoraptor") otra = tr;
     });
-    ok("hay una segunda criatura para probar la ×", !!otra, antesN + " guardadas");
+    ok("there is a second creature to test the ×", !!otra, antesN + " saved");
     otra.querySelector("[data-borrar]").click();
-    ok("la × borra la criatura y NO te lleva a la calculadora",
+    ok("the × deletes the creature and does NOT take you to the calculator",
        Object.keys(INV).length === antesN - 1 && document.getElementById("s-mios").classList.contains("on"),
-       "quedan " + Object.keys(INV).length + " y la pestana activa es " +
-       (document.getElementById("s-mios").classList.contains("on") ? "Mis criaturas" : "otra"));
+       "there remain " + Object.keys(INV).length + " and the active tab is " +
+       (document.getElementById("s-mios").classList.contains("on") ? "Mis criaturas" : "another"));
 
-    // y una criatura borrada ya no tiene fila
-    ok("la fila borrada desaparece de la lista",
+    // and a deleted creature no longer has a row
+    ok("the deleted row disappears from the list",
        !/Rajadorixis/i.test(txt("miosCuerpo")) && /Indoraptor/i.test(txt("miosCuerpo")),
        txt("miosCuerpo").slice(0, 60));
 
-    // ---------- 9. editar el arbol se refleja en la CALCULADORA ----------
-    // Paralidactylus es un apex mega_hybrid: es raiz de su propio arbol y nace
-    // en 26. Sin crear y con 0 ADN, de 0 a 35 cuesta 3.000 (300 de crearla +
-    // 2.700 de escalera). Con 300 puestos en el arbol, el deficit baja a 2.700.
+    // ---------- 9. editing the tree is reflected in the CALCULATOR ----------
+    // Paralidactylus is an apex mega_hybrid: it is the root of its own tree and is
+    // born at 26. Not created and with 0 DNA, from 0 to 35 costs 3.000 (300 to
+    // create it + 2.700 of ladder). With 300 put in the tree, the deficit drops
+    // to 2.700.
     elegir("paralidactylus");
     document.getElementById("nivelObj").value = 35;
     ev(document.getElementById("nivelObj"), "input");
     document.querySelector('nav button[data-t="arbol"]').click();
     var raizP = document.querySelector("#arbolCuerpo .nodo.raiz");
-    ok("Paralidactylus es la raiz de su arbol", !!raizP, raizP ? "si" : "(no hay raiz)");
+    ok("Paralidactylus is the root of its tree", !!raizP, raizP ? "yes" : "(no root)");
     var etiq = etiquetasDe("resultado");
     var iFalta = etiq.indexOf("ADN que falta");
     var cifrasAntes = cifrasDe("resultado");
-    log("calculadora antes de tocar el arbol", JSON.stringify(cifrasAntes));
-    ok("la calculadora ensena el ADN que falta y parte de 3.000",
-       iFalta >= 0 && cifrasAntes[iFalta] === 3000, "ADN que falta = " + cifrasAntes[iFalta]);
+    log("calculator before touching the tree", JSON.stringify(cifrasAntes));
+    ok("the calculator shows the missing DNA and starts from 3.000",
+       iFalta >= 0 && cifrasAntes[iFalta] === 3000, "missing DNA = " + cifrasAntes[iFalta]);
     var campoAntes = document.getElementById("adnTengo").value;
 
     var adnRaiz = raizP.querySelector("input[data-campo='adn']");
     teclear(adnRaiz, "300");
     ev(adnRaiz, "change");
 
-    ok("el ADN puesto en la raiz del arbol llega al campo de la calculadora",
+    ok("the DNA put in the root of the tree reaches the calculator field",
        document.getElementById("adnTengo").value === "300",
-       "campo de la calculadora = " + document.getElementById("adnTengo").value + " (antes " + campoAntes + ")");
+       "calculator field = " + document.getElementById("adnTengo").value + " (before " + campoAntes + ")");
     var cifrasDespues = cifrasDe("resultado");
-    ok("y el resultado de la calculadora se recalcula (3.000 - 300 = 2.700)",
+    ok("and the calculator result is recalculated (3.000 - 300 = 2.700)",
        cifrasDespues[iFalta] === 2700,
-       "ADN que falta = " + cifrasDespues[iFalta] + " (antes " + cifrasAntes[iFalta] + ")");
+       "missing DNA = " + cifrasDespues[iFalta] + " (before " + cifrasAntes[iFalta] + ")");
 
-    // ---------- 10. informe completo del arbol ----------
+    // ---------- 10. full report of the tree ----------
     var inf = document.getElementById("informeArbol");
-    ok("la calculadora tiene el informe del arbol", !!inf, inf ? "si" : "(no existe)");
+    ok("the calculator has the tree report", !!inf, inf ? "yes" : "(does not exist)");
     if (inf){
       var filasInf = inf.querySelectorAll("tbody tr");
       var nodosArbol = document.querySelectorAll("#arbolCuerpo .nodo").length;
-      // El informe agrupa por criatura: una fila por criatura distinta, no por
-      // aparicion en el arbol. Nunca puede haber mas filas que nodos.
+      // The report groups by creature: one row per distinct creature, not per
+      // appearance in the tree. There can never be more rows than nodes.
       var nombresInf = [];
       inf.querySelectorAll("tbody tr:not(.total)").forEach(function(tr){
         nombresInf.push(tr.querySelector("td").textContent
           .replace(/raíz|se recolecta|sin crear/g, "").trim());
       });
       var repes = nombresInf.filter(function(x, i){ return nombresInf.indexOf(x) !== i; });
-      ok("el informe lista una fila por criatura, sin repetir ninguna",
-         repes.length === 0, nombresInf.length + " filas" + (repes.length ? " | repetidas: " + repes.join(", ") : ""));
-      ok("y no lista mas criaturas que nodos tiene el arbol",
-         nombresInf.length <= nodosArbol, nombresInf.length + " filas para " + nodosArbol + " nodos");
-      ok("el informe nombra la raiz y sus ingredientes",
+      ok("the report lists one row per creature, without repeating any",
+         repes.length === 0, nombresInf.length + " rows" + (repes.length ? " | repeated: " + repes.join(", ") : ""));
+      ok("and it does not list more creatures than the tree has nodes",
+         nombresInf.length <= nodosArbol, nombresInf.length + " rows for " + nodosArbol + " nodes");
+      ok("the report names the root and its ingredients",
          /Paralidactylus/.test(txc("informeArbol")) && /Paralitrosaurus/.test(txc("informeArbol")) &&
          /Skorpiodactylus/.test(txc("informeArbol")),
          txc("informeArbol").slice(0, 90));
-      log("cifras del informe", JSON.stringify(cifrasDe("informeArbol")) + " | " +
+      log("report figures", JSON.stringify(cifrasDe("informeArbol")) + " | " +
           JSON.stringify(etiquetasDe("informeArbol")));
-      ok("el informe va arriba del bloque de nivel maximo",
+      ok("the report goes above the maximum level block",
          !!(document.getElementById("informeArbol").compareDocumentPosition(
               document.getElementById("maxNivel")) & Node.DOCUMENT_POSITION_FOLLOWING),
-         "informe antes de maxNivel");
+         "report before maxNivel");
       var tb = inf.querySelector("table");
-      ok("la tabla del informe cabe a lo ancho, sin scroll horizontal",
+      ok("the report table fits across, without horizontal scroll",
          tb.scrollWidth <= tb.clientWidth + 2,
          "scrollWidth " + tb.scrollWidth + " vs clientWidth " + tb.clientWidth);
-      // la suma de la columna "Falta" tiene que ser la cifra total del informe.
-      // Columnas: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
-      // (la de «Rareza» se quito el 25-sep, y la de «Veces» tambien).
-      /* La fila Total ya NO tiene una celda que ocupe 2: al meterle el boton
-         «Criar a todas» en la columna «Nivel», la primera celda baja a
-         colspan=1 y la fila pasa a tener 6 celdas, las mismas que la cabecera.
-         Antes se leia `celdasTotal[3]` dando por hecho el colspan; ese indice
-         ahora devuelve OTRA columna (Tienes en vez de Falta). Es la trampa 16
-         —leer una celda por su posicion— mordiendo en el cambio siguiente a
-         documentarla. Se lee por el NOMBRE de la columna. */
+      // the sum of the "Falta" column has to be the total figure of the report.
+      // Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
+      // (the «Rareza» one was removed on 25-sep, and the «Veces» one too).
+      /* The Total row no longer has a cell that spans 2: when the «Criar a todas»
+         button was put into the «Nivel» column, the first cell drops to
+         colspan=1 and the row ends up with 6 cells, the same as the header.
+         Before, `celdasTotal[3]` was read taking the colspan for granted; that
+         index now returns ANOTHER column (Tienes instead of Falta). It is trap 16
+         —reading a cell by its position— biting on the change right after
+         documenting it. It is read by the NAME of the column. */
       var iF = indiceEtiqueta("informeArbol", /^ADN que falta/i);
       var sumaFalta = 0;
       inf.querySelectorAll("tbody tr:not(.total)").forEach(function(tr){
@@ -706,17 +711,17 @@ window.addEventListener("load", function(){
       });
       var celdasTotal = inf.querySelector("tr.total").querySelectorAll("td");
       var totalFila = Number(celdaDe(inf.querySelector("tr.total"), "Falta").replace(/[^\d]/g, "")) || 0;
-      ok("la fila Total cuadra con la suma de las filas y con la cifra de arriba",
+      ok("the Total row matches the sum of the rows and the figure above",
          celdasTotal.length === 6 && iF >= 0 && totalFila === sumaFalta &&
          totalFila === cifrasDe("informeArbol")[iF],
-         celdasTotal.length + " celdas | suma " + sumaFalta + " = total " + totalFila +
-         " = cifra " + cifrasDe("informeArbol")[iF]);
+         celdasTotal.length + " cells | sum " + sumaFalta + " = total " + totalFila +
+         " = figure " + cifrasDe("informeArbol")[iF]);
     }
 
-    // ---------- 11. ingrediente compartido: el ADN se descuenta UNA vez ----------
-    // Indoraptor lleva Velociraptor, y su ingrediente Indominus Rex tambien: la
-    // misma reserva de ADN sale en dos ramas. Restando el deficit de cada
-    // aparicion se descontaba el mismo ADN dos veces y el total salia corto.
+    // ---------- 11. shared ingredient: the DNA is subtracted ONCE ----------
+    // Indoraptor carries Velociraptor, and its Indominus Rex ingredient too: the
+    // same DNA pool shows up in two branches. Subtracting the deficit of each
+    // appearance subtracted the same DNA twice and the total came out short.
     elegir("indoraptor");
     document.getElementById("nivelObj").value = 30;
     ev(document.getElementById("nivelObj"), "input");
@@ -729,33 +734,34 @@ window.addEventListener("load", function(){
     var tI = plan("indoraptor", 30, 0, new Set(), true, contarSubida);
     var ttI = totales(tI);
     var vel = ttI.porUuid["velociraptor"];
-    ok("el arbol detecta el ingrediente compartido", vel && vel.veces === 2,
-       vel ? "sale " + vel.veces + " veces" : "(no aparece)");
+    ok("the tree detects the shared ingredient", vel && vel.veces === 2,
+       vel ? "it appears " + vel.veces + " times" : "(does not appear)");
     var apar = [];
     (function rec(x){ if (x.uuid === "velociraptor") apar.push(x); x.hijos.forEach(rec); })(tI);
     var necSuma = apar.reduce(function(a, x){ return a + x.adnNec; }, 0);
     var naive = 0;
     (function rec(x){ naive += x.deficit; x.hijos.forEach(rec); })(tI);
-    log("Velociraptor: nec por rama " + apar.map(function(x){ return x.adnNec; }).join(" + ") +
-        " = " + necSuma + " | tiene 30.000 | apariciones " + apar.length);
-    ok("su ADN necesario es la SUMA de las dos ramas", vel.nec === necSuma,
+    log("Velociraptor: needed per branch " + apar.map(function(x){ return x.adnNec; }).join(" + ") +
+        " = " + necSuma + " | has 30.000 | appearances " + apar.length);
+    ok("its needed DNA is the SUM of the two branches", vel.nec === necSuma,
        vel.nec + " vs " + necSuma);
-    ok("y lo que tienes se descuenta UNA vez, no una por rama",
-       vel.falta === Math.max(0, necSuma - 30000), vel.falta + " (suma de deficits " +
+    ok("and what you have is subtracted ONCE, not once per branch",
+       vel.falta === Math.max(0, necSuma - 30000), vel.falta + " (sum of deficits " +
        apar.reduce(function(a, x){ return a + x.deficit; }, 0) + ")");
-    ok("el total del arbol corrige justo una reserva contada de mas",
+    ok("the tree total corrects exactly one pool counted too many",
        ttI.adn === naive + 30000,
-       "total " + nf(ttI.adn) + " vs suma por apariciones " + nf(naive) + " (diferencia " +
-       nf(ttI.adn - naive) + ", la reserva son 30.000)");
-    /* La columna «Veces» se retiro el 25-sep-2026. Lo que hay que comprobar
-       ahora es lo contrario de antes: que NO este, ni en la cabecera ni en el
-       texto —la nota la citaba por su nombre—, y que la fila del Velociraptor
-       siga llevando el total corregido. El contador `veces` sigue vivo detras
-       (alimenta `repetidas`), pero eso lo comprueba la asercion de arriba. */
-    ok("el informe sigue avisando del ingrediente compartido",
+       "total " + nf(ttI.adn) + " vs sum per appearances " + nf(naive) + " (difference " +
+       nf(ttI.adn - naive) + ", the pool is 30.000)");
+    /* The «Veces» column was withdrawn on 25-sep-2026. What has to be checked now
+       is the opposite of before: that it is NOT there, neither in the header nor
+       in the text —the note cited it by name—, and that the Velociraptor row
+       still carries the corrected total. The `veces` counter is still alive
+       behind the scenes (it feeds `repetidas`), but that is checked by the
+       assertion above. */
+    ok("the report still warns about the shared ingredient",
        /Velociraptor/.test(txc("informeArbol")) &&
-       /varias ramas del árbol/.test(txc("informeArbol")), "informe con la nota de compartidas");
-    ok("y la columna «Veces» ya no esta: ni en la cabecera ni citada en la nota",
+       /varias ramas del árbol/.test(txc("informeArbol")), "report with the shared note");
+    ok("and the «Veces» column is no longer there: neither in the header nor cited in the note",
        inf.querySelectorAll("thead th").length === 6 && !/Veces/.test(txc("informeArbol")),
        Array.prototype.map.call(inf.querySelectorAll("thead th"), function(th){
          return th.textContent.trim(); }).join(" | "));
@@ -763,55 +769,55 @@ window.addEventListener("load", function(){
     inf.querySelectorAll("tbody tr").forEach(function(tr){
       if (/Velociraptor/.test(tr.innerText)) filaVel = tr;
     });
-    ok("la fila del Velociraptor tiene 6 celdas y el total corregido",
+    ok("the Velociraptor row has 6 cells and the corrected total",
        filaVel && filaVel.querySelectorAll("td").length === 6 &&
        Number(celdaDe(filaVel, "Falta").replace(/[^\d]/g, "")) === vel.falta,
-       filaVel ? filaVel.querySelectorAll("td").length + " celdas, falta " +
-                 celdaDe(filaVel, "Falta") : "(sin fila)");
+       filaVel ? filaVel.querySelectorAll("td").length + " cells, missing " +
+                 celdaDe(filaVel, "Falta") : "(no row)");
   } catch (e) {
-    log("!! EXCEPCION en la parte de los botones", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+    log("!! EXCEPTION in the buttons part", e.message + " @@ " + (e.stack || "").split("\n")[1]);
   }
 
-  // ---------- 12. el interruptor «subir los ingredientes» ----------
-  /* Esta seccion NO es un espejo del codigo: es el enunciado de lo que espera
-     quien usa la pagina.
+  // ---------- 12. the «subir los ingredientes» switch ----------
+  /* This section is NOT a mirror of the code: it is the statement of what the
+     person using the page expects.
 
-     El informe sumaba la escalera de TODAS las criaturas pasara lo que pasara,
-     asi que daba exactamente la misma cifra con la casilla marcada y
-     desmarcada, mientras la pestana del arbol si cambiaba. Dos vistas de la
-     misma pantalla contradiciendose. La prueba del espejo Python no lo veia
-     porque el espejo cometia el mismo error: cuando la prueba y el codigo se
-     escriben desde la misma lectura, un malentendido comun pasa en verde. */
+     The report added the ladder of ALL the creatures no matter what, so it gave
+     exactly the same figure with the checkbox checked and unchecked, while the
+     tree tab did change. Two views of the same screen contradicting each other.
+     The Python mirror test did not see it because the mirror made the same
+     mistake: when the test and the code are written from the same reading, a
+     common misunderstanding passes in green. */
   try {
     var chkSub = document.getElementById("chkSubida");
-    ok("existe la casilla de contar la subida", !!chkSub);
+    ok("the checkbox for counting the level-up exists", !!chkSub);
 
-    /* Filas del informe por nombre, MAS la fila Total, todo capturado en el
-       mismo instante. Leer las filas como datos y la fila Total del DOM mas
-       tarde no vale: entre medias se vuelve a encender la casilla, el informe se
-       repinta, y el Total que se lee ya es el de la casilla marcada. Media foto
-       del estado A y media del estado B.
-       El nombre es el primer nodo de texto de la primera celda; las pildoras
-       («raíz», «se recolecta») van detras. */
+    /* Report rows by name, PLUS the Total row, all captured at the same
+       instant. Reading the rows as data and the Total row from the DOM later is
+       no good: in between the checkbox is turned back on, the report is
+       repainted, and the Total that is read is already the one with the checkbox
+       checked. Half a picture of state A and half of state B.
+       The name is the first text node of the first cell; the pills
+       («raíz», «se recolecta») come after it. */
     function filasInforme(){
       var m = {}, raiz = null;
       document.querySelectorAll("#informeArbol tbody tr:not(.total)").forEach(function(tr){
         var c = tr.querySelectorAll("td");
         var nom = (c[0].childNodes[0] && c[0].childNodes[0].textContent || "").trim();
         if (!nom) return;
-        /* Por NOMBRE de columna, no por indice: ver la nota de arriba y la
-           trampa 16. La celda «Nivel» puede llevar dentro el boton «criar», y
-           `textContent` lo incluye, que es justo lo que hace falta leer. */
+        /* By column NAME, not by index: see the note above and trap 16. The
+           «Nivel» cell may contain the «criar» button, and `textContent` includes
+           it, which is exactly what needs to be read. */
         m[nom] = {nec: Number(celdaDe(tr, "ADN necesario").replace(/[^\d]/g, "")) || 0,
                   nivel: celdaDe(tr, "Nivel"),
                   falta: Number(celdaDe(tr, "Falta").replace(/[^\d]/g, "")) || 0};
         if (tr.classList.contains("raiz-fila")) raiz = nom;
       });
-      /* Columnas: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
-         (la de «Rareza» y la de «Veces» se quitaron el 25-sep).
-         La fila Total YA NO lleva colspan: al ganar el boton «Criar a todas» en
-         la columna «Nivel», sus 6 celdas coinciden con las 6 columnas, asi que
-         `celdaDe` la lee igual que a cualquier otra fila. */
+      /* Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
+         (the «Rareza» one and the «Veces» one were removed on 25-sep).
+         The Total row no longer carries a colspan: when it gained the «Criar a
+         todas» button in the «Nivel» column, its 6 cells match the 6 columns, so
+         `celdaDe` reads it the same as any other row. */
       var trTot = document.querySelector("#informeArbol tbody tr.total");
       var cT = trTot ? trTot.querySelectorAll("td") : [];
       return {porNombre: m, raiz: raiz,
@@ -820,106 +826,106 @@ window.addEventListener("load", function(){
               totalFalta: cT.length ? Number(celdaDe(trTot, "Falta").replace(/[^\d]/g, "")) || 0 : -1};
     }
 
-    chkSub.checked = true; ev(chkSub, "change");          // partir del estado marcado
+    chkSub.checked = true; ev(chkSub, "change");          // start from the checked state
     var cifON = cifrasDe("informeArbol");
     var iTot = indiceEtiqueta("informeArbol", /^ADN que falta/i);
     var iRec = indiceEtiqueta("informeArbol", /^A recolectar$/i);
     var iMon = indiceEtiqueta("informeArbol", /^Monedas$/i);
-    ok("el informe tiene sus cuatro cifras rotuladas", iTot >= 0 && iRec >= 0 && iMon >= 0,
+    ok("the report has its four labelled figures", iTot >= 0 && iRec >= 0 && iMon >= 0,
        JSON.stringify(etiquetasDe("informeArbol")));
     var ON = filasInforme();
-    ok("el informe marca cual es la raiz", !!ON.raiz, ON.raiz || "(ninguna fila con raiz-fila)");
+    ok("the report marks which one is the root", !!ON.raiz, ON.raiz || "(no row with raiz-fila)");
 
     chkSub.checked = false; ev(chkSub, "change");
     var cifOFF = cifrasDe("informeArbol");
     var OFF = filasInforme();
 
-    ok("apagar la casilla cambia el informe", cifON[iTot] !== cifOFF[iTot],
-       "ADN que falta en total: " + cifON[iTot] + " con la casilla, " + cifOFF[iTot] + " sin ella");
-    ok("y cambia a menos: sin subir ingredientes hace falta menos ADN",
+    ok("turning the checkbox off changes the report", cifON[iTot] !== cifOFF[iTot],
+       "total missing DNA: " + cifON[iTot] + " with the checkbox, " + cifOFF[iTot] + " without it");
+    ok("and it changes to less: without levelling up ingredients less DNA is needed",
        cifOFF[iTot] < cifON[iTot], cifOFF[iTot] + " < " + cifON[iTot]);
-    ok("lo que hay que recolectar tambien baja", cifOFF[iRec] < cifON[iRec],
+    ok("what has to be gathered also drops", cifOFF[iRec] < cifON[iRec],
        cifON[iRec] + " -> " + cifOFF[iRec]);
-    ok("las monedas tambien bajan", cifOFF[iMon] < cifON[iMon],
+    ok("the Coins also drop", cifOFF[iMon] < cifON[iMon],
        cifON[iMon] + " -> " + cifOFF[iMon]);
 
-    /* La raiz SIEMPRE paga su escalera: es el objetivo del calculo, no un
-       ingrediente. Apagar la casilla no puede abaratarla. */
-    ok("la raiz conserva su ADN necesario con la casilla apagada",
+    /* The root ALWAYS pays its ladder: it is the target of the calculation, not an
+       ingredient. Turning the checkbox off cannot make it cheaper. */
+    ok("the root keeps its needed DNA with the checkbox off",
        ON.raiz && OFF.porNombre[ON.raiz] && ON.porNombre[ON.raiz].nec === OFF.porNombre[ON.raiz].nec,
        ON.raiz ? ON.raiz + ": " + ON.porNombre[ON.raiz].nec + " vs " +
-                 (OFF.porNombre[ON.raiz] ? OFF.porNombre[ON.raiz].nec : "(no sale)") : "(sin raiz)");
+                 (OFF.porNombre[ON.raiz] ? OFF.porNombre[ON.raiz].nec : "(does not come out)") : "(no root)");
 
-    /* A un ingrediente solo se le puede QUITAR la escalera, nunca sumarle. */
+    /* An ingredient can only have its ladder TAKEN AWAY, never added to. */
     var comunes = Object.keys(ON.porNombre).filter(function(k){ return OFF.porNombre[k]; });
     var suben = comunes.filter(function(k){ return OFF.porNombre[k].nec > ON.porNombre[k].nec; });
-    ok("ningun ingrediente sube de ADN al apagar la casilla", suben.length === 0,
-       suben.length + " suben" + (suben.length ? ": " + suben.slice(0,3).join(", ") : ""));
+    ok("no ingredient goes up in DNA when the checkbox is turned off", suben.length === 0,
+       suben.length + " go up" + (suben.length ? ": " + suben.slice(0,3).join(", ") : ""));
 
     var bajan = comunes.filter(function(k){
       return k !== ON.raiz && OFF.porNombre[k].nec < ON.porNombre[k].nec;
     });
-    ok("y al menos un ingrediente baja, que es lo que se le quita", bajan.length > 0,
-       bajan.length + " de " + comunes.length + " bajan, p.ej. " + (bajan[0] || "—"));
+    ok("and at least one ingredient drops, which is what is taken away from it", bajan.length > 0,
+       bajan.length + " of " + comunes.length + " drop, e.g. " + (bajan[0] || "—"));
 
-    /* Sin subida no hay rango de niveles que ensenar para un INGREDIENTE:
-       «16 → 20» haria creer que se esta pagando esa subida. La raiz es la
-       excepcion: siempre paga su escalera, asi que siempre ensena su rango.
+    /* Without the level-up there is no level range to show for an INGREDIENT:
+       «16 → 20» would make you believe that level-up is being paid for. The root
+       is the exception: it always pays its ladder, so it always shows its range.
 
-       OJO con buscar «→» a secas: desde el 25-sep la flecha se usa para DOS
-       cosas —el rango de niveles («16 → 20») y el boton de criar («criar → 20»,
-       que es una accion, no un rango)—. Por eso `esRangoNivel` busca la firma
-       completa. Es mas preciso que antes, no mas laxo: `/→/` daba por rango
-       cualquier cosa con la flecha. */
+       WATCH OUT about looking for «→» on its own: since 25-sep the arrow is used
+       for TWO things —the level range («16 → 20») and the breed button
+       («criar → 20», which is an action, not a range)—. That is why
+       `esRangoNivel` looks for the full signature. It is more precise than
+       before, not more lax: `/→/` took anything with the arrow for a range. */
     var rangos = comunes.filter(function(k){
       return k !== ON.raiz && esRangoNivel(OFF.porNombre[k].nivel);
     });
-    ok("sin subir ingredientes no se ensena ningun rango de niveles", rangos.length === 0,
-       rangos.length + " filas con rango" + (rangos.length ? ": " + rangos.slice(0,3).join(", ") : ""));
-    ok("y la raiz conserva su rango, porque su escalera si se paga",
+    ok("without levelling up ingredients no level range is shown", rangos.length === 0,
+       rangos.length + " rows with a range" + (rangos.length ? ": " + rangos.slice(0,3).join(", ") : ""));
+    ok("and the root keeps its range, because its ladder is indeed paid",
        !ON.raiz || esRangoNivel(OFF.porNombre[ON.raiz].nivel),
-       ON.raiz ? ON.raiz + ": " + OFF.porNombre[ON.raiz].nivel : "(sin raiz)");
+       ON.raiz ? ON.raiz + ": " + OFF.porNombre[ON.raiz].nivel : "(no root)");
     var rangosON = comunes.filter(function(k){ return esRangoNivel(ON.porNombre[k].nivel); });
-    ok("con la casilla marcada si se ensenan rangos donde los hay", rangosON.length > 0,
-       rangosON.length + " filas con rango");
+    ok("with the checkbox checked ranges are shown where there are any", rangosON.length > 0,
+       rangosON.length + " rows with a range");
 
-    /* Con la casilla apagada, la misma pantalla tiene que decir con que criterio
-       calcula. Si no, da dos respuestas distintas segun una casilla que esta en
-       otra pestana, y ninguna de las dos se identifica. */
-    ok("el informe avisa de que sigue el criterio de paleo.gg",
+    /* With the checkbox off, the same screen has to say by what criterion it
+       calculates. Otherwise it gives two different answers depending on a checkbox
+       that is in another tab, and neither of the two identifies itself. */
+    ok("the report warns that it follows paleo.gg's criterion",
        /paleo\.gg/.test(txc("informeArbol")));
     chkSub.checked = true; ev(chkSub, "change");
-    ok("y el aviso desaparece al volver a marcarla",
+    ok("and the notice disappears when it is checked again",
        !/criterio de paleo\.gg/.test(txc("informeArbol")));
 
-    /* El total tiene que cuadrar con la suma de las filas en LOS DOS estados:
-       si la agregacion y las filas salieran de cuentas distintas, uno de los dos
-       estaria mintiendo. */
-    [["con la casilla", cifON, ON], ["sin la casilla", cifOFF, OFF]].forEach(function(p){
+    /* The total has to match the sum of the rows in BOTH states: if the
+       aggregation and the rows came from different calculations, one of the two
+       would be lying. */
+    [["with the checkbox", cifON, ON], ["without the checkbox", cifOFF, OFF]].forEach(function(p){
       var sumaNec = 0, sumaFalta = 0;
       Object.keys(p[2].porNombre).forEach(function(k){
         sumaNec += p[2].porNombre[k].nec;
         sumaFalta += p[2].porNombre[k].falta;
       });
-      ok("la columna «ADN necesario» del Total cuadra con las filas " + p[0],
+      ok("the «ADN necesario» column of the Total matches the rows " + p[0],
          p[2].nCeldasTotal === 6 && p[2].totalNec === sumaNec,
-         p[2].nCeldasTotal + " celdas | total " + p[2].totalNec + " vs suma de filas " + sumaNec);
-      ok("y la columna «Falta» del Total tambien " + p[0],
+         p[2].nCeldasTotal + " cells | total " + p[2].totalNec + " vs sum of rows " + sumaNec);
+      ok("and the «Falta» column of the Total too " + p[0],
          p[2].totalFalta === sumaFalta,
-         "total " + p[2].totalFalta + " vs suma de filas " + sumaFalta);
+         "total " + p[2].totalFalta + " vs sum of rows " + sumaFalta);
     });
   } catch (e) {
-    log("!! EXCEPCION en la parte del interruptor", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+    log("!! EXCEPTION in the switch part", e.message + " @@ " + (e.stack || "").split("\n")[1]);
   }
 
-  // ---------- 13. EL NIVEL OBJETIVO ES DE CADA CRIATURA ----------
-  /* El objetivo vivia en un solo sitio: el deslizador. Habia UNA sola escritura
-     de `objetivo` en INV (la del boton «Guardar»), asi que no existia hasta
-     guardar; y `elegir` conservaba el valor del deslizador en vez de restaurar el
-     de la criatura, de modo que poner 30 en el Indoraptor y pasar a otro dino le
-     dejaba el 30 al nuevo sin que nadie lo hubiera pedido. Pedido de n30 el
-     25-sep-2026: «guarda un nivel objetivo distinto para cada dino, eso debe
-     reflejarse en la calculadora y en mis criaturas». */
+  // ---------- 13. THE TARGET LEVEL BELONGS TO EACH CREATURE ----------
+  /* The target lived in a single place: the slider. There was only ONE write of
+     `objetivo` in INV (the one from the «Guardar» button), so it did not exist
+     until saving; and `elegir` kept the slider's value instead of restoring the
+     creature's, so that setting 30 on the Indoraptor and moving to another dino
+     left the 30 on the new one without anyone having asked for it. Request from
+     n30 on 25-sep-2026: «guarda un nivel objetivo distinto para cada dino, eso
+     debe reflejarse en la calculadora y en mis criaturas». */
   try {
     localStorage.removeItem("jwa322.inventario");
     localStorage.removeItem("jwa322.mios");
@@ -929,123 +935,122 @@ window.addEventListener("load", function(){
     function objGuardado(u){ return INV[u] ? INV[u].objetivo : undefined; }
     function celdaObjetivo(u){
       var tr = document.querySelector('#miosCuerpo tr[data-ir="' + u + '"]');
-      return tr ? celdaDe(tr, "Objetivo") : "(sin fila)";
+      return tr ? celdaDe(tr, "Objetivo") : "(no row)";
     }
 
     elegir("indoraptor");
-    ok("una criatura sin objetivo guardado arranca en el tope", objetivo() === 35,
-       "deslizador = " + objetivo());
+    ok("a creature without a saved target starts at the cap", objetivo() === 35,
+       "slider = " + objetivo());
     teclear(document.getElementById("nivelObj"), "30");
-    ok("mover el deslizador guarda el objetivo de esa criatura", objGuardado("indoraptor") === 30,
-       "guardado = " + objGuardado("indoraptor"));
+    ok("moving the slider saves that creature's target", objGuardado("indoraptor") === 30,
+       "saved = " + objGuardado("indoraptor"));
 
     elegir("tyrannosaurus_rex");
-    ok("al cambiar de criatura NO se hereda el objetivo de la anterior", objetivo() === 35,
-       "el t-rex aparece en " + objetivo() + " y el indoraptor tenia 30");
+    ok("when changing creature the previous one's target is NOT inherited", objetivo() === 35,
+       "the t-rex appears at " + objetivo() + " and the indoraptor had 30");
     teclear(document.getElementById("nivelObj"), "25");
 
     elegir("indoraptor");
-    ok("al volver, cada criatura recupera el suyo", objetivo() === 30, "indoraptor = " + objetivo());
+    ok("on returning, each creature recovers its own", objetivo() === 30, "indoraptor = " + objetivo());
     elegir("tyrannosaurus_rex");
-    ok("y la otra el suyo", objetivo() === 25, "t-rex = " + objetivo());
+    ok("and the other one its own", objetivo() === 25, "t-rex = " + objetivo());
 
     elegir("indoraptor"); document.getElementById("btnGuardar").click();
     elegir("tyrannosaurus_rex"); document.getElementById("btnGuardar").click();
-    ok("«Mis criaturas» enseña el objetivo de cada fila",
+    ok("«Mis criaturas» shows the target of each row",
        celdaObjetivo("indoraptor") === "30" && celdaObjetivo("tyrannosaurus_rex") === "25",
        "indoraptor " + celdaObjetivo("indoraptor") + " / t-rex " + celdaObjetivo("tyrannosaurus_rex"));
 
-    /* El arbol saca el objetivo de la raiz DEL DESLIZADOR, asi que tiene que
-       enterarse al moverlo. Antes el manejador llamaba solo a `calcular`, y la
-       raiz se quedaba con el objetivo anterior: la misma pantalla daba dos
-       respuestas. */
+    /* The tree takes the target of the root FROM THE SLIDER, so it has to find
+       out when it is moved. Before, the handler only called `calcular`, and the
+       root kept the previous target: the same screen gave two answers. */
     elegir("indoraptor");
     irA("arbol"); pintarArbol();
     var raiz30 = document.querySelector(".arbol .nodo.raiz").textContent.replace(/\s+/g, " ");
-    ok("la raiz del arbol cita el objetivo de su criatura", /→ 30/.test(raiz30), raiz30.slice(0, 78));
+    ok("the root of the tree quotes its creature's target", /→ 30/.test(raiz30), raiz30.slice(0, 78));
     irA("calc"); teclear(document.getElementById("nivelObj"), "33");
     irA("arbol"); pintarArbol();
     var raiz33 = document.querySelector(".arbol .nodo.raiz").textContent.replace(/\s+/g, " ");
-    ok("y se entera al mover el deslizador, sin quedarse con el 30",
+    ok("and it finds out when the slider is moved, without keeping the 30",
        /→ 33/.test(raiz33) && !/→ 30/.test(raiz33), raiz33.slice(0, 78));
 
-    /* `fijar` REEMPLAZA el objeto de INV entero: si no arrastrase el objetivo,
-       teclear el ADN de un ingrediente le borraria su objetivo a la raiz. */
+    /* `fijar` REPLACES the whole INV object: if it did not carry the target
+       along, typing the DNA of an ingredient would erase the root's target. */
     irA("arbol"); pintarArbol();
     var ing = document.querySelector("#arbolCuerpo .nodo:not(.raiz) input[data-campo='adn']");
     var uIng = ing.dataset.u;
     teclear(ing, "999");
-    ok("teclear en el arbol no borra el objetivo de la raiz", objGuardado("indoraptor") === 33,
-       "ahora es " + objGuardado("indoraptor"));
-    ok("y el ingrediente no se queda con un objetivo que nadie le dio",
-       objGuardado(uIng) === undefined, "objetivo del ingrediente = " + objGuardado(uIng));
+    ok("typing in the tree does not erase the root's target", objGuardado("indoraptor") === 33,
+       "now it is " + objGuardado("indoraptor"));
+    ok("and the ingredient does not keep a target that nobody gave it",
+       objGuardado(uIng) === undefined, "ingredient target = " + objGuardado(uIng));
 
     var crudo = JSON.parse(localStorage.getItem("jwa322.inventario") || "{}");
-    ok("el objetivo se persiste, criatura por criatura",
+    ok("the target is persisted, creature by creature",
        crudo.indoraptor && crudo.indoraptor.objetivo === 33 &&
        crudo.tyrannosaurus_rex && crudo.tyrannosaurus_rex.objetivo === 25,
        "indoraptor " + (crudo.indoraptor && crudo.indoraptor.objetivo) +
        " / t-rex " + (crudo.tyrannosaurus_rex && crudo.tyrannosaurus_rex.objetivo));
 
-    /* La × olvida los datos de esa criatura, objetivo incluido: si estaba
-       abierta, el deslizador no puede seguir enseñando el de una criatura que ya
-       no tiene datos. */
+    /* The × forgets that creature's data, target included: if it was open, the
+       slider cannot keep showing the one of a creature that no longer has data. */
     elegir("tyrannosaurus_rex");
     irA("mios");
     var x = document.querySelector('#miosCuerpo [data-borrar="tyrannosaurus_rex"]');
-    ok("hay × para el t-rex en la lista", !!x);
+    ok("there is a × for the t-rex in the list", !!x);
     if (x) x.click();
-    ok("tras la ×, la criatura abierta vuelve al tope", objetivo() === 35,
-       "deslizador = " + objetivo());
+    ok("after the ×, the open creature goes back to the cap", objetivo() === 35,
+       "slider = " + objetivo());
     irA("calc");
   } catch (e) {
-    log("!! EXCEPCION en el objetivo por criatura", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+    log("!! EXCEPTION in the target per creature", e.message + " @@ " + (e.stack || "").split("\n")[1]);
   }
 
-  // ---------- 14. criar desde el informe ----------
-  /* Peticion de n30 (25-sep-2026): «cuando no esté creado un dino, despues de su
+  // ---------- 14. breeding from the report ----------
+  /* Request from n30 (25-sep-2026): «cuando no esté creado un dino, despues de su
      nombre NO aparezca la leyenda "sin crear", pero en la columna "nivel" si
      aparezca, pero en lugar de "sin crear" dirá "criar" y al hacer click en la
      palabra pongas el nivel mínimo del dino, en la intersección con la fila
      donde dice "total del arbol" y "nivel" si hay al menos una criatura no
      criada habrá un texto que diga "Criar a todas"».
 
-     Lo que hay que sujetar aqui, y por que cada cosa:
-       - el estado «sin crear» sigue siendo VISIBLE, solo que en la columna del
-         nivel y como accion. Si desapareciera de los dos sitios, el informe
-         dejaria de decir que esa criatura no existe;
-       - pulsar «criar» NO es una simulacion: tiene que cambiar el inventario de
-         verdad, por la misma via que la casilla del arbol, porque el nivel se
-         guarda y sale luego en la pestana del arbol y en «Mis criaturas»;
-       - «Criar a todas» pone al NIVEL DE LA FUSION —no al de nacimiento, que era
-         lo primero que se pidio y n30 corrigio el 25-sep: «debe poner al nivel
-         minimo usable para el dinosaurio de la calculadora»—, y toca SOLO las
-         que no estan creadas o las que estan POR DEBAJO de ese nivel. La RAIZ
-         queda fuera: «la criatura raiz no se modifica, solamente su arbol». */
+     What has to be pinned down here, and why each thing:
+       - the «sin crear» state is still VISIBLE, only in the level column and as
+         an action. If it disappeared from both places, the report would stop
+         saying that creature does not exist;
+       - pressing «criar» is NOT a simulation: it has to change the inventory for
+         real, through the same path as the tree checkbox, because the level is
+         saved and then shows up in the tree tab and in «Mis criaturas»;
+       - «Criar a todas» sets the LEVEL OF THE FUSION —not the birth one, which
+         was the first thing asked for and n30 corrected on 25-sep: «debe poner
+         al nivel minimo usable para el dinosaurio de la calculadora»—, and it
+         touches ONLY the ones that are not created or the ones that are BELOW
+         that level. The ROOT is left out: «la criatura raiz no se modifica,
+         solamente su arbol». */
   try {
     localStorage.removeItem("jwa322.inventario");
     localStorage.removeItem("jwa322.mios");
     INV = {}; MIS = []; guardar();
-    /* El escenario tiene que cubrir los CUATRO casos a la vez, porque de eso
-       depende que el atajo se juzgue de verdad:
-         - indoraptor      la RAIZ, creada a 25 (nace a 21, su objetivo es 30).
-                           No se puede tocar, aunque no este en su objetivo.
-         - indominus_rex   creada POR ENCIMA del nivel que exige la fusion (30,
-                           cuando solo se le piden 20). Es el control mas
-                           importante: una implementacion que «pusiera a todas en
-                           el nivel de la fusion» la BAJARIA a 20, o sea que le
-                           borraria al usuario 10 niveles que ya tiene. Y una que
-                           «reiniciara» las creadas la bajaria a su nacimiento
-                           (16). Los dos casos se ven aqui, porque 30 no es ni 20
-                           ni 16.
-         - tyrannosaurus_rex  creada POR DEBAJO de lo que exige la fusion: nace a
-                           11 y la fusion de Indominus Rex (legendaria) la pide a
-                           15. Tiene que SUBIR a 15.
-         - velociraptor    SIN crear. Tiene que quedar en 20, que es lo que pide
-                           la fusion de Indoraptor (unica) — no en 1, que es
-                           donde nace.
-       Se monta dos veces (el boton individual y el atajo cambian el inventario),
-       por eso es una funcion y no una tanda de lineas sueltas. */
+    /* The scenario has to cover the FOUR cases at once, because whether the
+       shortcut is judged for real depends on it:
+         - indoraptor      the ROOT, created at 25 (born at 21, its target is 30).
+                           It cannot be touched, even if it is not at its target.
+         - indominus_rex   created ABOVE the level the fusion demands (30, when
+                           only 20 is asked of it). It is the most important
+                           control: an implementation that «put them all at the
+                           fusion level» would LOWER it to 20, that is, it would
+                           erase 10 levels the user already has. And one that
+                           «reset» the created ones would lower it to its birth
+                           (16). Both cases are visible here, because 30 is
+                           neither 20 nor 16.
+         - tyrannosaurus_rex  created BELOW what the fusion demands: it is born at
+                           11 and the Indominus Rex fusion (legendary) asks for it
+                           at 15. It has to GO UP to 15.
+         - velociraptor    NOT created. It has to end up at 20, which is what the
+                           Indoraptor fusion (unique) asks for — not at 1, which
+                           is where it is born.
+       It is assembled twice (the individual button and the shortcut change the
+       inventory), which is why it is a function and not a batch of loose lines. */
     function montarEscenario(){
       localStorage.removeItem("jwa322.inventario");
       localStorage.removeItem("jwa322.mios");
@@ -1072,91 +1077,92 @@ window.addEventListener("load", function(){
     var filaInd = filaInforme("Indoraptor");
     var filaVel = filaInforme("Velociraptor");
     var filaIndom = filaInforme("Indominus Rex");
-    ok("el informe tiene las filas de esta prueba",
+    ok("the report has the rows of this test",
        !!filaTRex && !!filaInd && !!filaVel && !!filaIndom,
        [["t-rex",filaTRex],["indoraptor",filaInd],["velociraptor",filaVel],["indominus",filaIndom]]
-         .map(function(p){ return p[1] ? p[0]+" ok" : "SIN "+p[0]; }).join(" / "));
+         .map(function(p){ return p[1] ? p[0]+" ok" : "WITHOUT "+p[0]; }).join(" / "));
 
-    /* 1) La pildora «sin crear» ya no va detras del nombre, en NINGUNA fila. */
+    /* 1) The «sin crear» pill no longer goes after the name, in ANY row. */
     var conPildora = [];
     document.querySelectorAll("#informeArbol tbody tr:not(.total)").forEach(function(tr){
       if (/sin crear/.test(tr.querySelector("td").textContent)) conPildora.push(tr.querySelector("td").textContent.trim().slice(0, 30));
     });
-    ok("ninguna fila del informe lleva «sin crear» detras del nombre",
-       conPildora.length === 0, conPildora.join(" | ") || "ninguna");
+    ok("no row of the report carries «sin crear» after the name",
+       conPildora.length === 0, conPildora.join(" | ") || "none");
 
-    /* 2) Pero el estado NO se ha perdido: esta en la columna «Nivel», y ademas
-          es la accion. La pildora de la pestana del arbol sigue donde estaba:
-          el cambio es del INFORME, no de la pestana.
-          El boton se busca en VELOCIRAPTOR, que es la unica criatura SIN CREAR
-          del escenario. T-Rex tambien esta por debajo de lo que se le pide,
-          pero esta CREADA, asi que no lleva boton: el atajo la alcanza igual,
-          y eso se comprueba mas abajo. */
-    ok("la pestaña del arbol conserva su pildora «sin crear»",
-       /sin crear/.test(txt("arbolCuerpo")), "pestana del arbol");
+    /* 2) But the state is NOT lost: it is in the «Nivel» column, and it is also
+          the action. The tree tab's pill is still where it was: the change is in
+          the REPORT, not in the tab.
+          The button is looked for in VELOCIRAPTOR, which is the only creature
+          NOT CREATED in the scenario. T-Rex is also below what is asked of it,
+          but it is CREATED, so it does not carry a button: the shortcut reaches
+          it anyway, and that is checked further down. */
+    ok("the tree tab keeps its «sin crear» pill",
+       /sin crear/.test(txt("arbolCuerpo")), "tree tab");
     var btnCriar = filaVel ? filaVel.querySelector('[data-criar="velociraptor"]') : null;
-    ok("una criatura sin crear lleva el boton «criar» en la columna Nivel",
+    ok("a creature not created carries the «criar» button in the Nivel column",
        !!btnCriar && btnCriar.textContent.trim() === "criar" &&
        celdaDe(filaVel, "Nivel").indexOf("criar") === 0,
-       btnCriar ? "boton «" + btnCriar.textContent.trim() + "», celda «" +
-                  celdaDe(filaVel, "Nivel") + "»" : "(sin boton)");
-    ok("y una ya creada NO lo lleva",
+       btnCriar ? "button «" + btnCriar.textContent.trim() + "», cell «" +
+                  celdaDe(filaVel, "Nivel") + "»" : "(no button)");
+    ok("and one already created does NOT carry it",
        filaInd && !filaInd.querySelector("[data-criar]") &&
        esRangoNivel(celdaDe(filaInd, "Nivel")),
-       filaInd ? "celda «" + celdaDe(filaInd, "Nivel") + "»" : "(sin fila)");
+       filaInd ? "cell «" + celdaDe(filaInd, "Nivel") + "»" : "(no row)");
 
-    /* 3) La fila Total ofrece el atajo. OJO: el conjunto que el atajo va a tocar
-          YA NO son los botones. T-Rex esta creada (a 11) y por eso no lleva
-          boton, pero el atajo SI tiene que alcanzarla, porque esta por debajo
-          del nivel que exige la fusion. Se mira la lista que el informe publica
-          para el atajo, que sale de la misma `cri` que pinta las filas. */
+    /* 3) The Total row offers the shortcut. WATCH OUT: the set the shortcut is
+          going to touch is NO LONGER the buttons. T-Rex is created (at 11) and
+          that is why it does not carry a button, but the shortcut DOES have to
+          reach it, because it is below the level the fusion demands. The list
+          that the report publishes for the shortcut is looked at, which comes
+          from the same `cri` that paints the rows. */
     var trTot = document.querySelector("#informeArbol tbody tr.total");
     var btnTodas = trTot ? trTot.querySelector("[data-criar-todas]") : null;
-    ok("la fila Total ofrece «Criar a todas» en la columna Nivel",
+    ok("the Total row offers «Criar a todas» in the Nivel column",
        !!btnTodas && btnTodas.textContent.trim() === "Criar a todas" &&
        celdaDe(trTot, "Nivel").indexOf("Criar a todas") === 0,
-       (btnTodas ? "«" + btnTodas.textContent.trim() + "»" : "(sin boton)") +
-       " | celda «" + celdaDe(trTot, "Nivel") + "»");
+       (btnTodas ? "«" + btnTodas.textContent.trim() + "»" : "(no button)") +
+       " | cell «" + celdaDe(trTot, "Nivel") + "»");
 
     var dichoPorCriar = {};
     POR_CRIAR.forEach(function(x){ dichoPorCriar[x.uuid] = x.nivel; });
-    ok("el atajo se lleva las dos que no sirven, y NI la raiz NI la que ya esta en su nivel",
+    ok("the shortcut takes the two that do not work, and NEITHER the root NOR the one already at its level",
        Object.keys(dichoPorCriar).sort().join(",") === "tyrannosaurus_rex,velociraptor" &&
        dichoPorCriar.tyrannosaurus_rex === 15 && dichoPorCriar.velociraptor === 20,
        JSON.stringify(dichoPorCriar));
 
-    /* 4) Pulsar «criar» deja la criatura EN EL NIVEL QUE EXIGE LA FUSION. Antes
-          la dejaba en su nivel de nacimiento —Velociraptor es comun, o sea 1— y
-          el numero de la flecha no era el que quedaba puesto: habia que subirla
-          despues. n30 lo corrigio el 25-sep. */
+    /* 4) Pressing «criar» leaves the creature AT THE LEVEL THE FUSION DEMANDS.
+          Before it left it at its birth level —Velociraptor is common, that is,
+          1— and the number on the arrow was not the one left in place: it had to
+          be raised afterwards. n30 corrected it on 25-sep. */
     if (btnCriar) btnCriar.click();
     var invVel = invDe("velociraptor");
-    ok("pulsar «criar» la deja en el nivel de la fusion (20), no en el de nacimiento (1)",
+    ok("pressing «criar» leaves it at the fusion level (20), not at the birth one (1)",
        invVel.creado === true && invVel.nivel === 20 && minLv(C["velociraptor"][1]) === 1,
-       "creado=" + invVel.creado + " nivel=" + invVel.nivel +
-       " (nace a " + minLv(C["velociraptor"][1]) + ")");
+       "created=" + invVel.creado + " level=" + invVel.nivel +
+       " (born at " + minLv(C["velociraptor"][1]) + ")");
     var filaVel2 = filaInforme("Velociraptor");
-    ok("y su fila deja de ofrecer criar",
+    ok("and its row stops offering to breed",
        filaVel2 && !filaVel2.querySelector("[data-criar]"),
-       filaVel2 ? "celda «" + celdaDe(filaVel2, "Nivel") + "»" : "(sin fila)");
+       filaVel2 ? "cell «" + celdaDe(filaVel2, "Nivel") + "»" : "(no row)");
 
-    /* 5) «Criar a todas», con los CUATRO casos a la vez. Se vuelve a montar el
-          escenario porque el paso 4 ya cambio el inventario. */
+    /* 5) «Criar a todas», with the FOUR cases at once. The scenario is assembled
+          again because step 4 already changed the inventory. */
     montarEscenario();
     var antes = {};
     ["indoraptor","indominus_rex","tyrannosaurus_rex","velociraptor"].forEach(function(u){
       var v = invDe(u); antes[u] = {creado:v.creado, nivel:v.nivel};
     });
-    log("antes de «Criar a todas»", JSON.stringify(antes));
+    log("before «Criar a todas»", JSON.stringify(antes));
 
-    /* Que el escenario SIRVA para juzgar, comprobado ANTES de pulsar. Si alguno
-       de estos numeros coincidiera con lo que produce una implementacion
-       equivocada, la comprobacion de despues pasaria sin probar nada:
-         - la raiz esta en 25; nace a 21 y su objetivo es 30, asi que ni
-           «reiniciar al minimo» ni «empujar al objetivo» pasarian inadvertidos;
-         - Indominus Rex esta en 30 y nace a 16: ni bajarla al nivel exigido (20)
-           ni reiniciarla a su nacimiento pasarian inadvertidos; */
-    ok("el escenario distingue los cuatro casos (raiz / por encima / por debajo / sin crear)",
+    /* That the scenario is GOOD for judging, checked BEFORE pressing. If any of
+       these numbers coincided with what a wrong implementation produces, the
+       check afterwards would pass without proving anything:
+         - the root is at 25; it is born at 21 and its target is 30, so neither
+           «reset to the minimum» nor «push to the target» would go unnoticed;
+         - Indominus Rex is at 30 and is born at 16: neither lowering it to the
+           required level (20) nor resetting it to its birth would go unnoticed; */
+    ok("the scenario distinguishes the four cases (root / above / below / not created)",
        antes.indoraptor.nivel === 25 && minLv(C["indoraptor"][1]) === 21 &&
        antes.indominus_rex.nivel === 30 && minLv(C["indominus_rex"][1]) === 16 &&
        antes.tyrannosaurus_rex.nivel === 11 && minLv(C["tyrannosaurus_rex"][1]) === 11 &&
@@ -1170,53 +1176,53 @@ window.addEventListener("load", function(){
     ["indoraptor","indominus_rex","tyrannosaurus_rex","velociraptor"].forEach(function(u){
       var v = invDe(u); ahora[u] = {creado:v.creado, nivel:v.nivel};
     });
-    log("despues de «Criar a todas»", JSON.stringify(ahora));
+    log("after «Criar a todas»", JSON.stringify(ahora));
 
-    ok("«Criar a todas» NO toca la RAIZ, aunque este por debajo de su objetivo",
+    ok("«Criar a todas» does NOT touch the ROOT, even if it is below its target",
        ahora.indoraptor.creado === true && ahora.indoraptor.nivel === 25,
        "indoraptor: " + antes.indoraptor.nivel + " → " + ahora.indoraptor.nivel);
 
-    ok("y NO BAJA una creada que ya estaba por encima del nivel exigido (30, se le piden 20)",
+    ok("and it does NOT LOWER one already created that was above the required level (30, 20 is asked of it)",
        ahora.indominus_rex.creado === true && ahora.indominus_rex.nivel === 30,
        "indominus_rex: " + antes.indominus_rex.nivel + " → " + ahora.indominus_rex.nivel);
 
-    ok("pero SI sube una creada que estaba por debajo del nivel exigido (11 → 15)",
+    ok("but it DOES raise one created that was below the required level (11 → 15)",
        ahora.tyrannosaurus_rex.creado === true && ahora.tyrannosaurus_rex.nivel === 15,
        "tyrannosaurus_rex: " + antes.tyrannosaurus_rex.nivel + " → " + ahora.tyrannosaurus_rex.nivel);
 
-    ok("y la que no estaba creada queda creada en el nivel exigido (20)",
+    ok("and the one that was not created is left created at the required level (20)",
        ahora.velociraptor.creado === true && ahora.velociraptor.nivel === 20,
        "velociraptor: " + antes.velociraptor.nivel + " → " + ahora.velociraptor.nivel);
 
-    /* 6) Y el atajo desaparece solo: cuando ya no queda ninguna por debajo, no
-          hay nada que hacer. Si el boton siguiera ahi, el informe estaria
-          ofreciendo una accion que no hace nada. */
-    ok("el atajo desaparece cuando ya no queda ninguna por crear ni por debajo",
+    /* 6) And the shortcut disappears on its own: when there is no one left below,
+          there is nothing to do. If the button were still there, the report would
+          be offering an action that does nothing. */
+    ok("the shortcut disappears when there is no one left to create or below",
        !document.querySelector("#informeArbol [data-criar-todas]") && POR_CRIAR.length === 0,
-       POR_CRIAR.length + " en la lista del atajo, " +
-       document.querySelectorAll("#informeArbol [data-criar-todas]").length + " botones");
-    ok("y ninguna fila del informe dice ya «sin crear»",
-       !/sin crear/.test(txc("informeArbol")), "informe completo");
+       POR_CRIAR.length + " in the shortcut list, " +
+       document.querySelectorAll("#informeArbol [data-criar-todas]").length + " buttons");
+    ok("and no row of the report says «sin crear» any more",
+       !/sin crear/.test(txc("informeArbol")), "full report");
 
-    /* 7) Los niveles se guardaron de verdad, no solo se pintaron: es el mismo
-          dato que usan la pestana del arbol y «Mis criaturas». */
+    /* 7) The levels were really saved, not just painted: it is the same data
+          used by the tree tab and «Mis criaturas». */
     var crudo2 = JSON.parse(localStorage.getItem("jwa322.inventario") || "{}");
-    ok("lo cambiado queda guardado en el inventario",
+    ok("what was changed is really saved in the inventory",
        crudo2.tyrannosaurus_rex && crudo2.tyrannosaurus_rex.creado === true &&
        crudo2.tyrannosaurus_rex.nivel === 15 &&
        crudo2.indoraptor && crudo2.indoraptor.nivel === 25,
        "t-rex " + JSON.stringify(crudo2.tyrannosaurus_rex) +
        " | indoraptor " + JSON.stringify(crudo2.indoraptor));
   } catch (e) {
-    log("!! EXCEPCION en crear desde el informe", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+    log("!! EXCEPTION in breeding from the report", e.message + " @@ " + (e.stack || "").split("\n")[1]);
   }
 
-  // ---------- imagenes ----------
+  // ---------- images ----------
   var bien = 0, mal = [];
   CLONES.forEach(function(c){ if (c.el.complete && c.el.naturalWidth > 0) bien++; else mal.push(c.src); });
   if (CLONES.length)
-    ok("todas las imagenes referenciadas cargan", mal.length === 0,
-       bien + "/" + CLONES.length + " ok" + (mal.length ? " fallan: " + mal.slice(0,3).join(", ") : ""));
+    ok("all the referenced images load", mal.length === 0,
+       bien + "/" + CLONES.length + " ok" + (mal.length ? " fail: " + mal.slice(0,3).join(", ") : ""));
 
   log("", "");
   log(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===", "");
@@ -1228,16 +1234,16 @@ window.addEventListener("load", function(){
 __ENTREGA__
 });
 
-/* Las imagenes se comprueban con clones que SI cargan: `loading="lazy"` no carga
-   nada que este en un contenedor oculto, asi que mirar los <img> de la pestana
-   del arbol daria 0x0 y seria un artefacto de la prueba, no un fallo de la pagina. */
+/* The images are checked with clones that DO load: `loading="lazy"` does not load
+   anything that is in a hidden container, so looking at the <img> of the tree tab
+   would give 0x0 and would be an artifact of the test, not a failure of the page. */
 (function(){
   var srcs = [];
   document.querySelectorAll("img").forEach(function(im){
     var s = im.getAttribute("src");
     if (s && srcs.indexOf(s) < 0) srcs.push(s);
   });
-  log("imagenes distintas referenciadas", srcs.length);
+  log("distinct images referenced", srcs.length);
   srcs.forEach(function(s){
     var c = new Image(); c.src = s;
     c.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px";
@@ -1268,13 +1274,14 @@ html = open(HTML, encoding="utf-8").read()
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
 if "<head>" not in html:
-    raise SystemExit("no encuentro <head> para fijar el idioma")
+    raise SystemExit("I cannot find <head> to pin the language")
 html = html.replace("<head>", "<head>\n" + PIN, 1)
 m = re.search(r"<body[^>]*>", html)
 html = html[:m.end()] + CAZA + html[m.end():] + DIAG.replace("__ENTREGA__", srv.js("__diag"))
-# Antes de abrir el navegador: si el diagnostico no compila junto a la aplicacion
-# —colision de nombres en el ambito global—, la prueba se quedaria sin correr y
-# el sintoma seria «no entrego el informe», que no dice nada. Ver informe_browser.
+# Before opening the browser: if the diagnostic does not compile together with
+# the application —name collision in the global scope—, the test would not run
+# and the symptom would be «it did not deliver the report», which says nothing.
+# See informe_browser.
 _ok_scripts, _msg_scripts = comprobar_scripts(html, "probar_estres.py")
 print(_msg_scripts)
 if not _ok_scripts:
@@ -1296,7 +1303,7 @@ informe = srv.texto().strip()
 
 TXT = os.path.join(DIR, "estres.txt")
 open(TXT, "w", encoding="utf-8").write(informe + "\n")
-print("informe:", TXT)
+print("report:", TXT)
 print("-" * 72)
 print(informe)
 print("-" * 72)

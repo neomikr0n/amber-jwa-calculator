@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 """
-Equivalencia: los numeros que calcula el HTML (JS) deben ser IDENTICOS a los que
-calcula modelo.py (Python), criatura por criatura.
+Equivalence: the numbers the HTML (JS) computes must be IDENTICAL to those
+computed by modelo.py (Python), creature by creature.
 
-Por que existe, teniendo verificar_motor.py
--------------------------------------------
-`verificar_motor.py` SACA el motor del HTML y lo corre en Node: comprueba las
-funciones puras contra el modelo. Esta prueba hace lo contrario: deja el motor
-DENTRO de la pagina y llama a `costeADN` / `costeMon` / `nFus` en el navegador,
-que es el camino que recorre el usuario. Si alguien cambia como la pagina
-entrega los datos (no lo que calcula), esta es la que se entera.
+Why it exists, given verificar_motor.py
+---------------------------------------
+`verificar_motor.py` TAKES the engine out of the HTML and runs it in Node: it
+checks the pure functions against the model. This test does the opposite: it
+leaves the engine INSIDE the page and calls `costeADN` / `costeMon` / `nFus` in
+the browser, which is the path the user takes. If someone changes how the page
+delivers the data (not what it computes), this is the one that finds out.
 
-Como se juzga
--------------
-El navegador pinta su salida en un <pre> y la entrega con un XHR SINCRONO al
-servidor local de `informe_browser.py`; la comparacion la hace Python.
+How it is judged
+----------------
+The browser paints its output into a <pre> and delivers it with a SYNCHRONOUS
+XHR to the local server of `informe_browser.py`; the comparison is done by
+Python.
 
-Antes esta prueba NO comparaba nada: volcaba su salida a un PNG, imprimia los
-valores esperados por stdout y ahi lo dejaba. Siempre salia con codigo 0, asi
-que no podia fallar. Ahora cada fila es un OK o un FALLO y el codigo de salida
-es 1 si algo discrepa, 2 si el navegador no llego a entregar el informe.
+Before, this test compared NOTHING: it dumped its output to a PNG, printed the
+expected values to stdout and left it there. It always exited with code 0, so
+it could not fail. Now every row is an OK or a FALLO and the exit code is 1 if
+anything disagrees, 2 if the browser never delivered the report.
 """
 import json, math, os, shutil, subprocess, sys
 
@@ -36,7 +37,7 @@ FUERA = os.path.join(DIR, "eq.html")
 SHOT = os.path.join(DIR, "eq.png")
 PERFIL = os.path.join(DIR, "perfil3")
 
-# criaturas de prueba: mezcla de rarezas y de tipos
+# test creatures: a mix of rarities and types
 PRUEBA = ["indoraptor", "trykosaurus", "paralidactylus", "aliorasuchus",
           "koolatrodon", "arsionosaurus", "indominus_rex", "acrocanthops",
           "93_classic_t_rex", "rajadorixis", "ankylocodon", "diplotator"]
@@ -44,7 +45,7 @@ PRUEBA = ["indoraptor", "trykosaurus", "paralidactylus", "aliorasuchus",
 cri = json.load(open(os.path.join(RAIZ, "data", "jwa-3.22.json")))["criaturas"]
 
 
-# ---------------- referencia en Python ----------------
+# ---------------- reference in Python ----------------
 def ref(u, desde, hasta):
     x = cri[u]
     r = x["rareza"]
@@ -82,12 +83,12 @@ for u in PRUEBA:
     for hasta in (30, 35):
         ESPERADO["%s|%d" % (u, hasta)] = ref(u, 0, hasta)
 
-# ---------------- prueba en el navegador ----------------
+# ---------------- test in the browser ----------------
 DIAG = """
 <script>
-/* En `load`, no al parsear: el motor de la pagina se monta en su propio manejador
-   de `load`, y este script va despues, asi que para cuando corre ya existen C,
-   costeADN y compania. Al parsear todavia no. */
+/* On `load`, not while parsing: the page engine is set up in its own `load`
+   handler, and this script goes after it, so by the time it runs C, costeADN
+   and company already exist. While parsing they do not. */
 window.addEventListener("load", function(){
   var us = __US__, hs = [30, 35], out = [];
   for (var i=0;i<us.length;i++){
@@ -114,11 +115,12 @@ __ENTREGA__
 """
 
 os.makedirs(DIR, exist_ok=True)
-os.makedirs(PERFIL, exist_ok=True)     # Firefox NO crea el perfil: sin esto muere con
-                                       # "Could not find profile folder" y no hay captura
+os.makedirs(PERFIL, exist_ok=True)     # Firefox does NOT create the profile: without this it dies with
+                                       # "Could not find profile folder" and there is no screenshot
 
-# `img/` al lado: la pagina pide las fotos y sin el directorio salen errores de
-# consola que no hacen falta para juzgar esto, pero ensucian el diagnostico.
+# `img/` alongside: the page asks for the photos and without the directory you
+# get console errors that are not needed to judge this, but they clutter the
+# diagnostic output.
 en = os.path.join(DIR, "img"); IMG = os.path.join(RAIZ, "img")
 if os.path.islink(en):
     if os.readlink(en) != IMG:
@@ -136,7 +138,7 @@ html = open(os.path.join(RAIZ, "amber-jwa-3.22.html"), encoding="utf-8").read()
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
 if "<head>" not in html:
-    raise SystemExit("no encuentro <head> para fijar el idioma")
+    raise SystemExit("cannot find <head> to pin the language")
 html = html.replace("<head>", "<head>\n" + PIN, 1)
 open(FUERA, "w", encoding="utf-8").write(html + DIAG)
 
@@ -153,7 +155,7 @@ if not informe:
     print(veredicto("")[1][0])
     raise SystemExit(2)
 
-# ---------------- comparacion ----------------
+# ---------------- comparison ----------------
 lineas, fallos = [], []
 vistas = set()
 for l in informe.splitlines():
@@ -163,7 +165,7 @@ for l in informe.splitlines():
     partes = l.split("|")
     if len(partes) < 6:
         fallos.append(l)
-        lineas.append("FALLO fila mal formada: %r" % l)
+        lineas.append("FALLO malformed row: %r" % l)
         continue
     u, h, adn, mon, f, monf = partes[0], partes[1], partes[2], partes[3], partes[4], partes[5]
     clave = "%s|%s" % (u, h)
@@ -171,34 +173,34 @@ for l in informe.splitlines():
     esp = ESPERADO.get(clave)
     if esp is None:
         fallos.append(clave)
-        lineas.append("FALLO %s: la pagina devolvio una criatura que no se pidio" % clave)
+        lineas.append("FALLO %s: the page returned a creature that was not requested" % clave)
         continue
     try:
         got = (int(adn), int(mon), int(f), int(monf))
     except ValueError:
         fallos.append(clave)
-        lineas.append("FALLO %s: no son numeros -> %s" % (clave, l))
+        lineas.append("FALLO %s: they are not numbers -> %s" % (clave, l))
         continue
     if got == esp:
-        lineas.append("OK   %-22s nivel %-2s  ADN %-10d monedas %-10d fusiones %-6d mon.fus %d"
+        lineas.append("OK   %-22s level %-2s  DNA %-10d Coins %-10d Fusions %-6d mon.fus %d"
                       % (u, h, got[0], got[1], got[2], got[3]))
     else:
         fallos.append(clave)
-        det = ["ADN", "monedas", "fusiones", "mon.fus"]
+        det = ["DNA", "Coins", "Fusions", "mon.fus"]
         cual = ", ".join("%s %d != %d" % (det[i], got[i], esp[i])
                          for i in range(4) if got[i] != esp[i])
-        lineas.append("FALLO %-22s nivel %-2s  %s" % (u, h, cual))
+        lineas.append("FALLO %-22s level %-2s  %s" % (u, h, cual))
 
 faltan = sorted(set(ESPERADO) - vistas)
 for c in faltan:
     fallos.append(c)
-    lineas.append("FALLO %s: la pagina no devolvio esta fila" % c)
+    lineas.append("FALLO %s: the page did not return this row" % c)
 
 for l in lineas:
     print(l)
 print()
 if fallos:
-    print("RESULTADO: %d FALLOS de %d filas." % (len(fallos), len(ESPERADO)))
+    print("RESULT: %d FALLOs out of %d rows." % (len(fallos), len(ESPERADO)))
     raise SystemExit(1)
-print("RESULTADO: %d/%d filas identicas entre el motor del HTML (en el navegador) y modelo.py."
+print("RESULT: %d/%d rows identical between the HTML engine (in the browser) and modelo.py."
       % (len(ESPERADO), len(ESPERADO)))

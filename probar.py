@@ -2,8 +2,8 @@
 """Arnés de prueba: mete un script de diagnostico en el HTML y lo captura con Firefox."""
 import os, re, subprocess, sys, shutil, glob
 
-RAIZ = "/home/n30/Documentos/jwa-calculadora"
-HTML = os.path.join(RAIZ, "calculadora-jwa-3.22.html")
+RAIZ = os.path.dirname(os.path.abspath(__file__))
+HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
 DIR = "/tmp/jwa-test"
 PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "diag.html")

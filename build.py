@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Construye calculadora-jwa-3.22.html a partir de data/jwa-3.22.json + modelo.py.
+Construye amber-jwa-3.22.html a partir de data/jwa-3.22.json + modelo.py.
 
 El resultado es UN SOLO fichero HTML autocontenido: sin CDN, sin red, sin
 dependencias. Se abre con doble clic y funciona sin conexion.
@@ -22,7 +22,11 @@ from modelo import (ADN_31_35, ADN_POR_FUSION, ADN_POR_FUSION_MEDIA, COINR,
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 ORIGEN = os.path.join(RAIZ, "data", "jwa-3.22.json")
 FAVICON = os.path.join(RAIZ, "img", "favicon.svg")
-DESTINO = os.path.join(RAIZ, f"calculadora-jwa-{VERSION}.html")
+DESTINO = os.path.join(RAIZ, f"amber-jwa-{VERSION}.html")
+# Deploy entry point. Vercel/GitHub Pages serve index.html, so the same
+# self-contained HTML is written twice: the versioned copy is the artefact a
+# human double-clicks, and index.html is what the site serves.
+INDICE = os.path.join(RAIZ, "index.html")
 
 # Orden de los seis stats en el slot 8. Es el mismo que usa el juego y el mismo
 # en el que paleo.gg los ensena en su bloque «Basic Stats».
@@ -135,9 +139,12 @@ def main():
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         f.write(html)
+    with open(INDICE, "w", encoding="utf-8") as f:
+        f.write(html)
 
     kb = os.path.getsize(DESTINO) / 1024
     print(f"escrito {DESTINO}  ({kb:.0f} KB)")
+    print(f"escrito {INDICE}  (idéntico, para el despliegue)")
     print(f"criaturas: {len(criaturas)}")
 
 

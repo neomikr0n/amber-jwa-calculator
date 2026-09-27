@@ -18,7 +18,7 @@ from modelo import (ADN_31_35, ADN_POR_FUSION_MEDIA, COINR, COIN_31_35,
                     CREACION, L, MIN_LV, MONEDAS_FUSION, OMEGA_31_35, OMEGA_COINR,
                     OMEGA_L, TOPES_ADN, nivel_maximo)
 
-HTML = os.path.join(RAIZ, "calculadora-jwa-3.22.html")
+HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
 DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
 IMG = os.path.join(RAIZ, "img")
 

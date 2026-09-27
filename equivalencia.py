@@ -23,7 +23,7 @@ es 1 si algo discrepa, 2 si el navegador no llego a entregar el informe.
 """
 import json, math, os, shutil, subprocess, sys
 
-RAIZ = "/home/n30/Documentos/jwa-calculadora"
+RAIZ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, RAIZ)
 
 from modelo import (ADN_31_35, ADN_POR_FUSION_MEDIA, COINR, COIN_31_35,
@@ -129,7 +129,7 @@ if not os.path.exists(en):
 srv = arrancar()
 DIAG = DIAG.replace("__US__", json.dumps(PRUEBA)).replace("__ENTREGA__", srv.js("__eq"))
 
-shutil.copy(os.path.join(RAIZ, "calculadora-jwa-3.22.html"), FUERA)
+shutil.copy(os.path.join(RAIZ, "amber-jwa-3.22.html"), FUERA)
 open(FUERA, "a", encoding="utf-8").write(DIAG)
 
 env = dict(os.environ)

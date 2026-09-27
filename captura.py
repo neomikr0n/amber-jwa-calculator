@@ -11,7 +11,7 @@ Uso:  python3 captura.py
 import os, re, shutil, subprocess
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "calculadora-jwa-3.22.html")
+HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-ui"
 PERFIL = os.path.join(DIR, "perfil")

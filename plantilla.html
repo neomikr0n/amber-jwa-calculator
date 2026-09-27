@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__NOMBRE__ — calculadora de ADN de Jurassic World Alive 3.22</title>
+<!-- El icono de la pestana: es lo unico que se ve cuando el foco esta en otra
+     pestana, asi que va EN LINEA (data URI) y no como un fichero al lado. Un
+     <link href="img/favicon.svg"> se romperia en cuanto el HTML se copiara sin
+     la carpeta. `build.py` mete aqui el contenido de img/favicon.svg, que sigue
+     siendo la unica fuente.
+     El dibujo es un teropodo sobre disco ambar, hecho para esta herramienta: NO
+     es el logotipo oficial de Jurassic Park, que es marca registrada. -->
+<link rel="icon" href="__FAVICON__">
+<!-- El tema se aplica ANTES de pintar. Puesto desde el script del final del
+     <body>, la pagina se pintaria primero con el tema por defecto y cambiaria
+     despues: un parpadeo en cada carga. -->
+<script>
+try {
+  if (localStorage.getItem("jwa322.tema") === "yellow")
+    document.documentElement.setAttribute("data-tema", "yellow");
+} catch (e) {}
+</script>
+<style>
+:root{
+  --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --borde:#272c3a;
+  --tx:#e6e9ef; --tx2:#8b93a7; --tx3:#5f6879;
+  /* --marca es el color de MARCA de la interfaz: pestana activa, botones
+     principales, foco, titulares. Es lo unico que cambia entre temas ademas de
+     fondos, bordes y texto. En «default» vale lo mismo que --verde, asi que el
+     aspecto no cambia ni un pixel (comprobado comparando capturas).
+     OJO: --verde NO es el color de marca aunque hoy compartan hex. --verde
+     significa «alcanza» y por eso se queda quieto entre temas; --marca es
+     decoracion y por eso cambia. */
+  --marca:#4ade80; --acc-tx:#06210f;
+  --hueco:#0d1017; --informe:#12151d; --rama:#333a4b; --punteado:#3a4256;
+  --raiz-bg:#16241c; --raiz-borde:#2f4a3a;
+  --verde:#4ade80; --ambar:#fbbf24; --azul:#60a5fa; --rojo:#f87171; --violeta:#a78bfa;
+  /* Color de las pildoras de estado. Cian a proposito: los colores de rareza ya
+     ocupan el verde, el ambar, el rojo y el azul, asi que las pildoras usan un
+     tono que no esta en esa paleta y dejan de competir con las etiquetas.
+     Se queda cian TAMBIEN en el tema amarillo, y por la misma razon: el cian no
+     esta ni en la paleta de rareza ni en la del tema, asi que no se puede
+     confundir con ninguno de los dos. */
+  --pill:#22d3ee;
+  /* Acento del PANEL DE STATS: el «+165» que aportan los puntos, la linea de lo
+     que da el siguiente paso y el hover de sus mandos. Es cian, y no --marca,
+     por una razon medida y no estetica: `probar_rareza.py` recorre el DOM y
+     exige que todo elemento cuyo color RENDERIZADO sea un hex de rareza este
+     declarado como colision conocida. Con --marca, el panel la incumplia, porque
+     --marca vale #4ade80 en «default», que es LITERALMENTE --r-unica. Y se veia:
+     en una captura, el nombre «indoraptor» de la tira iba en verde y el «+165»
+     del panel en el mismo verde, en la misma pantalla.
+     Cambiar el nombre de la variable no bastaba —el hex seguia siendo el mismo—,
+     asi que el panel usa un tono que no esta ni en la paleta de rareza ni en la
+     semantica, y deja de haber nada que declarar. Coincide hoy con --pill, que
+     se eligio cian por el mismo motivo; son dos variables y no una porque son
+     dos widgets distintos y pueden separarse. */
+  --st-acc:#22d3ee;
+  /* Colores de rareza. Son una ELECCION DEL USUARIO, no los del juego:
+     comun blanco · rara azul · epica amarillo · legendaria rojo · unica verde ·
+     apex morado. Omega no estaba en la lista y ANTES era violeta (#a78bfa), el
+     mismo tono que ahora pide el apex: se mueve a fucsia para que no se
+     confundan. Cuatro coinciden a proposito con los colores semanticos de
+     arriba; se escriben sueltos para que cambiarlos no arrastre a la interfaz.
+     Estos siete NO cambian entre temas: significan algo. */
+  --r-comun:#f1f5f9; --r-rara:#60a5fa; --r-epica:#fbbf24; --r-legendaria:#f87171;
+  --r-unica:#4ade80; --r-apex:#c084fc; --r-omega:#f472b6;
+}
+/* Tema «yellow»: la paleta de la imagen (negro + naranja + ambar).
+   Cambia fondos, bordes, texto y color de marca. Y NADA MAS: los siete colores
+   de rareza y los cuatro semanticos (--verde alcanza, --ambar falta, --rojo
+   error, --azul informacion) son identicos en los dos temas, porque significan
+   algo. Tocar esos seria justo la confusion que n30 pidio evitar.
+   La marca es NARANJA (#ff6d1f) y no ambar a proposito: #fbbf24 es literalmente
+   el color de la rareza Epica, y un boton ambar junto a una etiqueta Epica no
+   se distinguiria. En la paleta de rareza no hay ningun naranja.
+   El tinte de la raiz (--raiz-bg) pasa a marron calido: es un FONDO, no texto,
+   asi que no compite con la etiqueta Epica, que va como texto sobre el.
+   --pill y --st-acc tampoco se tocan, y por la misma razon que los semanticos:
+   el cian no esta ni en la paleta de rareza ni en la de este tema. Dejarlos en
+   naranja seria meter el color de marca donde antes habia uno neutro. */
+:root[data-tema="yellow"]{
+  --bg:#0a0806; --panel:#151009; --panel2:#1e1710; --borde:#33261a;
+  --tx:#f7ecdc; --tx2:#bda284; --tx3:#8a7154;
+  --marca:#ff6d1f; --acc-tx:#1c0d02;
+  --hueco:#0b0805; --informe:#120d07; --rama:#3a2a18; --punteado:#4a3623;
+  --raiz-bg:#241a0d; --raiz-borde:#4a3616;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--tx);
+  font:14px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 90px}
+code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace}
+
+/* cabecera */
+header{border-bottom:1px solid var(--borde);padding-bottom:16px;margin-bottom:20px}
+header .cab{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+header .tema{flex:0 0 auto;min-width:128px}
+header .tema label{margin-bottom:5px}
+h1{font-size:21px;margin:0 0 6px;letter-spacing:-.2px}
+h1 .v{color:var(--marca);font-weight:600}
+.sub{color:var(--tx2);font-size:12.5px}
+.sub b{color:var(--tx);font-weight:600}
+
+/* pestañas */
+/* Franja de arriba: el buscador a la IZQUIERDA y las pestañas a su lado. El
+   borde inferior lo lleva la FRANJA y no el nav, para que la pestaña activa se
+   apoye en la misma linea que el resto: si lo llevaran los dos saldrian dos
+   lineas seguidas. */
+.barra-sup{
+  display:flex;align-items:flex-end;gap:20px;
+  margin-bottom:20px;border-bottom:1px solid var(--borde);
+}
+/* Ancho FIJO: si creciera con el texto, las pestañas se moverian al teclear. */
+.barra-sup .buscador{flex:0 0 290px;max-width:290px}
+.barra-sup .buscador label{font-size:11px;margin-bottom:4px}
+.barra-sup .buscador input[type=text]{padding:7px 10px;font-size:13px}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+nav button{
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--tx2);
+  padding:9px 13px;font-size:13.5px;cursor:pointer;font-family:inherit;border-radius:5px 5px 0 0;
+}
+nav button:hover{color:var(--tx);background:#ffffff08}
+nav button.on{color:var(--marca);border-bottom-color:var(--marca)}
+/* En pantalla estrecha no caben a la par: el buscador arriba y las pestañas
+   debajo, que es como estaba antes de moverlo. */
+@media(max-width:820px){
+  .barra-sup{flex-direction:column;align-items:stretch;gap:12px}
+  .barra-sup .buscador{flex:none;max-width:none}
+  nav{flex:none}
+}
+section{display:none}
+section.on{display:block}
+
+/* paneles */
+.panel{background:var(--panel);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx2);margin:0 0 13px;font-weight:600}
+.grid{display:grid;gap:14px}
+@media(min-width:820px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+
+/* formularios */
+label{display:block;font-size:12px;color:var(--tx2);margin-bottom:5px}
+input[type=text],input[type=number],select{
+  width:100%;background:var(--bg);border:1px solid var(--borde);color:var(--tx);
+  border-radius:7px;padding:9px 11px;font-size:14px;font-family:inherit;
+}
+input:focus,select:focus{outline:0;border-color:var(--marca)}
+input[type=range]{width:100%;accent-color:var(--marca)}
+button.acc{
+  background:var(--marca);color:var(--acc-tx);border:0;border-radius:7px;padding:10px 16px;
+  font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;
+}
+button.acc:hover{filter:brightness(1.08)}
+button.gh{
+  background:none;border:1px solid var(--borde);color:var(--tx2);border-radius:7px;
+  padding:8px 13px;font-size:13px;cursor:pointer;font-family:inherit;
+}
+button.gh:hover{color:var(--tx);border-color:var(--tx3)}
+
+/* buscador */
+.buscador{position:relative}
+.lista{
+  position:absolute;z-index:40;left:0;right:0;top:calc(100% + 4px);max-height:330px;overflow:auto;
+  background:var(--panel2);border:1px solid var(--borde);border-radius:9px;display:none;
+  box-shadow:0 16px 40px #0009;
+}
+.lista.on{display:block}
+.lista .it{padding:8px 11px;cursor:pointer;display:flex;align-items:center;gap:9px;border-bottom:1px solid #ffffff08}
+.lista .it:last-child{border-bottom:0}
+.lista .it:hover{background:#ffffff0d}
+/* El resaltado del TECLADO tiene que verse mas que el simple pasar el raton: con
+   el raton el puntero ya dice donde estas, pero con las flechas la unica senal
+   es la fila. Por eso `.sel` sube el fondo y anade una barra a la izquierda.
+   La barra va en `--pill` (cian) y NO en `--marca`, por lo mismo que el boton
+   `criar`: en «default» `--marca` vale exactamente `--r-unica`, y esta lista
+   ensena criaturas de todas las rarezas con su etiqueta a la derecha, asi que
+   una barra verde al lado de una etiqueta verde pareceria hablar de la rareza.
+   El cian no es color de ninguna rareza: es el color de ESTADO de la
+   herramienta, que es exactamente lo que esto es. */
+.lista .it.sel{background:#ffffff17;box-shadow:inset 3px 0 0 var(--pill)}
+.lista .it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista .vacio{padding:12px;color:var(--tx3);font-size:13px}
+
+/* etiquetas */
+/* La etiqueta de rareza lleva un FONDO del 12% de su propio color. No es decoracion: los
+   colores de rareza comparten hex con los semanticos de la interfaz (--verde, --ambar,
+   --rojo, --azul), asi que un numero verde y una etiqueta verde se confundian. Con fondo,
+   la etiqueta se lee como insignia y no como texto suelto.
+   El 12% no es un numero al azar: el fondo sube la luminosidad bajo el texto, y eso BAJA
+   el contraste. Medido sobre el panel mas claro (#1d212c): al 12% el peor caso es el rojo
+   de Legendaria con 4,87:1; al 16% baja a 4,56:1 y al 18% ya suspende AA (4,44:1).
+   `probar_rareza.py` vuelve a medir ese contraste en el navegador, no aqui. */
+.tag{
+  display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  padding:2px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap;
+  background:color-mix(in srgb, currentColor 12%, transparent);
+}
+.rc-comun{color:var(--r-comun)} .rc-rara{color:var(--r-rara)} .rc-epica{color:var(--r-epica)}
+.rc-legendaria{color:var(--r-legendaria)} .rc-unica{color:var(--r-unica)}
+.rc-apex{color:var(--r-apex)} .rc-omega{color:var(--r-omega)}
+
+/* cifras */
+.cifras{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(148px,1fr))}
+.cifra{background:var(--panel2);border:1px solid var(--borde);border-radius:9px;padding:12px}
+.cifra .k{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.cifra .v{font-size:20px;font-weight:650;letter-spacing:-.4px}
+.cifra .n{font-size:11px;color:var(--tx3);margin-top:3px}
+.cifra.al .v{color:var(--verde)}
+.cifra.wa .v{color:var(--ambar)}
+.cifra.ro .v{color:var(--rojo)}
+
+/* arbol */
+.arbol{font-size:13.5px}
+.arbol .rama{border-left:2px dashed var(--rama);margin-left:26px;padding-left:15px}
+.arbol .nodo{
+  background:var(--panel2);border:1px solid var(--borde);border-radius:9px;
+  padding:10px 12px;margin:9px 0;display:flex;gap:12px;align-items:flex-start;
+}
+.arbol .nodo.raiz{border-color:var(--raiz-borde);background:var(--raiz-bg)}
+.arbol .nodo.hoja{border-style:dashed}
+.arbol .foto{
+  width:64px;height:78px;flex:0 0 64px;object-fit:contain;border-radius:6px;
+  background:var(--hueco);border:1px solid var(--borde);
+}
+.arbol .cuerpo{flex:1;min-width:0}
+.arbol .cab{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.arbol .nm{font-weight:600}
+.arbol .det{color:var(--tx2);font-size:12px;margin-top:4px;line-height:1.6}
+.arbol .det b{color:var(--tx)}
+.arbol .campos{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:8px}
+.arbol .campos label{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);display:block;margin-bottom:3px}
+.arbol .campos input[type=text]{width:88px;padding:5px 8px;font-size:13px}
+.arbol .campos input[type=checkbox]{width:auto;margin:0 0 4px}
+.arbol .chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);padding-bottom:6px;cursor:pointer;white-space:nowrap}
+.arbol .chk input{cursor:pointer}
+.arbol .maxn{font-size:11.5px;color:var(--tx3);margin-top:5px}
+.arbol .maxn b{color:var(--tx)}
+.vacio-txt{color:var(--tx3);font-size:13.5px}
+
+/* miniatura en el buscador y en la tabla */
+.mini{
+  width:30px;height:36px;flex:0 0 30px;object-fit:contain;border-radius:4px;
+  background:var(--hueco);border:1px solid var(--borde);
+}
+.mini.g{width:38px;height:46px;flex-basis:38px}
+
+/* Filas de «Mis criaturas»: toda la fila lleva a la calculadora de esa criatura.
+   El boton de borrar (la ×) manda sobre la fila: su clic no navega. */
+#miosCuerpo tbody tr.fila-ir{cursor:pointer}
+#miosCuerpo tbody tr.fila-ir:hover{background:#ffffff08}
+#miosCuerpo tbody tr.fila-ir:hover .ir{
+  color:var(--marca);text-decoration-style:solid;text-decoration-color:currentColor;
+}
+button.ir{
+  background:none;border:0;padding:0;margin:0;color:var(--tx);font:inherit;
+  cursor:pointer;text-align:left;
+  /* Senal de que se puede pulsar, sin gritar: subrayado de puntos que se vuelve
+     solido al pasar por encima. */
+  text-decoration:underline dotted var(--punteado);text-underline-offset:3px;
+}
+button.ir.foto-btn{display:block;line-height:0;border-radius:7px;text-decoration:none}
+button.ir:focus-visible{outline:2px solid var(--marca);outline-offset:3px;border-radius:4px}
+/* El nombre pintado con el color de su rareza. Hay que repetir las siete reglas
+   a proposito: `button.ir` fija `color:var(--tx)` y, con especificidad (0,1,1),
+   GANA a `.rc-comun` (0,1,0). Sin esto el nombre saldria blanco y el color de
+   rareza no se veria por ningun lado. */
+button.ir.rc-comun{color:var(--r-comun)} button.ir.rc-rara{color:var(--r-rara)}
+button.ir.rc-epica{color:var(--r-epica)} button.ir.rc-legendaria{color:var(--r-legendaria)}
+button.ir.rc-unica{color:var(--r-unica)} button.ir.rc-apex{color:var(--r-apex)}
+button.ir.rc-omega{color:var(--r-omega)}
+/* Tira de fotos de «Mis criaturas», arriba del todo en la calculadora. */
+.tira{display:flex;gap:9px;flex-wrap:wrap}
+.tira button.ir.foto-btn{
+  border:1px solid var(--borde);border-radius:9px;overflow:hidden;
+  background:var(--panel2);padding:0;
+}
+.tira button.ir.foto-btn:hover{border-color:var(--marca)}
+.tira .tira-nm{
+  display:block;font-size:10.5px;font-weight:650;line-height:1.35;padding:3px 3px 5px;
+  max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;
+}
+.ficha{display:flex;gap:14px;align-items:flex-start}.ficha .grande{
+  width:104px;height:126px;flex:0 0 104px;object-fit:contain;border-radius:8px;
+  background:var(--hueco);border:1px solid var(--borde);
+}
+.maxnivel{
+  background:var(--raiz-bg);border:1px solid var(--raiz-borde);border-radius:9px;padding:12px 14px;margin-top:11px;
+}
+.maxnivel .t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--marca);margin-bottom:5px}
+.maxnivel .v{font-size:17px;font-weight:650}
+.maxnivel .d{font-size:11.5px;color:var(--tx2);margin-top:4px;line-height:1.6}
+.maxnivel .d b{color:var(--tx)}
+
+/* informe completo del arbol, dentro de la calculadora */
+.informe{
+  background:var(--informe);border:1px solid var(--borde);border-radius:11px;
+  padding:14px 16px;margin-top:16px;
+}
+.informe h3{margin:0 0 5px;font-size:13px;letter-spacing:.4px;color:var(--marca)}
+.informe .sub{font-size:11.5px;color:var(--tx3);line-height:1.65;margin-bottom:13px}
+.informe table{margin-top:2px;font-size:12.5px}
+.informe td{padding:6px 9px}
+.informe tr.raiz-fila td{background:var(--raiz-bg)}
+.informe .ind{color:var(--tx3)}
+.informe tr.total td{border-top:1px solid var(--tx3);border-bottom:0;font-weight:650}
+.informe .rr{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.informe .rr > span{
+  display:inline-flex;align-items:center;gap:7px;background:var(--panel2);
+  border:1px solid var(--borde);border-radius:8px;padding:5px 10px;font-size:12.5px;
+}
+.informe .rr b{font-variant-numeric:tabular-nums}
+/* El boton «criar» del informe. Es una ACCION, no una etiqueta, y por eso va en
+   el cian de estado (--pill) y NO en --marca: --marca vale #4ade80 en «default»,
+   que es LITERALMENTE --r-unica, y `probar_rareza.py` acusaria —con razon— un
+   boton del color de la rareza Única pegado a un nombre de criatura que puede
+   ser Única. El cian no esta ni en la paleta de rareza ni en la del tema.
+   El fondo y el borde son el mismo cian con alfa, como las pildoras. */
+.informe .criar{
+  font:inherit;font-size:11.5px;font-weight:600;line-height:1.5;cursor:pointer;
+  padding:1px 8px;border-radius:20px;background:#22d3ee1f;border:1px solid #22d3ee59;
+  color:var(--pill);
+}
+.informe .criar:hover{background:#22d3ee33;border-color:var(--pill)}
+.informe .criar:focus-visible{outline:2px solid var(--pill);outline-offset:2px}
+/* En la fila Total el texto va en 650; el boton hereda el tamano pero no el
+   peso, para que no se confunda con la cifra que tiene al lado. */
+.informe tr.total .criar{font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--borde)}
+th{color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#ffffff06}
+
+.aviso{
+  border-left:3px solid var(--ambar);background:#fbbf240f;border-radius:0 8px 8px 0;
+  padding:11px 14px;font-size:12.5px;color:#e8d9b0;margin-bottom:14px;
+}
+.aviso.info{border-left-color:var(--azul);background:#60a5fa0f;color:#c9dbf5}
+.aviso b{color:#fff}
+.nota{font-size:11.5px;color:var(--tx3);margin-top:9px;line-height:1.5}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#ffffff0d;color:var(--pill);margin:0 5px 5px 0}
+
+/* ---------- stats del dino (donde estaba «Filtrar por rareza») ----------
+   El panel esta en el HTML pero VACIO: las seis fichas y los cuatro mandos los
+   construye `montarStats()` UNA vez al arrancar, y a partir de ahi `pintarStats`
+   solo cambia textos y valores. Nunca se rehace su innerHTML: si se rehiciera,
+   los mandos se destruirian en cada repintado y la referencia que tuviera el
+   manejador quedaria muerta —el fallo que ya costo una sesion entera con el
+   boton de guardar, donde el clic no hacia nada y no daba ningun error—. */
+.stats{background:var(--panel2);border:1px solid var(--borde);border-radius:10px;padding:12px 13px}
+.stats .st-cab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.stats .st-t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx2);font-weight:600}
+.stats .st-n{font-size:11.5px;color:var(--tx3)}
+.st-rejilla{display:grid;gap:7px;grid-template-columns:repeat(2,1fr)}
+/* Tres columnas, no `auto-fit`: con auto-fit el ancho del panel daba CINCO
+   fichas en la primera fila y una sola en la segunda, y las etiquetas se
+   cortaban a «VEL…» y «ARMAD…». En rejilla fija siempre son 3 y 2. */
+@media(min-width:820px){.st-rejilla{grid-template-columns:repeat(3,1fr)}}
+.st{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:5px 8px}
+.st .st-i{flex:0 0 auto;display:block}
+/* La etiqueta va ENCIMA del valor y no al lado: en una linea sola el icono, el
+   nombre, la cifra y el incremento no caben, y el nombre era lo que se perdia. */
+.st .st-tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.st .st-k{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st .st-n{display:flex;align-items:baseline;gap:5px}
+.st .st-v{font-size:13.5px;font-weight:650;font-variant-numeric:tabular-nums}
+.st .st-d{font-size:10.5px;font-weight:700;color:var(--st-acc);font-variant-numeric:tabular-nums}
+.st .st-d:empty{display:none}
+.st-mej{margin-top:11px;padding-top:10px;border-top:1px solid var(--borde);display:grid;gap:5px}
+.st-fila{display:flex;align-items:center;gap:7px}
+.st-fila .st-i{flex:0 0 auto;display:block}
+.st-fila .st-k{font-size:11px;color:var(--tx2);flex:1;min-width:0}
+.st-b{
+  width:24px;height:24px;flex:0 0 24px;border-radius:6px;cursor:pointer;font:inherit;
+  font-size:15px;line-height:1;background:var(--bg);border:1px solid var(--borde);color:var(--tx);
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.st-b:hover:not(:disabled){border-color:var(--st-acc);color:var(--st-acc)}
+.st-b:disabled{opacity:.35;cursor:default}
+.st-p{min-width:22px;text-align:center;font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}
+.st-nota{font-size:11px;color:var(--tx3);margin-top:9px;line-height:1.55}
+.st-nota b{color:var(--tx)}
+.st-coste{margin-top:9px}
+.st-coste .st-ct{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);margin-bottom:4px}
+.st-coste .st-cr{display:flex;flex-wrap:wrap;gap:5px 8px;align-items:center}
+.st-coste .st-cr span{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--borde);border-radius:20px;padding:2px 9px;font-size:12px}
+.st-coste .st-cr img{display:block}
+.st-coste .st-cq{display:block;margin-top:5px;font-size:12px;color:var(--st-acc)}
+.stats[data-vacio="1"] .st-mej,.stats[data-vacio="1"] .st-coste{display:none}
+/* La columna de los stats es mas ancha que la del buscador: seis fichas y cuatro
+   mandos no caben en la mitad justa. */
+@media(min-width:820px){#filaElegir{grid-template-columns:minmax(240px,.82fr) 1.18fr}}
+footer{color:var(--tx3);font-size:11.5px;border-top:1px solid var(--borde);padding-top:14px;margin-top:26px;line-height:1.7}
+footer code{color:var(--tx2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="cab">
+    <div>
+      <h1>__NOMBRE__ <span class="v">JWA 3.22</span></h1>
+      <div class="sub">
+        <b id="hTotal">—</b> criaturas · datos de <b>paleo.gg</b> actualizados el <b id="hFecha">—</b> ·
+        costes verificados contra <b>221 fichas</b> sin discrepancias · funciona <b>sin conexión</b>
+      </div>
+    </div>
+    <!-- El tema. Los nombres son los que pidio n30: «default» y «yellow». -->
+    <div class="tema">
+      <label for="tema">Tema</label>
+      <select id="tema">
+        <option value="default">Default</option>
+        <option value="yellow">Yellow</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<!-- El buscador vive ARRIBA, en la misma franja que las pestañas y FUERA de la
+     calculadora. n30 (25-sep-2026): «quiero que la búsqueda quede fuera del
+     apartado 1 ... mueve la busqueda a la parte superior izquierda, donde se ven
+     las pestañas de calculadora, arbold de fusion, mis criaturas, creo que ahí
+     estorbará menos». Al salir de la sección es GLOBAL —se ve en las cuatro
+     pestañas— y por eso elegir una criatura tiene que LLEVAR a la calculadora:
+     el buscador no puede dejar al usuario mirando otra pestaña con una criatura
+     elegida que no ve. -->
+<div class="barra-sup">
+  <div class="buscador">
+    <label for="q">Buscar entre las <span id="nTotal">—</span> criaturas</label>
+    <input type="text" id="q" placeholder="Escribe un nombre… (ej. Indoraptor)" autocomplete="off"
+           role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list">
+    <div class="lista" id="lista" role="listbox"></div>
+  </div>
+  <nav>
+    <button class="on" data-t="calc">Calculadora</button>
+    <button data-t="arbol">Árbol de fusión</button>
+    <button data-t="mios">Mis criaturas</button>
+    <button data-t="cat">Catalizadores</button>
+  </nav>
+</div>
+
+<!-- ============ CALCULADORA ============ -->
+<section class="on" id="s-calc">
+  <!-- Tus criaturas guardadas, en fotos. Va ARRIBA del todo porque es lo que mas
+       se usa: entrar a la herramienta y saltar a un dino de los tuyos. El bloque
+       entero se oculta si no hay ninguna guardada. -->
+  <div class="panel" id="panelMisFotos" style="display:none">
+    <h2>Mis criaturas <span id="nMisFotos" style="font-weight:400;color:var(--tx2);font-size:12px"></span></h2>
+    <div class="tira" id="misFotos"></div>
+  </div>
+
+  <div class="panel">
+    <h2>1 · La criatura</h2>
+    <!-- La ficha va DENTRO de la rejilla, en la columna izquierda, a la par de los
+         stats. n30: «donde la foto y pequeña descripcion de la criatura quedan
+         abajo, debería de estar arriba y a la par de los stats». Antes ocupaba el
+         ancho entero por debajo de la rejilla, y su celda la ocupaba el buscador,
+         que ya no está aquí. -->
+    <div class="grid g2" id="filaElegir">
+      <div id="elegida"></div>
+      <!-- Aqui estaba el <select> «Filtrar por rareza». Se quito el 25-sep-2026 a
+           peticion de n30 y su sitio lo ocupan los stats del dino.
+           El panel va VACIO a proposito: lo rellena `montarStats()` una sola vez
+           (ver el comentario del CSS). -->
+      <div class="stats" id="panelStats" data-vacio="1">
+        <div class="st-cab">
+          <span class="st-t">Stats</span>
+          <span class="st-n" id="stNivel">—</span>
+        </div>
+        <div class="st-rejilla" id="stRejilla"></div>
+        <div class="st-mej" id="stMej"></div>
+        <div class="st-coste" id="stCoste"></div>
+        <div class="st-nota" id="stNota">Elige una criatura en el buscador de arriba para ver sus stats.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="pEntrada" style="display:none">
+    <h2>2 · Tus datos</h2>
+    <div class="grid g3">
+      <div>
+        <label for="nivelAct">Nivel actual</label>
+        <input type="number" id="nivelAct" min="0" max="35" step="1" value="0">
+        <div class="nota" id="notaNivel">0 = sin crear</div>
+      </div>
+      <div>
+        <label for="adnTengo">ADN que tienes</label>
+        <input type="number" id="adnTengo" min="0" step="1" value="0">
+        <div class="nota" id="notaAdn">—</div>
+      </div>
+      <div>
+        <label for="nivelObj">Nivel objetivo: <b id="lblObj">—</b></label>
+        <input type="range" id="nivelObj" min="1" max="35" value="35">
+        <div class="nota">Arrastra o usa las flechas del teclado</div>
+      </div>
+    </div>
+    <div id="informeArbol"></div>
+    <div class="maxnivel" id="maxNivel"></div>
+  </div>
+
+  <div id="resultado"></div>
+</section>
+
+<!-- ============ ARBOL ============ -->
+<section id="s-arbol">
+  <div class="panel">
+    <h2>Árbol de fusión — de arriba abajo</h2>
+    <div class="aviso info">
+      Se recorre <b>hacia abajo</b>: partimos de la criatura elegida y bajamos por todos los
+      ingredientes que hacen falta para crearla, en cascada. Las cifras de ADN son
+      <b>lo que hay que reunir</b>, ya descontando lo que tengas guardado.
+    </div>
+    <div class="aviso">
+      Cada criatura del árbol es <b>editable</b>: escribe su nivel y el ADN que tienes, o destilda
+      <b>Creada</b> si todavía no existe. Se guarda al momento y recalcula todo lo que cuelga de ella.
+    </div>
+    <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--tx);margin-bottom:16px;cursor:pointer">
+      <input type="checkbox" id="chkSubida" checked style="width:auto;margin:0">
+      Contar el ADN de <b>subir los ingredientes</b> al nivel que exige la fusión
+    </label>
+    <div class="nota" style="margin:-8px 0 18px">
+      Con la casilla marcada obtienes lo que de verdad hay que reunir. Si la desmarcas, el cálculo
+      imita al de <b>paleo.gg</b>, que asume que los ingredientes «ya están listos para fusionar» y
+      solo cuenta el ADN que se consume en las fusiones.
+    </div>
+    <div id="arbolCuerpo" class="arbol"><p class="vacio-txt">Elige una criatura en la pestaña «Calculadora».</p></div>
+  </div>
+</section>
+
+<!-- ============ MIS CRIATURAS ============ -->
+<section id="s-mios">
+  <div class="panel">
+    <h2>Lo que has guardado</h2>
+    <div class="aviso info" style="margin-bottom:14px">
+      <b>Pulsa cualquier fila</b> —el nombre, la foto o cualquier hueco de la línea— y te lleva
+      a la calculadora de esa criatura, con su nivel, su ADN y su objetivo tal y como los dejaste.
+    </div>
+    <div id="miosCuerpo"></div>
+  </div>
+  <div class="panel">
+    <h2>Resumen</h2>
+    <div class="cifras" id="miosResumen"></div>
+    <div class="nota">
+      Los datos se guardan en el navegador (<code>localStorage</code>), en este dispositivo.
+      No se envía nada a ningún sitio. Usa «Exportar» para llevártelos.
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="gh" id="btnExport">Exportar JSON</button>
+      <button class="gh" id="btnImport">Importar JSON</button>
+      <button class="gh" id="btnBorrar">Borrar todo</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CATALIZADORES ============ -->
+<section id="s-cat">
+  <div class="panel">
+    <h2>Catalizadores — planificador de recombinación</h2>
+    <div class="aviso">
+      <b>Datos NO verificados.</b> A diferencia del resto de la calculadora, las tasas de
+      recombinación <b>no están publicadas por el juego</b> y aquí se usan los pesos y las
+      recetas observadas por <b>idgt902</b> (guía de ago-2025). Los catalizadores sirven para
+      <b>mejoras (enhancements)</b>, no para subir de nivel: es un eje aparte.
+    </div>
+    <div class="grid g3">
+      <div>
+        <label for="cComun">ADN Común en el tanque</label>
+        <input type="number" id="cComun" min="0" step="100" value="0">
+      </div>
+      <div>
+        <label for="cRara">ADN Rara</label>
+        <input type="number" id="cRara" min="0" step="100" value="0">
+      </div>
+      <div>
+        <label for="cEpica">ADN Épica</label>
+        <input type="number" id="cEpica" min="0" step="100" value="0">
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div>
+        <label for="cLegend">ADN Legendaria</label>
+        <input type="number" id="cLegend" min="0" step="50" value="0">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="acc" id="btnCat">Calcular</button>
+      </div>
+    </div>
+    <div id="catSalida" style="margin-top:16px"></div>
+  </div>
+</section>
+
+<!-- La pestana «Referencia» se quito el 25-sep-2026 a peticion de n30: era
+     informativa y no se usaba. Se llevo por delante cuatro paneles —la escalera
+     de ADN por nivel, el coste por fusion, los topes de inventario y la tabla de
+     fiabilidad de cada dato— y el bloque de JavaScript que los rellenaba. Los
+     DATOS siguen en el modelo (`M.L`, `M.creacion`, `M.topes`, `M.adnPorFusion`)
+     y los verifican `verificar_motor.py` y `probar.py`; lo que ya no existe es su
+     tabla. Para consultarlos, la pestana «Calculadora» los aplica al caso real. -->
+
+<footer>
+  Datos de criaturas: <span class="mono" id="fFuente">—</span>.<br>
+  Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias),
+  el comunicado oficial de la 3.22 y la base de datos de <span class="mono">jurassic-journal</span>.<br>
+  El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las
+  fusiones calculadas son una estimación, no una promesa.<br>
+  Generado el <span class="mono" id="fGen">—</span>. Herramienta no oficial, sin relación con Ludia.
+</footer>
+</div>
+
+<script>
+"use strict";
+const D = __DATOS__, M = D.modelo, C = D.criaturas;
+const RAREZAS = {common:"Común",rare:"Rara",epic:"Épica",legendary:"Legendaria",unique:"Única",apex:"Apex",omega:"Omega"};
+const CLASE   = {common:"comun",rare:"rara",epic:"epica",legendary:"legendaria",unique:"unica",apex:"apex",omega:"omega"};
+const TIPOS   = {non_hybrid:"sin híbrido",hybrid:"híbrido",super_hybrid:"superhíbrido",mega_hybrid:"megahíbrido",giga_hybrid:"gigahíbrido"};
+
+const nf = n => (n==null?"—":n.toLocaleString("es-MX"));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tag = r => '<span class="tag rc-'+CLASE[r]+'">'+RAREZAS[r]+'</span>';
+const minLv = r => M.minLv[r] || 1;
+
+/* ---------- donde se consigue una criatura ---------- */
+/* Los codigos crudos viven en C[u][7] y la etiqueta se resuelve aqui contra
+   M.locEtiquetas: el codigo es la identidad, el texto es presentacion. Las
+   etiquetas no estan escritas a mano, las saca `verificar_fuentes.py` del cache
+   de paleo.gg y falla si el modelo se separa de la fuente.
+
+   Tres casos que NO se pueden mezclar:
+     - DARDEO: se caza con el dardo en el mapa.
+     - COMBATE: Arena, Torres de Asalto, Incursion y Misiones de Alianza. Se
+       PELEA, no se dardea; por eso la pildora lo dice, y no se presenta como
+       una zona de dardeo. Solo 2 criaturas tienen de las dos cosas.
+     - SIN FUENTE: omega y criaturas de evento, que no salen en el mapa.
+   El santuario se omite a proposito: es colocacion pasiva, no una zona. Se
+   puede omitir sin perder nada porque NINGUNA de las 518 lo tiene como unica
+   fuente, y eso lo comprueba `verificar_fuentes.py` en cada pasada.          */
+const etiqLoc = c => M.locEtiquetas[c] || c;
+/* La etiqueta de paleo.gg trae la franja horaria pegada («Local Area 3 | All Day»).
+   En la PILDORA sobra: las siete zonas del mapa son las CUATRO franjas (medido:
+   dawn+day+dusk+night en las 87 combinaciones que existen), asi que «All Day» no
+   distingue nada y solo alarga la pildora — la peor pasaba de 49 caracteres y no
+   cabia en la fila de un nodo. El texto COMPLETO, con su franja, sigue en el
+   tooltip, que es donde no molesta. */
+const etiqLocCorta = c => String(M.locEtiquetas[c] || c).replace(/\s*\|\s*All Day$/, "");
+function zonaDe(u, corta){
+  const f = (C[u] && C[u][7]) || [];
+  const et = corta ? etiqLocCorta : etiqLoc;
+  const partes = [];
+  const dardea = f.filter(x => M.locDardeo.includes(x));
+  const pelea  = f.filter(x => M.locCombate.includes(x));
+  if (dardea.length) partes.push(dardea.map(et).join(" · "));
+  if (pelea.length)  partes.push(pelea.map(et).join(" · ") + " · combate");
+  if (partes.length) return partes.join(" · ");
+  if (f.includes("sanctuary")) return "solo en santuario";
+  return "sin fuente en el mapa";
+}
+function zonaTitulo(u){
+  const f = (C[u] && C[u][7]) || [];
+  if (!f.length) return "Sin datos de origen en la fuente";
+  return "Fuentes en el juego: " + f.map(etiqLoc).join(" · ");
+}
+/* ¿La zona aporta algo aqui? De las 518, 248 son hibridos y su fuente es `none`:
+   a esos no se les busca en el mapa, se fusionan, asi que decirles «sin fuente en
+   el mapa» es ruido. La pildora se enseña solo cuando dice algo: siempre en las
+   que no tienen ingredientes (es justo el dato que se necesita para conseguirlas),
+   y en un hibrido solo si de verdad sale en el mapa — hay uno, Purrolyth, que
+   tambien cae en Strike Towers. */
+const zonaUtil = u => {
+  const f = (C[u] && C[u][7]) || [];
+  if (!(C[u] && C[u][5] && C[u][5].length)) return true;
+  return f.some(x => M.locDardeo.includes(x) || M.locCombate.includes(x));
+};
+
+/* ---------- un nombre de criatura, pulsable y con el color de su rareza ------ */
+/* El color ya dice la rareza, asi que al lado sobra la etiqueta: por eso el
+   informe del arbol pierde la columna «Rareza». Pulsa y lleva a su calculadora. */
+const nombreIr = (u, titulo) => {
+  const c = C[u];
+  if (!c) return esc(u);
+  return '<button class="ir rc-'+CLASE[c[1]]+'" data-ir="'+u+'" title="'+
+         esc(titulo || ("Llevar "+c[0]+" a la calculadora"))+'">'+esc(c[0])+'</button>';
+};
+
+/* ---------- todas las criaturas de las ramas SUPERIORES ---------------------- */
+/* Sube por `hijos` hasta arriba y devuelve todas las alcanzables, sin la propia
+   criatura. Es el cierre transitivo, no los hijos directos: «Lleva a» tiene que
+   decir todo lo que se puede construir con ella, aunque sea en dos o tres
+   pasos.
+   Va por ANCHURA y con marca de visitados porque el grafo tiene diamantes: una
+   misma criatura se alcanza por varios caminos (p.ej. dos ingredientes suyos
+   convergen en el mismo hibrido) y sin la marca saldria repetida.               */
+function ascendientes(u){
+  const vistos = new Set([u]);
+  const niveles = [];
+  let frente = [u];
+  while (frente.length){
+    const siguiente = [];
+    for (const x of frente){
+      for (const h of ((C[x] && C[x][6]) || [])){
+        if (!C[h] || vistos.has(h)) continue;
+        vistos.add(h);
+        siguiente.push(h);
+      }
+    }
+    if (!siguiente.length) break;
+    siguiente.sort((a, b) => C[a][0].localeCompare(C[b][0], "es"));
+    niveles.push(siguiente);
+    frente = siguiente;
+  }
+  return niveles;
+}
+
+/* ---------- modelo de costes ---------- */
+function costeADN(r, desde, hasta, crear){
+  if (hasta <= desde) return 0;
+  if (r === "omega"){
+    let t = 0;
+    if (crear && desde < 1) t += M.omegaL[0];
+    for (let n = Math.max(desde,1)+1; n <= hasta; n++)
+      t += (n <= 30) ? M.omegaL[n-1] : M.omega3135[n-31];
+    return t;
+  }
+  const m = minLv(r);
+  const a = Math.max(desde, m);
+  let t = 0;
+  for (let n = a+1; n <= Math.min(hasta,30); n++) t += M.L[n-m];
+  if (hasta > 30) t += (hasta - Math.max(a,30)) * M.adn3135[r];
+  if (crear) t += M.creacion[r];
+  return t;
+}
+function costeMon(r, desde, hasta){
+  if (hasta <= desde) return 0;
+  const a = Math.max(desde, minLv(r));
+  let t = 0;
+  if (r === "omega"){
+    for (let n = a+1; n <= Math.min(hasta,30); n++) t += M.omegaCoinR[n-1];
+    if (hasta > 30) t += (hasta - Math.max(a,30)) * M.coinOmega3135;
+    return t;
+  }
+  for (let n = a+1; n <= Math.min(hasta,30); n++) t += M.coinR[n-1];
+  if (hasta > 30) t += (hasta - Math.max(a,30)) * M.coin3135;
+  return t;
+}
+const adnFus = (ri,rh) => M.adnPorFusion[String((M.tier[rh]??0) - (M.tier[ri]??0))] || 0;
+const nFus   = d => d <= 0 ? 0 : Math.ceil(d / M.media);
+
+/* ---------- inventario guardado ----------
+   Aqui hay DOS cosas distintas, y antes estaban mezcladas en una sola:
+
+     · `INV` = lo que TIENES de cada criatura. Lo escriben la calculadora y el
+       arbol al teclear. Es estado de trabajo, y se conserva al recargar.
+     · `MIS` = «Mis criaturas»: la lista de las que has guardado a proposito.
+       Solo la escriben el boton «Guardar en mis criaturas», el borrado y la
+       importacion.
+
+   Antes «Mis criaturas» era simplemente `Object.keys(INV)`, asi que teclear el
+   ADN de un ingrediente en el arbol metia ese ingrediente en la lista: pulsar
+   Guardar acababa dejando guardado el arbol genealogico entero. Ahora la lista
+   y los datos son dos cosas, y solo el boton anade a la lista. */
+const CLAVE = "jwa322.inventario";
+const CLAVE_MIOS = "jwa322.mios";
+let INV = {};
+try { INV = JSON.parse(localStorage.getItem(CLAVE) || "{}"); } catch(e){ INV = {}; }
+/* La lista es nueva. Si no existe se migra desde lo que ya habia guardado, para
+   que nadie pierda «Mis criaturas» al abrir esta version. */
+let MIS = null;
+try { MIS = JSON.parse(localStorage.getItem(CLAVE_MIOS) || "null"); } catch(e){ MIS = null; }
+if (!Array.isArray(MIS)) MIS = Object.keys(INV);
+MIS = MIS.filter(u => !!C[u]);
+const guardar = () => {
+  try {
+    localStorage.setItem(CLAVE, JSON.stringify(INV));
+    localStorage.setItem(CLAVE_MIOS, JSON.stringify(MIS));
+  } catch(e){}
+};
+const esMia = u => MIS.indexOf(u) !== -1;
+const anadirMia = u => { if (esMia(u)) return false; MIS.push(u); return true; };
+const quitarMia = u => { const i = MIS.indexOf(u); if (i === -1) return false; MIS.splice(i, 1); return true; };
+
+/* Cada criatura guarda {nivel, adn, creado, objetivo, bVida, bDano, bVel, mejora}.
+   `creado` es explicito porque hay una diferencia real entre "nivel 0" y
+   "nivel 1": una criatura sin crear cuesta ADN de creacion ademas de la escalera.
+   Los datos guardados por versiones anteriores no tienen el campo, asi que se
+   deduce del nivel. */
+const invDe = u => {
+  const v = INV[u] || {};
+  const r = C[u] ? C[u][1] : "common";
+  const m = minLv(r);
+  const nivel = Math.max(0, Math.min(35, Number(v.nivel) || 0));
+  return {
+    nivel: nivel,
+    adn: Math.max(0, Number(v.adn) || 0),
+    creado: v.creado !== undefined ? !!v.creado : nivel >= m
+  };
+};
+
+/* ---------- puntos de mejora y pista de mejoras ----------
+   Los puntos («stat boost») y el paso de la pista («enhancements») son datos DE
+   LA CRIATURA, como el nivel y el ADN, y viajan con ellos: `fijar` reemplaza
+   INV[u] ENTERO, asi que si no se copiaran alli, teclear el nivel borraria los
+   puntos sin avisar. Es el mismo fallo que ya tuvo el nivel objetivo, y por eso
+   los cuatro campos se declaran en un solo sitio: MEJ_CAMPOS. */
+const MEJ_CAMPOS = ["bVida", "bDano", "bVel", "mejora"];
+/* La pista de mejoras de una criatura, o null si no la tiene (371 de las 518:
+   solo Unica y Apex la llevan). */
+const PISTA = u => (C[u] && C[u][9]) || null;
+
+/* El bono de tope que dan las mejoras YA aplicadas: la suma de los `boost_max`
+   de los primeros n pasos. En Unica es +1 (lo da el paso 3) y en Apex +2. */
+function bonoMejora(u, n){
+  const p = PISTA(u); if (!p) return 0;
+  let s = 0;
+  for (let i = 0; i < Math.min(n, p.length); i++)
+    if (p[i][2][0] === "boost_max") s += p[i][2][1];
+  return s;
+}
+/* Nivel al que se ensenan los stats: el actual, y si aun no esta creada, el de
+   nacimiento. Un nivel 0 no es un nivel: es «no existe». */
+function nivelStats(u){
+  const i = invDe(u), m = minLv(C[u][1]);
+  return i.creado ? Math.max(i.nivel, m) : m;
+}
+/* Las mejoras solo existen a partir del nivel 30. paleo.gg hace lo mismo: al
+   bajar de 30, la pista vuelve a 0. */
+const mejoraMax = u => nivelStats(u) >= M.mejoraNivelMin ? M.mejoraPasos : 0;
+/* La pista aplicada, acotada al nivel. */
+function mejoraDe(u){
+  const v = (INV[u] || {}).mejora;
+  return Math.max(0, Math.min(mejoraMax(u), Number(v) || 0));
+}
+/* Tope TOTAL de puntos: el nivel MAS el bono de la pista. En paleo.gg es
+   `v = (capBoostByLevel ? level : 35) + capBoostIncrease`, y los tres stats
+   comparten ese tope: no es 20 por stat mas un colchon, es un pozo comun. */
+const topePuntos = u => nivelStats(u) + bonoMejora(u, mejoraDe(u));
+/* Los puntos, acotados: cada stat no pasa de 20 y los tres juntos, del tope. */
+function puntosDe(u){
+  const v = INV[u] || {}, tope = topePuntos(u);
+  let bV = Math.max(0, Math.min(M.topeBoostStat, Number(v.bVida) || 0));
+  let bD = Math.max(0, Math.min(M.topeBoostStat, Number(v.bDano) || 0));
+  let bS = Math.max(0, Math.min(M.topeBoostStat, Number(v.bVel) || 0));
+  /* Se recorta en LECTURA, no solo al escribir: bajar el nivel baja el tope, y
+     lo que ya estaba guardado puede no caber. `acotarMejoras` lo deja escrito
+     para que lo que se ve sea lo que se guarda. */
+  while (bV + bD + bS > tope){
+    if (bS > 0) bS--; else if (bD > 0) bD--; else bV--;
+  }
+  return {bVida: bV, bDano: bD, bVel: bS, tope: tope};
+}
+const mejDe = u => Object.assign({mejora: mejoraDe(u)}, puntosDe(u));
+/* Deja ESCRITO lo que `mejDe` acaba de acotar. Solo toca los campos que ya
+   existian: materializar los que faltan haria que `fijar` creyera que ha
+   cambiado algo en la primera pulsacion de tecla y repintaria de mas. */
+function acotarMejoras(u){
+  if (!C[u] || !INV[u]) return;
+  if (!MEJ_CAMPOS.some(c => INV[u][c] !== undefined)) return;
+  const a = mejDe(u);
+  MEJ_CAMPOS.forEach(c => { INV[u][c] = a[c]; });
+}
+
+/* Los stats reales de una criatura, en el orden de M.statsOrden.
+   El ORDEN de aplicacion es el de paleo.gg y no da igual: primero el nivel,
+   luego los puntos y por ultimo la pista.
+     · nivel: vida y dano por MULT_NIVEL (los `stats` del JSON son los de nivel
+       26, que es donde el multiplicador vale 1). La velocidad, la armadura y
+       los dos criticos NO escalan con el nivel.
+     · puntos: +2 de velocidad planos y +2,5% de vida y dano cada uno.
+     · pista: velocidad plana, vida y dano en PORCENTAJE (valor 110 = x1,10).
+   Se redondea hacia abajo al final, como el original. */
+function statsDe(u, niv, mej){
+  const b = C[u][8], f = M.multNivel[Math.max(1, Math.min(35, niv)) - 1] / 1e9;
+  let vida = b[0] * f, dano = b[1] * f;
+  let vel = b[2], arm = b[3], cri = b[4], crm = b[5];
+  vel  += M.boostVelocidad * mej.bVel;
+  vida *= 1 + M.boostFraccion * mej.bVida;
+  dano *= 1 + M.boostFraccion * mej.bDano;
+  const p = PISTA(u) || [];
+  for (let i = 0; i < Math.min(mej.mejora, p.length); i++){
+    const tipo = p[i][2][0], valor = p[i][2][1];
+    if (tipo === "speed")       vel  += valor;
+    else if (tipo === "health") vida  = vida * valor / 100;
+    else if (tipo === "damage") dano  = dano * valor / 100;
+  }
+  return [Math.floor(vida), Math.floor(dano), Math.floor(vel),
+          Math.floor(arm), Math.floor(cri), Math.floor(crm)];
+}
+
+/* Escribe un campo y devuelve si el inventario cambio de verdad.
+   Ademas de escribir, ACOTA: el tope de puntos depende del nivel, asi que bajar
+   el nivel puede dejar guardado algo que ya no cabe. Se recorta y se guarda
+   recortado, para que al recargar se vea lo mismo que se vio al teclear. */
+const fijar = (u, campo, valor) => {
+  const r = C[u] ? C[u][1] : "common", m = minLv(r);
+  const antes = INV[u] || {};
+  const act = invDe(u);
+  const nuevo = {nivel: act.nivel, adn: act.adn, creado: act.creado};
+  /* El nivel objetivo, los puntos de mejora y la pista viajan con el resto.
+     `INV[u] = nuevo` REEMPLAZA el objeto entero, asi que sin esta linea teclear
+     el nivel o el ADN de una criatura en el arbol le borraba su objetivo y sus
+     puntos de mejora, y volvian a cero sin avisar. */
+  ["objetivo"].concat(MEJ_CAMPOS).forEach(c => {
+    if (INV[u] && INV[u][c] !== undefined) nuevo[c] = INV[u][c];
+  });
+  if (campo === "creado"){
+    nuevo.creado = !!valor;
+    // al crear, la criatura aparece en su nivel de nacimiento; al descrearla, a 0
+    nuevo.nivel = nuevo.creado ? Math.max(act.nivel, m) : 0;
+  } else if (campo === "nivel"){
+    const n = Math.max(0, Math.min(35, Number(valor) || 0));
+    nuevo.creado = n >= m;
+    nuevo.nivel = nuevo.creado ? n : 0;
+  } else if (campo === "adn"){
+    nuevo.adn = Math.max(0, Number(valor) || 0);
+  } else if (MEJ_CAMPOS.indexOf(campo) !== -1){
+    nuevo[campo] = Math.max(0, Number(valor) || 0);
+  }
+  INV[u] = nuevo;
+  acotarMejoras(u);            // ya con el nivel nuevo
+  if (C[u]) INV[u].nombre = C[u][0];
+
+  const mAntes = MEJ_CAMPOS.map(c => antes[c] === undefined ? null : antes[c]).join();
+  const mAhora = MEJ_CAMPOS.map(c => INV[u][c] === undefined ? null : INV[u][c]).join();
+  if (nuevo.nivel === act.nivel && nuevo.adn === act.adn && nuevo.creado === act.creado
+      && mAntes === mAhora) return false;
+  guardar();
+  return true;
+};
+
+/* Nivel maximo alcanzable con el ADN que se tiene. Espejo de
+   modelo.nivel_maximo: si `creado` es falso, el primer pago es la creacion. */
+function nivelMaximo(r, desde, adn, creado, tope){
+  if (tope === undefined) tope = M.nivelMax;
+  adn = Math.max(0, Number(adn) || 0);
+  const m = nivelCreacion(r);
+  if (creado === undefined) creado = desde >= m;
+  let nivel, gastado;
+  if (!creado){
+    const c = costeCreacion(r);
+    if (adn < c) return {nivel:0, gastado:0, sobra:adn};
+    adn -= c; gastado = c; nivel = m;
+  } else {
+    nivel = Math.max(desde, m); gastado = 0;
+  }
+  while (nivel < tope){
+    const paso = costePaso(r, nivel + 1);
+    if (paso <= 0 || paso > adn) break;
+    adn -= paso; gastado += paso; nivel += 1;
+  }
+  return {nivel:nivel, gastado:gastado, sobra:adn};
+}
+const nivelCreacion = r => r === "omega" ? 1 : (M.minLv[r] || 1);
+const costeCreacion = r => r === "omega" ? M.omegaL[0] : (M.creacion[r] || 0);
+function costePaso(r, n){
+  if (n <= 0) return 0;
+  if (r === "omega")
+    return n <= 30 ? M.omegaL[n-1] : (n <= M.nivelMax ? M.omega3135[n-31] : 0);
+  const m = M.minLv[r];
+  if (m === undefined || n < m) return 0;
+  return n <= 30 ? M.L[n-m] : (n <= M.nivelMax ? M.adn3135[r] : 0);
+}
+const imgDe = u => "img/" + u + ".webp";
+/* `ansiosa` (opcional): quita `loading="lazy"`. Hace falta en la tira de fotos,
+   que esta ARRIBA de todo y es lo primero que se mira: medido, sus `<img lazy>`
+   no se cargaban nunca —ni estando en pantalla— y salia el texto alternativo en
+   su lugar, mientras que clones ansiosos de las MISMAS direcciones cargaban sin
+   problema (o sea, los ficheros estaban bien y el fallo era del `lazy`).
+   Para el arbol y las tablas sigue siendo `lazy`, que es lo que evita pedir 518
+   ficheros de golpe. */
+const foto = (u, clase, tam, ansiosa) => {
+  const c = C[u];
+  return '<img class="'+clase+'" src="'+imgDe(u)+'" alt="'+esc(c?c[0]:u)+'"'+
+         ' width="'+tam+'" height="'+Math.round(tam*1.2)+'"'+
+         (ansiosa ? "" : ' loading="lazy"')+' decoding="async"'+
+         ' onerror="this.style.visibility=\'hidden\'">';
+};
+
+/* ---------- plan recursivo (hacia abajo) ---------- */
+/* `contarSubida`: si es false, imita el criterio de paleo.gg, que NO cuenta el
+   ADN de subir los ingredientes (asume que "ya estan listos para fusionar").
+   Para la criatura raiz siempre se cuenta: es el objetivo del calculo.        */
+function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv){
+  const c = C[uuid], rareza = c[1], ings = c[5];
+  const inv = (raiz && raizInv) ? raizInv : invDe(uuid);
+  const m = minLv(rareza);
+  const creado = !!inv.creado;
+  // si no esta creada, la criatura no existe: se cuenta desde 0 y se paga la creacion
+  const desde = creado ? Math.max(inv.nivel, m) : 0;
+  const sinCrear = !creado;
+  const adnSubir = costeADN(rareza, desde, objetivo, sinCrear);
+  const cuentaSubir = raiz || contarSubida;
+  const adnNec = (cuentaSubir ? adnSubir : 0) + (adnExtra||0);
+  const monNec = cuentaSubir ? costeMon(rareza, desde, objetivo) : 0;
+  const deficit = Math.max(0, adnNec - inv.adn);
+  const max = nivelMaximo(rareza, desde, inv.adn, creado);
+  const nodo = {uuid, nombre:c[0], rareza, tipo:c[2], desde, objetivo, adnSubir, cuentaSubir,
+                adnNec, monNec, tengo:inv.adn, deficit, extra:adnExtra||0, hijos:[],
+                creado, max, fusiones:0, monFus:0, nivelIng:null, esHoja:false,
+                base:ings.length === 0};
+
+  if (deficit > 0 && ings.length && !visto.has(uuid)){
+    const f = nFus(deficit);
+    nodo.fusiones = f;
+    nodo.monFus = f * (M.monedasFusion[rareza] || 0);
+    nodo.nivelIng = M.minIngrediente[rareza];
+    const v2 = new Set(visto); v2.add(uuid);
+    for (const ing of ings){
+      const ri = C[ing] ? C[ing][1] : "common";
+      const adnIng = f * adnFus(ri, rareza);
+      const invIng = invDe(ing);
+      // el objetivo del ingrediente nunca baja de donde ya esta
+      const nivelActualIng = invIng.creado ? Math.max(invIng.nivel, minLv(ri)) : 0;
+      const objetivoIng = Math.max(nodo.nivelIng, nivelActualIng);
+      nodo.hijos.push(plan(ing, objetivoIng, adnIng, v2, false, contarSubida));
+    }
+  } else {
+    nodo.esHoja = true;
+  }
+  return nodo;
+}
+
+/* ---------- sumar el arbol ---------- */
+/* Suma el arbol SIN contar dos veces a la misma criatura.
+   Un ingrediente compartido —el Velociraptor que llevan a la vez Indoraptor e
+   Indominus Rex— es UNA sola reserva de ADN. Lo que consume se suma, porque son
+   fusiones distintas; pero lo que tienes se resta UNA vez. Sumando el deficit de
+   cada aparicion se restaba el mismo ADN dos veces y el total salia corto. */
+function totales(n){
+  const acc = {porUuid:{}, nodos:0, hojas:0, repetidas:0, fus:0, monFus:0,
+               mon:0, adn:0, adnNec:0, tengo:0, recolectar:0};
+
+  (function rec(x){
+    acc.nodos++;
+    acc.fus += x.fusiones;
+    acc.monFus += x.monFus;
+    const p = acc.porUuid[x.uuid] || (acc.porUuid[x.uuid] = {
+      uuid:x.uuid, nombre:x.nombre, rareza:x.rareza, veces:0, fus:0, extra:0,
+      desde:x.desde, objetivo:x.objetivo, sinCrear:false, tengo:x.tengo,
+      esHoja:false, base:false, cuentaSubir:false
+    });
+    p.veces++;
+    p.fus += x.fusiones;
+    p.extra += x.extra;                       // el ADN que se le echa al fusionar
+    p.objetivo = Math.max(p.objetivo, x.objetivo);
+    p.desde = Math.min(p.desde, x.desde);
+    p.sinCrear = p.sinCrear || !x.creado;
+    p.esHoja = p.esHoja || x.esHoja;
+    p.base = p.base || x.base;
+    /* Si CUALQUIER aparicion cuenta su escalera, se cuenta. Con el interruptor
+       apagado solo la raiz la cuenta, y aqui es donde se decide. */
+    p.cuentaSubir = p.cuentaSubir || x.cuentaSubir;
+    if (x.esHoja) acc.hojas++;
+    x.hijos.forEach(rec);
+  })(n);
+
+  for (const u in acc.porUuid){
+    const p = acc.porUuid[u];
+    /* La escalera se paga UNA vez: de su nivel hasta el mas alto que le pidan.
+       Si aparece dos veces con el mismo objetivo, sumarla dos veces seria pagar
+       dos veces lo mismo.
+
+       Y solo se paga si esa criatura cuenta su subida. `plan` ya lo decidia nodo
+       a nodo (`cuentaSubir`), pero aqui se sumaba la escalera siempre: con el
+       interruptor apagado el informe daba exactamente la misma cifra que con el
+       encendido, mientras la pestana del arbol si cambiaba. Las dos vistas
+       discrepaban justo cuando mas facil es no mirar. */
+    p.escalera = p.cuentaSubir ? costeADN(p.rareza, p.desde, p.objetivo, p.sinCrear) : 0;
+    p.mon = p.cuentaSubir ? costeMon(p.rareza, p.desde, p.objetivo) : 0;
+    p.nec = p.escalera + p.extra;
+    p.falta = Math.max(0, p.nec - p.tengo);
+    acc.adn += p.falta;
+    acc.adnNec += p.nec;
+    acc.tengo += p.tengo;
+    acc.mon += p.mon;
+    if (p.base) acc.recolectar += p.falta;    // sin ingredientes: hay que cazarla
+    if (p.veces > 1) acc.repetidas++;
+  }
+  return acc;
+}
+
+/* Las criaturas que el atajo «Criar a todas» tiene que poner al nivel de la
+   fusion. Lo llena `informeHTML` en cada pintado, a partir de la misma lista que
+   pinta las filas. Se guarda aqui, y no en un atributo del boton, porque el
+   conjunto ya NO coincide con los botones: incluye criaturas YA CREADAS que se
+   quedaron por debajo del nivel exigido, y esas no llevan boton. */
+let POR_CRIAR = [];
+
+/* ---------- informe completo del arbol ---------- */
+/* Todo el ADN que hace falta, criatura por criatura. Va ARRIBA del bloque de
+   nivel maximo: primero cuanto necesitas en total, y debajo hasta donde llegas
+   con lo que ya tienes. Se apoya en el mismo `totales` que la pestana del arbol,
+   asi que las dos vistas no pueden dar cifras distintas. */
+function informeHTML(t, tt){
+  const cri = Object.keys(tt.porUuid).map(u => tt.porUuid[u]);
+  const orden = ["common","rare","epic","legendary","unique","apex","omega"];
+  /* Lo que de verdad hay que ir a buscar es el ADN de las criaturas sin
+     ingredientes (las que no se pueden fusionar); lo demas sale de fusionar. */
+  const porRareza = {};
+  cri.forEach(p => { if (p.base && p.falta > 0) porRareza[p.rareza] = (porRareza[p.rareza] || 0) + p.falta; });
+
+  let h = '<div class="informe"><h3>Informe del árbol completo</h3>';
+  h += '<div class="sub">Todo el ADN que hace falta para llevar <b>'+esc(t.nombre)+'</b> al nivel '+
+       t.objetivo+', criatura por criatura, hasta las que se recolectan. «ADN necesario» es lo que esa '+
+       'criatura consume en todo el árbol: '+
+       (contarSubida ? 'su escalera más el ADN que se le echa encima al fusionarla.'
+                     : 'solo el ADN que se le echa encima al fusionarla, porque los ingredientes se '+
+                       'suponen ya listos para fusionar.')+
+       ' Lo que ya tienes se descuenta <b>una sola vez</b>, aunque la criatura salga en varias ramas.</div>';
+  if (!contarSubida){
+    /* Sin esto, la misma pantalla da dos respuestas segun una casilla que esta
+       en otra pestana. Hay que decir cual de las dos se esta viendo. */
+    h += '<div class="aviso info" style="margin-top:12px">La casilla <b>«Contar el ADN de subir los '+
+         'ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. '+
+         'Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>';
+  }
+
+  h += '<div class="cifras">' +
+    /* «en total» no es adorno: debajo, el bloque 3 · Resultado tiene OTRA cifra
+       con la etiqueta «ADN que falta», que es solo la de esta criatura. Sin la
+       coletilla, dos numeros distintos con el mismo nombre y uno encima del
+       otro. */
+    '<div class="cifra '+(tt.adn>0?"wa":"al")+'"><div class="k">ADN que falta en total</div><div class="v">'+
+      nf(tt.adn)+'</div><div class="n">en '+cri.length+' criaturas distintas'+
+      (tt.repetidas ? ', '+tt.repetidas+(tt.repetidas===1?' compartida':' compartidas') : '')+
+      '</div></div>' +
+    '<div class="cifra al"><div class="k">A recolectar</div><div class="v">'+nf(tt.recolectar)+
+      '</div><div class="n">de las que no se fusionan</div></div>' +
+    '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(tt.fus)+
+      '</div><div class="n">en toda la cascada</div></div>' +
+    '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(tt.mon + tt.monFus)+
+      '</div><div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
+    '</div>';
+
+  h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
+        '<th>Criatura</th><th class="num">Nivel</th>' +
+       '<th class="num">ADN necesario</th><th class="num">Tienes</th>' +
+       '<th class="num">Falta</th><th class="num">Fusiones</th></tr></thead><tbody>';
+  /* Los botones de criar. El texto del individual es corto porque va DENTRO de
+     una celda de la columna «Nivel», junto a la flecha y al objetivo.
+     El nivel al que ponen la criatura NO es el de nacimiento de su rareza, es
+     el que EXIGE LA FUSION —el mismo numero que ya ensena la flecha—, porque
+     una criatura en su nivel de nacimiento todavia no sirve para el arbol: hay
+     que subirla. Se pide el 25-sep-2026 (n30: «debe poner al nivel minimo
+     usable para el dinosaurio de la calculadora, ahorita mismo los cria a nivel
+     minimo de acuerdo a su rareza, cambialo»). El suelo de nacimiento no se
+     pierde: `nivelFus` nunca baja de `minLv(rareza)`, que es el unico valor
+     posible al crear. El titulo lo dice, porque un boton que cambia tus datos
+     sin decir cuanto vale mas.
+     OJO con el atributo: el del atajo es `data-criar-todas`, DISTINTO de
+     `data-criar`. El manejador recoge las criaturas pendientes con
+     `[data-criar]`, asi que si el atajo llevara tambien `data-criar` entraria en
+     esa lista con el valor «*» y se intentaria crear una criatura llamada «*».
+     Se vio al ejecutarlo: la prueba murio con «C[u] is undefined». */
+  const btnCriar = (u, nivel, titulo) =>
+    '<button class="criar" data-criar="'+u+'" data-nivel="'+nivel+'" title="'+esc(titulo)+'">criar</button>';
+  const btnCriarTodas = titulo =>
+    '<button class="criar" data-criar-todas="1" title="'+esc(titulo)+'">Criar a todas</button>';
+
+  /* El nivel que hace USABLE a una criatura en este arbol: el que exige la
+     fusion, o sea el mismo numero que ya ensena la flecha del informe. El suelo
+     de nacimiento se respeta porque por debajo de el la criatura no existe: no
+     es un minimo que se elija. Una sola definicion, usada por la celda y por el
+     atajo, para que no puedan separarse. */
+  const nivelFusion = p => Math.max(p.objetivo, minLv(p.rareza));
+
+  cri.forEach(p => {
+    /* Una criatura sin crear NO tiene nivel: no existe. Antes se decia
+       «sin crear → 20» en esta celda y ademas se ponia una pildora «sin crear»
+       detras del nombre, o sea lo mismo dos veces, y la celda del nivel
+       empezaba con una palabra en vez de con el dato.
+       Ahora la pildora no esta y la celda lleva la ACCION: «criar → 20» —
+       pulsando «criar» la criatura queda EN EL NIVEL 20, que es el que exige la
+       fusion: antes la dejaba en su nivel de nacimiento y habia que subirla
+       despues, o sea que el numero de la flecha no era el que quedaba puesto.
+       Con el interruptor de subir ingredientes apagado se sigue ensenando el
+       objetivo: la fusion lo exige igual, lo pague o no el informe. */
+    const nivel = p.sinCrear
+      ? btnCriar(p.uuid, nivelFusion(p),
+          'Pone '+p.nombre+' al nivel '+nivelFusion(p)+', que es el mínimo que exige la '+
+          'fusión de este árbol. Nace en el '+minLv(p.rareza)+'.') +
+        ' → ' + nivelFusion(p)
+      : (!p.cuentaSubir ? String(p.objetivo)
+         : p.objetivo <= p.desde ? String(p.objetivo)
+         : p.desde + ' → ' + p.objetivo);
+    h += '<tr'+(p.uuid === t.uuid ? ' class="raiz-fila"' : '')+'>' +
+      '<td>'+nombreIr(p.uuid, "Llevar "+p.nombre+" a la calculadora") +
+        (p.uuid === t.uuid ? ' <span class="pill">raíz</span>' : '') +
+        (p.base ? ' <span class="pill zona" title="'+esc(zonaTitulo(p.uuid))+'">'+
+                  esc(zonaDe(p.uuid, true))+'</span>' : '') +
+      '</td>' +
+      '<td class="num">'+nivel+'</td>' +
+      '<td class="num">'+nf(p.nec)+'</td>' +
+      '<td class="num">'+nf(p.tengo)+'</td>' +
+      '<td class="num"><b style="color:'+(p.falta>0?'var(--ambar)':'var(--verde)')+'">'+
+        nf(p.falta)+'</b></td>' +
+      '<td class="num">'+(p.fus ? nf(p.fus) : '—')+'</td></tr>';
+  });
+  /* La fila Total lleva una celda REAL en «Nivel»: el atajo de criar todo lo
+     que falta. Antes la primera celda ocupaba 2 columnas y la de «Nivel» no
+     existia en esa fila; n30 la pidio justo ahi («en la interseccion con la fila
+     donde dice total del arbol y nivel»). El colspan baja a 1 y la fila pasa de
+     5 celdas a 6, las mismas que la cabecera: deja de haber una fila con una
+     cuenta de celdas distinta a la de las columnas, que era una trampa para
+     cualquier lectura por posicion.
+
+     QUE entra en la lista, pedido el 25-sep-2026 (n30: «la criatura raiz no se
+     modifica, solamente su arbol y solamente que o no tengan datos o que el
+     dato que tengan sea menor al nivel mínimo que exige la fusion»):
+       - la RAIZ queda FUERA, aunque no este creada: no es ingrediente de nada,
+         asi que no hay nivel de fusion que la haga «usable», y su objetivo es el
+         que el usuario persigue, no un minimo que haya que alcanzar;
+       - entra la que no esta creada (`sinCrear`);
+       - y entra la creada que esta POR DEBAJO del nivel exigido, porque
+         entonces el arbol no puede funcionar con ella;
+       - la creada que ya esta en ese nivel o por encima NO se toca.
+     La lista se calcula AQUI, de la misma `cri` que pinta las filas —no de una
+     lista recalculada aparte—, para que el atajo no pueda tocar una criatura que
+     no salga en el informe ni saltarse una que si. */
+  POR_CRIAR = cri.filter(p => p.uuid !== t.uuid && (p.sinCrear || p.desde < p.objetivo))
+                .map(p => ({uuid:p.uuid, nivel:nivelFusion(p)}));
+  h += '<tr class="total"><td>Total del árbol</td>' +
+       '<td class="num">' + (POR_CRIAR.length
+         ? btnCriarTodas('Pone al nivel que exige la fusión las '+POR_CRIAR.length+' criaturas del '+
+                         'árbol que aún no están creadas o que están por debajo de ese nivel. '+
+                         'La criatura raíz NO se toca, y las que ya están en ese nivel o por '+
+                         'encima conservan su valor.')
+         : '') + '</td>' +
+       '<td class="num">'+nf(tt.adnNec)+'</td><td class="num">'+nf(tt.tengo)+'</td>' +
+       '<td class="num">'+nf(tt.adn)+'</td><td class="num">'+nf(tt.fus)+'</td></tr>';
+  h += '</tbody></table></div>';
+
+  /* La columna «Veces» se quito el 25-sep-2026 (n30: «no da informacion util»).
+     El CONTADOR se queda: `p.veces` es lo que alimenta `acc.repetidas`, que sale
+     en las dos cifras de arriba y en esta nota. Lo que no puede quedarse es una
+     nota que diga «las de Veces > 1»: apuntaria a una columna que ya no existe.
+     Ahora dice lo mismo sin senalar a ningun sitio, y ademas avisa de lo unico
+     que el usuario puede hacer mal aqui: sumar las filas a mano. */
+  if (tt.repetidas){
+    h += '<div class="nota" style="margin-top:12px">'+
+         (tt.repetidas === 1 ? 'Una criatura sale' : tt.repetidas + ' criaturas salen')+
+         ' en <b>varias ramas</b> del árbol. Su ADN es una sola reserva: hace falta la suma de lo que '+
+         'pide cada rama, y lo que tienes cuenta una vez. Por eso las filas <b>no se suman a mano</b>: '+
+         'la cifra buena es la de <b>ADN que falta en total</b>.</div>';
+  }
+  const rs = orden.filter(r => porRareza[r] > 0);
+  if (rs.length){
+    h += '<div class="nota" style="margin-top:12px">ADN que hay que <b>ir a recolectar</b>, por rareza ' +
+         '(solo las criaturas que no se fusionan):</div><div class="rr">' +
+         rs.map(r => '<span>'+tag(r)+'<b>'+nf(porRareza[r])+'</b></span>').join("") + '</div>';
+  } else if (tt.recolectar === 0){
+    h += '<div class="nota" style="margin-top:12px">No falta nada por recolectar: con lo que tienes ' +
+         'ya cubres todo el árbol.</div>';
+  }
+  return h + '</div>';
+}
+
+/* ---------- el informe del arbol: los botones de criar ----------
+   UN solo manejador, delegado en el contenedor. El informe se rehace entero con
+   `innerHTML` en cada repintado, asi que un listener colgado de un boton
+   concreto quedaria apuntando a un nodo que ya no esta en el documento: su clic
+   no haria nada, no lanzaria error y no avisaria. Es el mismo fallo que costo
+   una sesion entera con el boton de guardar.
+
+   Lo que hace el clic NO se reimplementa aqui: `fijar(u, "nivel", n)` es el mismo
+   camino que teclear el nivel en la pestana del arbol, y deja la criatura creada
+   en cuanto `n >= minLv(rareza)` — que es justo lo que se le pasa, porque
+   `nivelFusion` nunca baja del nivel de nacimiento. Si se escribiera aqui la
+   cuenta del minimo habria dos sitios diciendo cual es, y el dia que uno
+   cambiara el otro mentiria.
+
+   «Criar a todas» recorre `POR_CRIAR`, que `informeHTML` llena con la MISMA
+   lista de la que salen las filas: asi no puede crear una que no salga en el
+   arbol ni saltarse una que si, y no hace falta recalcular el arbol para saber a
+   quien le toca. El conjunto ya no coincide con los botones —incluye criaturas
+   ya creadas que se quedaron por debajo del nivel exigido, y esas no llevan
+   boton—, por eso es una lista y no un `querySelectorAll`. */
+document.getElementById("informeArbol").addEventListener("click", e => {
+  const el = e.target;
+  if (!el || !el.dataset) return;
+
+  if (el.dataset.criarTodas !== undefined){
+    let n = 0;
+    POR_CRIAR.forEach(x => {
+      if (fijar(x.uuid, "nivel", x.nivel)) n++;
+    });
+    if (n){ refrescar(); pintarLista(); }
+    return;
+  }
+  if (el.dataset.criar && fijar(el.dataset.criar, "nivel", Number(el.dataset.nivel))){
+    refrescar(); pintarLista();
+  }
+});
+
+/* ---------- pestañas ---------- */
+const BOTONES_NAV = document.querySelectorAll("nav button");
+function irA(t){
+  BOTONES_NAV.forEach(x => x.classList.toggle("on", x.dataset.t === t));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
+}
+BOTONES_NAV.forEach(b => { b.onclick = () => irA(b.dataset.t); });
+
+/* ---------- buscador ---------- */
+const q = document.getElementById("q"), lista = document.getElementById("lista");
+const TODAS = Object.keys(C).sort((a,b) => C[a][0].localeCompare(C[b][0], "es"));
+let elegido = null;
+let contarSubida = true;
+
+document.getElementById("hTotal").textContent = nf(D.meta.total);
+document.getElementById("nTotal").textContent = nf(D.meta.total);
+document.getElementById("hFecha").textContent = D.meta.fuenteActualizada;
+document.getElementById("fFuente").textContent = D.meta.fuente;
+document.getElementById("fGen").textContent = D.meta.descargado.slice(0,10);
+
+/* Solo por nombre. Antes habia ademas un filtro por rareza; se quito el
+   25-sep-2026 y con el su `select`. Si algun dia vuelve a hacer falta, el sitio
+   natural NO es un desplegable aparte sino el propio texto del buscador. */
+function filtrar(txt){
+  const t = txt.trim().toLowerCase();
+  const out = [];
+  for (const u of TODAS){
+    const c = C[u];
+    if (t && !c[0].toLowerCase().includes(t)) continue;
+    out.push(u);
+    if (out.length >= 60) break;
+  }
+  return out;
+}
+/* El resaltado de la lista es un INDICE, no una clase puesta a mano sobre un
+   nodo. `pintarLista` rehace la lista entera con innerHTML en cada pulsacion,
+   asi que el nodo resaltado deja de existir en el pintado siguiente: si el
+   resaltado viviera en el nodo, se perderia solo. El indice sobrevive porque
+   apunta a la LISTA DE RESULTADOS, no a un elemento del DOM.
+   `selIdx = -1` significa «ninguno resaltado», y es el estado al que se vuelve
+   al teclear: con el buscador por subcadena («rex» casa con media docena), un
+   resaltado heredado de la busqueda anterior haria que Enter llevara a una
+   criatura que no es la que el usuario acaba de escribir.
+   El nombre es `resBusqueda` y NO `res` a proposito. `res` es de esos nombres que
+   cualquier script ajeno escribe, y aqui eso no es un detalle de estilo: los
+   bloques <script> de una pagina COMPARTEN el ambito global, y un `let` aqui
+   choca con un `var` de alli. El choque no da un aviso util — el script que
+   llega despues NO COMPILA y se queda sin ejecutar en silencio. Paso de verdad:
+   la prueba de estres declara `var res` en su diagnostico, dejo de ejecutarse
+   entera, y el unico sintoma fue «el navegador no entrego el informe». Con un
+   nombre especifico el choque deja de ser probable. */
+let resBusqueda = [];
+let selIdx = -1;
+
+/* Desplazar la lista para que el resaltado quede a la vista. Se hace a mano con
+   `scrollTop` en vez de con `scrollIntoView` porque `scrollIntoView` puede
+   arrastrar tambien a los ancestros —incluida la pagina—, y aqui solo debe
+   moverse la lista. Con 60 resultados y 330 px de alto, el resaltado se sale del
+   marco en cuanto pasas de la octava fila; sin esto, el teclado parece «no hacer
+   nada» aunque se este moviendo. */
+function verResaltado(){
+  if (selIdx < 0) return;
+  const el = lista.children[selIdx];
+  if (!el) return;
+  const arriba = el.offsetTop, abajo = arriba + el.offsetHeight;
+  if (arriba < lista.scrollTop) lista.scrollTop = arriba;
+  else if (abajo > lista.scrollTop + lista.clientHeight) lista.scrollTop = abajo - lista.clientHeight;
+}
+
+/* `pintarLista` REPINTA el contenido; NO abre ni cierra el desplegable. Son dos
+   cosas distintas y mezclarlas era un defecto real: esta funcion se llama
+   tambien desde sitios que no tienen nada que ver con buscar —al tocar una
+   casilla del arbol, al guardar una criatura— solo para refrescar los datos del
+   inventario que la lista ensena al lado de cada nombre. Si abriera, usar el
+   arbol dejaria el desplegable desplegado encima del contenido.
+   Antes no se notaba porque el buscador vivia dentro de `#s-calc`: en otra
+   pestana la lista se abria, si, pero dentro de una seccion oculta. Al subirlo a
+   la franja de las pestanas —donde se ve siempre— el defecto salio a la luz. */
+function pintarLista(){
+  resBusqueda = filtrar(q.value);
+  if (selIdx >= resBusqueda.length) selIdx = resBusqueda.length - 1;
+  if (!resBusqueda.length){
+    selIdx = -1;
+    lista.innerHTML = '<div class="vacio">Sin resultados.</div>';
+    return;
+  }
+  lista.innerHTML = resBusqueda.map((u, i) => {
+    const c = C[u];
+    const h = c[5].length ? '<span style="color:var(--tx3);font-size:11.5px">← ' + c[5].length + ' ing.</span>' : "";
+    const inv = INV[u] ? invDe(u) : null;
+    const mio = inv ? '<span class="pill" style="margin:0">'+
+        (inv.creado ? "nivel "+inv.nivel : "sin crear")+'</span>' : "";
+    return '<div class="it'+(i === selIdx ? " sel" : "")+'" id="it-'+i+'" role="option" '+
+      'aria-selected="'+(i === selIdx)+'" data-u="'+u+'">'+foto(u,"mini",30)+
+      '<span class="nm">'+esc(c[0])+'</span>'+tag(c[1])+mio+h+'</div>';
+  }).join("");
+  /* El estado de accesibilidad se sincroniza SOLO si la lista esta abierta: con
+     la lista cerrada no hay nada que anunciar, y dejar el atributo puesto seria
+     decirle al lector de pantalla que hay un desplegable desplegado. */
+  if (lista.classList.contains("on")) sincronizarAria();
+}
+/* `aria-activedescendant` es lo que hace que un lector de pantalla anuncie la
+   fila resaltada: el foco NO se mueve del campo de texto —por eso el teclado se
+   captura en el input y no en las filas—, asi que sin este atributo la seleccion
+   por teclado seria invisible para quien no ve la pantalla. */
+function sincronizarAria(){
+  if (selIdx >= 0) q.setAttribute("aria-activedescendant", "it-" + selIdx);
+  else q.removeAttribute("aria-activedescendant");
+  verResaltado();
+}
+function abrirLista(){
+  lista.classList.add("on");
+  q.setAttribute("aria-expanded", "true");
+  sincronizarAria();
+}
+function cerrarLista(){
+  lista.classList.remove("on");
+  q.setAttribute("aria-expanded", "false");
+  q.removeAttribute("aria-activedescendant");
+}
+q.addEventListener("input", () => { selIdx = -1; pintarLista(); abrirLista(); });
+q.addEventListener("focus", () => { selIdx = -1; pintarLista(); abrirLista(); });
+/* El teclado se captura en el CAMPO, no en las filas: el foco nunca sale del
+   input, que es como se comporta un desplegable de verdad (y lo que permite
+   seguir escribiendo despues de moverte con las flechas). */
+q.addEventListener("keydown", e => {
+  const abierta = lista.classList.contains("on");
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+    /* Solo se interceptan las dos flechas verticales, y solo para la lista. Las
+       horizontales, Inicio/Fin, borrar y seleccionar texto con shift se dejan
+       intactas: un manejador que se queda con TODAS las teclas rompe el
+       movimiento del cursor dentro del texto, que es lo que se espera de un
+       campo de texto. */
+    e.preventDefault();   // si no, el cursor salta al principio o al final del texto
+    if (!abierta){ selIdx = -1; pintarLista(); abrirLista(); }
+    if (!resBusqueda.length) return;
+    if (e.key === "ArrowDown") selIdx = selIdx < 0 ? 0 : Math.min(selIdx + 1, resBusqueda.length - 1);
+    else                       selIdx = selIdx < 0 ? resBusqueda.length - 1 : Math.max(selIdx - 1, 0);
+    pintarLista();
+    return;
+  }
+  if (e.key === "Enter"){
+    /* Sin resaltado, Enter NO navega: llevar a «el primero de la lista» seria
+       llevar a una criatura que el usuario no ha elegido. */
+    if (selIdx < 0 || !resBusqueda[selIdx]) return;
+    e.preventDefault();
+    irACalculadora(resBusqueda[selIdx]);
+    return;
+  }
+  if (e.key === "Escape"){ cerrarLista(); }
+});
+lista.addEventListener("click", e => {
+  const it = e.target.closest(".it"); if (!it) return;
+  /* `irACalculadora`, NO `elegir`: el buscador ya es GLOBAL (vive fuera de las
+     pestañas), asi que elegir desde la pestaña «Árbol de fusión» dejaria la
+     criatura elegida en una pantalla que el usuario no esta mirando. */
+  irACalculadora(it.dataset.u);
+});
+/* Pasar el raton mueve el resaltado, para que Enter elija LO QUE SE VE y no lo
+   que quedo resaltado con el teclado antes. Sin esto, teclado y raton
+   discreparian y Enter se llevaria una sorpresa. Se cambia la clase a mano —y no
+   con `pintarLista`— porque repintar la lista entera en cada `mousemove` seria
+   tirar el DOM decenas de veces por segundo sin necesidad. */
+lista.addEventListener("mousemove", e => {
+  const it = e.target.closest(".it"); if (!it) return;
+  const i = resBusqueda.indexOf(it.dataset.u);
+  if (i < 0 || i === selIdx) return;
+  selIdx = i;
+  const previo = lista.querySelector(".it.sel");
+  if (previo) previo.classList.remove("sel");
+  it.classList.add("sel");
+});
+document.addEventListener("click", e => { if (!e.target.closest(".buscador")) cerrarLista(); });
+
+/* ---------- stats del dino, donde estaba «Filtrar por rareza» ---------- */
+const ETIQ_STAT = {vida:"Vida", dano:"Daño", velocidad:"Velocidad",
+                   armadura:"Armadura", critico:"Crítico", dano_critico:"Daño crít."};
+const ICONO_STAT = {vida:"health", dano:"damage", velocidad:"speed",
+                    armadura:"armor", critico:"crit", dano_critico:"critm"};
+/* La armadura y los dos criticos se ensenan en PORCENTAJE (paleo.gg pone «40%»,
+   «15%» y «125%»); la vida, el dano y la velocidad son numeros pelados. */
+const PCT_STAT = {armadura:1, critico:1, dano_critico:1};
+/* Los recursos de la pista de mejoras. Los codigos son los del juego y no se
+   inventan: se resuelven aqui, igual que las etiquetas de las zonas.
+   Las etiquetas CORTAS son una traduccion nuestra, no cadenas del juego; las
+   LARGAS son las de la propia fuente y van en el `title`, para que se pueda
+   cotejar sin salir de la pagina. */
+const RES_ICONO = {coins:"img/res/coin.png", catalyst_minor:"img/cat/catalyst_minor.png",
+                   catalyst:"img/cat/catalyst.png", catalyst_major:"img/cat/catalyst_major.png"};
+const RES_CORTO = {coins:"monedas", catalyst_minor:"cat. bronce",
+                   catalyst:"cat. plata", catalyst_major:"cat. oro"};
+const RES_LARGO = {coins:"Coins", catalyst_minor:"Bronze Catalyst",
+                   catalyst:"Silver Catalyst", catalyst_major:"Gold Catalyst"};
+
+/* Las seis fichas y los cuatro mandos, UNA sola vez, al arrancar. A partir de
+   ahi `pintarStats` solo cambia textos y valores, nunca el innerHTML del panel:
+   rehacerlo destruiria los mandos en cada repintado y dejaria muerta cualquier
+   referencia guardada —el fallo del boton de guardar, que no daba ni error—. */
+function montarStats(){
+  document.getElementById("stRejilla").innerHTML = M.statsOrden.map(k =>
+    '<div class="st"><img class="st-i" src="img/stat/' + ICONO_STAT[k] + '.png" alt=""' +
+      ' width="20" height="20"><span class="st-tx"><span class="st-k">' + ETIQ_STAT[k] + '</span>' +
+      '<span class="st-n"><span class="st-v" id="stV_' + k + '">—</span>' +
+      '<span class="st-d" id="stD_' + k + '"></span></span></span></div>').join("");
+  const fila = (campo, icono, txt, id) =>
+    '<div class="st-fila"' + (id ? ' id="' + id + '"' : '') + '>' +
+      '<img class="st-i" src="img/stat/' + icono + '.png" alt="" width="18" height="18">' +
+      '<span class="st-k">' + txt + '</span>' +
+      '<button class="st-b" data-boost="' + campo + '" data-paso="-1"' +
+        ' title="Quitar un punto de ' + txt + '">−</button>' +
+      '<span class="st-p" id="stP_' + campo + '">0</span>' +
+      '<button class="st-b" data-boost="' + campo + '" data-paso="1"' +
+        ' title="Añadir un punto de ' + txt + '">+</button>' +
+    '</div>';
+  document.getElementById("stMej").innerHTML =
+    fila("bVida", "health", "Vida") +
+    fila("bDano", "damage", "Daño") +
+    fila("bVel", "speed", "Velocidad") +
+    fila("mejora", "enhancement", "Mejora", "stFilaMej");
+}
+
+/* Lo que da un paso de la pista, en palabras. El valor de vida y dano es un
+   PORCENTAJE (110 = x1,10), no una cantidad: esta leido del JSON de paleo.gg,
+   donde los pasos de vida y dano son 110 y el de velocidad es 2 plano. */
+function efectoMejora(rwd){
+  const tipo = rwd[0], valor = rwd[1];
+  if (tipo === "speed")         return "+" + valor + " de velocidad";
+  if (tipo === "health")        return "+" + (valor - 100) + "% de vida";
+  if (tipo === "damage")        return "+" + (valor - 100) + "% de daño";
+  if (tipo === "boost_max")     return "+" + valor + " al tope de puntos";
+  if (tipo === "moves_reactive") return "movimiento reactivo";
+  return tipo;   // los cinco tipos estan medidos: 147 de 147 criaturas
+}
+
+function pintarStats(){
+  const p = document.getElementById("panelStats");
+  const nota = document.getElementById("stNota"), coste = document.getElementById("stCoste");
+  if (!elegido){
+    p.setAttribute("data-vacio", "1");
+    document.getElementById("stNivel").textContent = "—";
+    M.statsOrden.forEach(k => {
+      document.getElementById("stV_" + k).textContent = "—";
+      document.getElementById("stD_" + k).textContent = "";
+    });
+    nota.textContent = "Elige una criatura para ver sus stats.";
+    coste.innerHTML = "";
+    return;
+  }
+  p.removeAttribute("data-vacio");
+  const u = elegido, niv = nivelStats(u), m = mejDe(u);
+  const ahora = statsDe(u, niv, m);
+  /* La referencia con la que se compara NO es el nivel 26: es la MISMA criatura,
+     al mismo nivel y sin puntos ni mejoras. Comparando con el 26, una criatura
+     de nivel 20 saldria con deltas negativos y pareceria que las mejoras quitan
+     stats. El nivel 26 se sigue viendo, pero en el `title`. */
+  const sinNada = {bVida:0, bDano:0, bVel:0, mejora:0};
+  const base = statsDe(u, niv, sinNada), b26 = statsDe(u, 26, sinNada);
+  document.getElementById("stNivel").textContent = "nivel " + niv;
+  M.statsOrden.forEach((k, i) => {
+    const v = document.getElementById("stV_" + k), d = document.getElementById("stD_" + k);
+    v.textContent = nf(ahora[i]) + (PCT_STAT[k] ? "%" : "");
+    const dif = ahora[i] - base[i];
+    d.textContent = dif > 0 ? "+" + nf(dif) : "";
+    /* El `title` va en la FICHA, y se localiza con closest: la estructura de
+       dentro puede cambiar sin que esto deje de apuntar al sitio correcto. */
+    v.closest(".st").title = ETIQ_STAT[k] + " · base a nivel 26: " + nf(b26[i]) +
+      " · a nivel " + niv + ": " + nf(base[i]) + " · con lo tuyo: " + nf(ahora[i]);
+  });
+
+  const pts = m.bVida + m.bDano + m.bVel;
+  MEJ_CAMPOS.forEach(c => { document.getElementById("stP_" + c).textContent = m[c]; });
+  /* Los mandos se APAGAN cuando la accion no cabe; no se esconden. Un mando que
+     desaparece deja de decir donde esta el tope. */
+  const pon = (campo, paso, puede) => {
+    const b = document.querySelector('[data-boost="' + campo + '"][data-paso="' + paso + '"]');
+    if (b) b.disabled = !puede;
+  };
+  ["bVida","bDano","bVel"].forEach(c => {
+    pon(c, 1, m[c] < M.topeBoostStat && pts < m.tope);
+    pon(c, -1, m[c] > 0);
+  });
+  const pista = PISTA(u);
+  document.getElementById("stFilaMej").style.display = pista ? "" : "none";
+  if (pista){
+    pon("mejora", 1, m.mejora < mejoraMax(u));
+    pon("mejora", -1, m.mejora > 0);
+  }
+
+  const bono = bonoMejora(u, m.mejora);
+  let nh = 'Puntos <b>' + pts + '</b> de <b>' + m.tope + '</b> · tope = nivel ' + niv +
+           (pista ? (bono ? ' + ' + bono + ' de la pista' : '') : ' (esta criatura no tiene pista)');
+  if (pts < m.tope) nh += ' · quedan <b>' + (m.tope - pts) + '</b>';
+  if (pista && niv < M.mejoraNivelMin)
+    nh += '<br>La pista de mejoras necesita nivel <b>' + M.mejoraNivelMin + '</b> o más.';
+  nota.innerHTML = nh;
+
+  /* Lo que cuesta y lo que da el SIGUIENTE paso. Se ensena aunque no se pueda
+     subir todavia: saber lo que falta es la mitad de la herramienta. */
+  if (!pista){
+    coste.innerHTML = "";
+  } else if (m.mejora >= pista.length){
+    coste.innerHTML = '<span class="st-ct">Pista de mejoras</span>' +
+      '<span class="st-cq">Completa: los ' + pista.length + ' pasos están puestos.</span>';
+  } else {
+    const paso = m.mejora + 1, adn = pista[m.mejora][0], req = pista[m.mejora][1];
+    const ic = (src, txt, tit) => '<span title="' + esc(tit) + '"><img src="' + src +
+      '" alt="" width="18" height="18">' + esc(txt) + '</span>';
+    let cr = ic("img/res/dna.png", nf(adn), "DNA");
+    req.forEach(r => { cr += ic(RES_ICONO[r[0]], nf(r[1]), RES_LARGO[r[0]]); });
+    coste.innerHTML = '<span class="st-ct">Mejora ' + m.mejora + ' → ' + paso + '</span>' +
+      '<span class="st-cr">' + cr + '</span>' +
+      '<span class="st-cq">→ ' + esc(efectoMejora(pista[m.mejora][2])) + '</span>';
+  }
+}
+
+/* Un punto mas o menos, o un paso de la pista. Se acota ANTES de guardar: si se
+   guardara lo que no cabe, al recargar saldria otra cosa de la que se vio. */
+function cambiarMejora(u, campo, paso){
+  const m = mejDe(u), val = m[campo] + paso;
+  if (campo === "mejora"){
+    if (val < 0 || val > mejoraMax(u)) return false;
+    return fijar(u, "mejora", val);
+  }
+  if (val < 0 || val > M.topeBoostStat) return false;
+  /* El tope es del CONJUNTO de los tres stats, no de cada uno: para poner un
+     punto aqui habria que quitarlo de otro, y eso no lo decide la interfaz. */
+  const otros = (m.bVida + m.bDano + m.bVel) - m[campo];
+  if (otros + val > m.tope) return false;
+  return fijar(u, campo, val);
+}
+/* Un solo manejador para los cuatro mandos. El panel NO se repinta entero, asi
+   que este listener sigue vivo; por eso se engancha al panel y no a cada boton. */
+document.getElementById("panelStats").addEventListener("click", e => {
+  const b = e.target.closest("[data-boost]");
+  if (!b || b.disabled || !elegido) return;
+  if (cambiarMejora(elegido, b.dataset.boost, Number(b.dataset.paso))) refrescar();
+});
+
+/* ---------- elegir criatura ---------- */
+function elegir(u){
+  elegido = u;
+  const c = C[u], r = c[1], m = minLv(r), inv = invDe(u);
+  q.value = c[0];
+  document.getElementById("pEntrada").style.display = "";
+
+  /* «Lleva a» es TODA la rama superior, no solo los hijos directos: se sube por
+     `hijos` hasta arriba. Cada nivel se separa con un punto, para que se vea que
+     unas se construyen a partir de otras y no son todas hermanas. Solo el
+     nombre, coloreado por rareza y pulsable: el color ya dice la rareza, asi que
+     una etiqueta al lado sobraria. */
+  const asc = ascendientes(u);
+  const llevaTxt = asc.length
+    ? asc.map(niv => niv.map(h => nombreIr(h, "Llevar "+C[h][0]+" a la calculadora")).join(", "))
+         .join('<span style="color:var(--tx3)"> · </span>')
+    : "—";
+  const ingsTxt = c[5].length ? c[5].map(h => esc(C[h] ? C[h][0] : h)).join(" + ") : "—";
+  document.getElementById("elegida").innerHTML =
+    '<div class="ficha">'+foto(u,"grande",104)+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">' +
+          '<span style="font-size:17px;font-weight:650">'+esc(c[0])+'</span>'+tag(r)+
+          '<span class="pill">'+TIPOS[c[2]]+'</span><span class="pill">'+c[3]+'</span>'+
+          (c[4] ? "" : '<span class="pill">sin publicar</span>')+
+          (zonaUtil(u) ? '<span class="pill zona" title="'+esc(zonaTitulo(u))+'">'+esc(zonaDe(u, true))+'</span>' : '')+
+        '</div>' +
+        '<div style="font-size:12.5px;color:var(--tx2);line-height:1.7">' +
+          '<div>Nace en <b style="color:var(--tx)">nivel '+m+'</b> · crear cuesta <b style="color:var(--tx)">'+
+            nf(costeCreacion(r))+' ADN</b> · tope de ADN <b style="color:var(--tx)">'+nf(M.topes[r])+'</b></div>' +
+          '<div>Ingredientes: <b style="color:var(--tx)">'+ingsTxt+'</b></div>' +
+          '<div class="lleva">Lleva a: '+llevaTxt+'</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const na = document.getElementById("nivelAct"), at = document.getElementById("adnTengo");
+  na.min = 0; na.max = 35;
+  na.value = inv.nivel; at.value = inv.adn;
+  ponerObjetivoEnDeslizador(u);
+  document.getElementById("notaAdn").textContent = "tope " + nf(M.topes[r]);
+  document.getElementById("notaNivel").textContent = "0 = sin crear (nace en " + m + ")";
+  /* Los stats son de ESTA criatura: se repintan al cambiarla. `elegir` no llama
+     a `refrescar` (no toca el arbol ni la lista), asi que hay que decirlo. */
+  pintarStats();
+  calcular();
+}
+
+/* Poner en el deslizador el nivel objetivo QUE TIENE GUARDADO esa criatura.
+   Es la unica via: la usan `elegir` (al cambiar de dino) y la importacion (que
+   puede cambiar el objetivo de la criatura que ya esta abierta). Antes esto
+   vivia dentro de `elegir` y ademas duplicado en `irACalculadora`; dos sitios que
+   calculan lo mismo acaban discrepando. Si la criatura no tiene objetivo
+   guardado, el tope. */
+function ponerObjetivoEnDeslizador(u){
+  const no = document.getElementById("nivelObj"), m = minLv(C[u][1]);
+  no.min = m; no.max = 35;
+  /* El objetivo es de ESTA criatura. Antes se conservaba el que tuviera el
+     deslizador, asi que se heredaba en silencio: ponias 30 en el Indoraptor,
+     pasabas a otro dino y el nuevo aparecia con 30 sin que nadie lo pidiera. */
+  no.value = Math.max(m, Math.min(35, Number(INV[u] && INV[u].objetivo) || 35));
+}
+
+/* Guardar el nivel objetivo de la criatura elegida.
+   Es un dato DE LA CRIATURA, como el nivel y el ADN, y por eso se escribe al
+   mover el deslizador y no al pulsar «Guardar en mis criaturas»: ese boton solo
+   decide quien entra en la lista, no cual es el objetivo. Antes habia UNA sola
+   escritura de `objetivo` (la del boton), asi que el objetivo no existia hasta
+   guardar y cambiar de dino lo arrastraba al siguiente. */
+function fijarObjetivo(){
+  if (!elegido) return;
+  const u = elegido;
+  const hasta = Math.max(minLv(C[u][1]),
+                          Math.min(35, Number(document.getElementById("nivelObj").value) || 35));
+  if ((INV[u] && INV[u].objetivo) !== hasta){
+    if (!INV[u]) INV[u] = {nivel: 0, adn: 0, creado: false, nombre: C[u][0]};
+    INV[u].objetivo = hasta;
+    guardar();
+  }
+  /* `refrescar`, y NO `calcular`: el arbol tambien lee el deslizador —`pintarArbol`
+     saca de ahi el objetivo de la raiz—, asi que repintando solo el informe la
+     raiz del arbol se quedaba con el objetivo anterior y la misma pantalla daba
+     dos respuestas. Es el mismo fallo que ya tuvieron `chkSubida` y el ADN de la
+     raiz; el manejador que repinta media interfaz es el que mas se repite aqui. */
+  refrescar();
+}
+
+/* Llevar a la calculadora de una criatura concreta: es lo que hace un clic en
+   «Mis criaturas». `elegir` ya restaura el nivel objetivo que esa criatura tenia
+   guardado, asi que aqui no hay que volver a ponerlo: una sola via para el
+   objetivo, no dos que puedan discrepar. */
+function irACalculadora(u){
+  if (!C[u]) return;
+  elegir(u);
+  /* `cerrarLista` y no `lista.classList.remove("on")` a secas: cierra la lista
+     —que ahora es GLOBAL y puede estar abierta en cualquier pestaña— y deja
+     `aria-expanded` en «false». Tocar solo la clase dejaria el atributo diciendo
+     «abierto» con la lista cerrada. */
+  cerrarLista();
+  irA("calc");
+  /* Salto seco, no suave: es una navegacion, no un desplazamiento de lectura.
+     Ademas asi se puede comprobar en una prueba sin esperar animaciones. */
+  window.scrollTo(0, 0);
+}
+/* La calculadora y el arbol escriben en el MISMO sitio (INV), para que no haya
+   dos verdades distintas sobre lo que tienes. */
+function formAgrado(){
+  if (!elegido) return;
+  const cambioN = fijar(elegido, "nivel", document.getElementById("nivelAct").value);
+  const cambioA = fijar(elegido, "adn", document.getElementById("adnTengo").value);
+  if (cambioN || cambioA) refrescar();
+}
+document.getElementById("nivelAct").addEventListener("input", formAgrado);
+document.getElementById("adnTengo").addEventListener("input", formAgrado);
+
+/* Al salir del campo, lo que se ve tiene que ser lo que se guarda. Si se escribe
+   un nivel por debajo del de nacimiento (una unica nace en 21), la criatura no
+   puede estar creada y el nivel guardado es 0; sin esto el campo seguiria
+   ensenando 18 mientras el calculo y «Mis criaturas» hablan de 0. */
+function normalizarCampo(id, campo){
+  if (!elegido) return;
+  formAgrado();
+  const el = document.getElementById(id), guardado = invDe(elegido)[campo];
+  if (el.value !== "" && Number(el.value) !== guardado) el.value = guardado;
+}
+document.getElementById("nivelAct").addEventListener("change", () => normalizarCampo("nivelAct", "nivel"));
+document.getElementById("adnTengo").addEventListener("change", () => normalizarCampo("adnTengo", "adn"));
+document.getElementById("nivelObj").addEventListener("input", fijarObjetivo);
+document.getElementById("chkSubida").addEventListener("change", e => {
+  contarSubida = e.target.checked;
+  /* `refrescar`, no `pintarArbol`: el informe del arbol vive en la pestana de la
+     calculadora y lo pinta `calcular()`. Repintando solo el arbol, el informe se
+     quedaba con las cifras del criterio anterior y la misma pantalla ensenaba
+     dos respuestas distintas. Es el mismo fallo que tenia el ADN de la raiz. */
+  refrescar();
+});
+
+/* ---------- calcular ---------- */
+function calcular(){
+  if (!elegido) return;
+  const u = elegido, c = C[u], r = c[1], m = minLv(r);
+  const inv = invDe(u);
+  const desde = inv.creado ? Math.max(inv.nivel, m) : 0;
+  const tengo = inv.adn;
+  const hasta = Math.max(m, Math.min(35, Number(document.getElementById("nivelObj").value) || 35));
+  document.getElementById("lblObj").textContent = hasta;
+
+  const sinCrear = !inv.creado;
+  const adnNec = costeADN(r, desde, hasta, sinCrear);
+  const monNec = costeMon(r, desde, hasta);
+  const deficit = Math.max(0, adnNec - tengo);
+  const f = nFus(deficit);
+  const tope = M.topes[r];
+  const vueltas = deficit > tope ? Math.ceil(deficit / tope) : 1;
+
+  /* --- nivel maximo alcanzable con lo que hay ahora mismo --- */
+  const mx = nivelMaximo(r, desde, tengo, inv.creado);
+  const cCrear = costeCreacion(r);
+  let mh = '<div class="t">Nivel máximo con lo que tienes ahora</div>';
+  if (!inv.creado && tengo < cCrear){
+    mh += '<div class="v" style="color:var(--ambar)">Aún no llega ni a crearla</div>' +
+          '<div class="d">Crear esta criatura cuesta <b>'+nf(cCrear)+' ADN</b> y tienes <b>'+nf(tengo)+
+          '</b>. Te faltan <b>'+nf(cCrear-tengo)+'</b> para que exista. Su nivel de nacimiento es el <b>'+m+'</b>.</div>';
+  } else {
+    const subio = mx.nivel - (inv.creado ? desde : 0);
+    mh += '<div class="v">Nivel <b>'+mx.nivel+'</b>' +
+          (inv.creado ? '' : ' <span style="font-size:12px;font-weight:400;color:var(--tx2)">(recién creada, nace en '+m+')</span>') +
+          '</div>';
+    mh += '<div class="d">Con <b>'+nf(tengo)+' ADN</b>' +
+          (inv.creado ? ' desde el nivel <b>'+desde+'</b>' : ' partiendo de cero') +
+          ' llegas al nivel <b>'+mx.nivel+'</b>' +
+          (subio > 0 ? ' (subes <b>'+subio+'</b> nivel'+(subio===1?'':'es')+')' : '') +
+          '. Gastarías <b>'+nf(mx.gastado)+'</b> y te sobrarían <b>'+nf(mx.sobra)+'</b>.';
+    if (mx.nivel >= hasta){
+      mh += ' <b style="color:var(--verde)">Ya te alcanza para el objetivo '+hasta+'.</b>';
+    } else {
+      const falta = costeADN(r, desde, hasta, sinCrear) - mx.gastado;
+      mh += ' Te faltan <b style="color:var(--ambar)">'+nf(falta)+' ADN</b> para el nivel '+hasta+'.';
+    }
+    mh += '</div>';
+    if (mx.nivel >= M.nivelMax){
+      mh += '<div class="d">Está en el <b>tope del juego (nivel '+M.nivelMax+')</b>.</div>';
+    }
+  }
+  /* --- informe completo del arbol, ARRIBA del bloque de nivel maximo --- */
+  const t = plan(u, hasta, 0, new Set(), true, contarSubida);
+  document.getElementById("informeArbol").innerHTML = informeHTML(t, totales(t));
+
+  document.getElementById("maxNivel").innerHTML = mh;
+  let h = '<div class="panel"><h2>3 · Resultado</h2><div class="cifras">';
+  h += '<div class="cifra al"><div class="k">ADN necesario</div><div class="v">'+nf(adnNec)+'</div><div class="n">de '+(sinCrear?"sin crear":"nivel "+desde)+' a '+hasta+'</div></div>';
+  h += '<div class="cifra '+(deficit>0?"wa":"al")+'"><div class="k">ADN que falta</div><div class="v">'+nf(deficit)+'</div><div class="n">tienes '+nf(tengo)+'</div></div>';
+  h += '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(monNec)+'</div><div class="n">solo por subir de nivel</div></div>';
+  h += '</div>';
+
+  if (deficit > tope){
+    h += '<div class="aviso" style="margin-top:14px">El tope de ADN de una criatura <b>'+RAREZAS[r].toLowerCase()+
+         '</b> es <b>'+nf(tope)+'</b>. Necesitas '+nf(deficit)+' → tendrás que reunirlo en <b>'+vueltas+
+         ' tandas</b>, convirtiendo el sobrante en catalizadores o gastándolo.</div>';
+  }
+
+  if (deficit > 0 && c[5].length){
+    const nivelIng = M.minIngrediente[r];
+    h += '<h2 style="margin-top:20px">Fusiones necesarias</h2>';
+    h += '<div class="cifras">';
+    h += '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(f)+'</div><div class="n">a '+M.media+' ADN por fusión</div></div>';
+    h += '<div class="cifra"><div class="k">Monedas de fusión</div><div class="v">'+nf(f*(M.monedasFusion[r]||0))+'</div><div class="n">'+nf(M.monedasFusion[r])+' por fusión</div></div>';
+    h += '<div class="cifra"><div class="k">Nivel de los ingredientes</div><div class="v">'+nivelIng+'</div><div class="n">mínimo exigido</div></div>';
+    h += '</div>';
+    h += '<div style="overflow:auto;margin-top:14px"><table><thead><tr><th>Ingrediente</th><th>Rareza</th>'+
+         '<th class="num">ADN por fusión</th><th class="num">ADN total a reunir</th></tr></thead><tbody>';
+    for (const ing of c[5]){
+      const ri = C[ing] ? C[ing][1] : "common";
+      const apf = adnFus(ri, r);
+      h += '<tr><td>'+esc(C[ing]?C[ing][0]:ing)+'</td><td>'+tag(ri)+'</td><td class="num">'+nf(apf)+
+           '</td><td class="num"><b>'+nf(f*apf)+'</b></td></tr>';
+    }
+    h += '</tbody></table></div>';
+    h += '<div class="nota">Las fusiones son una <b>estimación</b>: cada fusión da una cantidad aleatoria de ADN y la media es '+
+         M.media+'. En la práctica puede hacerte falta alguna más.</div>';
+  } else if (deficit > 0){
+    h += '<div class="aviso info" style="margin-top:14px">Esta criatura no se obtiene por fusión: hay que '+
+         '<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>';
+  }
+
+  h += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">' +
+       '<button class="acc" id="btnGuardar">Guardar en «Mis criaturas»</button></div></div>';
+  document.getElementById("resultado").innerHTML = h;
+
+  document.getElementById("btnGuardar").onclick = () => {
+    /* Unico sitio que anade a «Mis criaturas»: solo la criatura elegida, nunca
+       el arbol que cuelga de ella. El nivel objetivo ya lo escribio
+       `fijarObjetivo` al mover el deslizador; aqui se conserva tal cual en vez de
+       volver a deducirlo, para que no haya dos formas de calcularlo. */
+    const yaEstaba = esMia(u);
+    INV[u] = Object.assign({}, INV[u],
+      {nivel: desde, adn: tengo, creado: inv.creado,
+       objetivo: (INV[u] && INV[u].objetivo) || hasta, nombre: c[0]});
+    anadirMia(u);
+    guardar(); refrescar(); pintarLista();
+    const b = document.getElementById("btnGuardar");
+    b.textContent = yaEstaba ? "Actualizado ✓" : "Guardado ✓";
+    setTimeout(() => b.textContent = "Guardar en «Mis criaturas»", 1400);
+  };
+
+  pintarArbol();
+}
+
+/* ---------- arbol ---------- */
+/* Posicion del cursor, con red de seguridad: en <input type=number> algunos
+   navegadores no dejan ni leerla ni fijarla. */
+function posCursor(el){
+  try { return el.selectionStart; } catch(e){ return null; }
+}
+function ponerCursor(el, p){
+  if (p === null || p === undefined) return;
+  try { el.setSelectionRange(p, p); } catch(e){ /* number: no se puede, da igual */ }
+}
+/* Los campos del arbol son type=text (ver `campos`), asi que ya no filtran solos:
+   aqui se quitan las letras y los signos. Se devuelve el texto limpio y se
+   recoloca el cursor descontando lo que se ha quitado POR DELANTE de el — si no,
+   borrar un caracter del medio manda el cursor al final, que es el mismo fallo
+   que se viene a arreglar, al reves. */
+function limpiarNumero(el){
+  const limpio = el.value.replace(/[^0-9]/g, "");
+  if (limpio === el.value) return el.value;
+  const pos = posCursor(el);
+  const antes = pos === null ? null : el.value.slice(0, pos).replace(/[^0-9]/g, "").length;
+  el.value = limpio;
+  if (antes !== null) ponerCursor(el, antes);
+  return limpio;
+}
+
+function pintarArbol(){
+  const cont = document.getElementById("arbolCuerpo");
+  if (!elegido){ cont.innerHTML = '<p class="vacio-txt">Elige una criatura en la pestaña «Calculadora».</p>'; return; }
+
+  /* Antes de repintar, guardamos donde estaba el cursor. Sin esto, cada tecla
+     rehace el arbol entero y el campo pierde el foco a la primera cifra. */
+  const act = document.activeElement;
+  const foco = (act && act.dataset && act.dataset.u) ? {
+    u: act.dataset.u, campo: act.dataset.campo, val: act.value, pos: posCursor(act)
+  } : null;
+
+  const hasta = Math.max(minLv(C[elegido][1]), Number(document.getElementById("nivelObj").value) || 35);
+  const t = plan(elegido, hasta, 0, new Set(), true, contarSubida);
+  const tt = totales(t);
+
+  /* Cuantas veces sale cada criatura en el arbol. Una que sale en varias ramas es
+     una sola reserva de ADN: su «falta» de cada fila es la de esa rama, no el
+     total. Se avisa en la fila para que nadie sume las filas a mano. */
+  const cuenta = {};
+  (function contar(x){ cuenta[x.uuid] = (cuenta[x.uuid] || 0) + 1; x.hijos.forEach(contar); })(t);
+
+  let h = '<div class="cifras" style="margin-bottom:16px">' +
+    '<div class="cifra al"><div class="k">ADN a recolectar</div><div class="v">'+nf(tt.recolectar)+'</div>'+
+      '<div class="n">de las '+tt.hojas+' criaturas que no se fusionan'+
+      (tt.repetidas ? ' · '+tt.repetidas+(tt.repetidas===1 ? ' compartida, contada una vez'
+                                                          : ' compartidas, contadas una vez') : '')+
+      '</div></div>' +
+    '<div class="cifra"><div class="k">Fusiones totales</div><div class="v">'+nf(tt.fus)+'</div></div>' +
+    '<div class="cifra"><div class="k">Monedas totales</div><div class="v">'+nf(tt.mon + tt.monFus)+'</div>'+
+      '<div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
+    '<div class="cifra"><div class="k">Criaturas en el árbol</div><div class="v">'+tt.nodos+'</div>'+
+      '<div class="n">raíz + ingredientes en cascada</div></div>' +
+    '</div>';
+
+  h += '<div class="aviso info" style="margin-bottom:16px">Edita el <b>nivel</b> y el <b>ADN</b> de '+
+       'cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. '+
+       'Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>';
+
+  function campos(n){
+    const m = minLv(n.rareza);
+    let s = '<div class="campos">';
+    s += '<label class="chk" title="Si no está creada, se suma el ADN de crearla">'+
+         '<input type="checkbox" data-u="'+n.uuid+'" data-campo="creado"'+(n.creado?' checked':'')+'> Creada</label>';
+    /* type="text" + inputmode="numeric", NO type="number". Medido en Firefox 156: en
+       un input number `setSelectionRange` lanza InvalidStateError y `selectionStart`
+       es null, asi que el cursor no se puede leer NI devolver. Como el arbol se
+       repinta entero en cada tecla, el cursor caia al principio y teclear «1500»
+       guardaba 51 (y «300», 3). Con type=text el cursor se lee y se devuelve, y el
+       teclado del movil sigue saliendo numerico. Lo que el number filtraba solo
+       (letras, signos) lo limpia `limpiarNumero`. */
+    s += '<div><label for="lv-'+n.uuid+'">Nivel</label>'+
+         '<input type="text" inputmode="numeric" autocomplete="off" id="lv-'+n.uuid+'" '+
+         'data-u="'+n.uuid+'" data-campo="nivel" value="'+(n.creado?n.desde:0)+'"></div>';
+    s += '<div><label for="ad-'+n.uuid+'">ADN que tienes</label>'+
+         '<input type="text" inputmode="numeric" autocomplete="off" id="ad-'+n.uuid+'" '+
+         'data-u="'+n.uuid+'" data-campo="adn" value="'+n.tengo+'"></div>';
+    s += '<div><label>Nivel que exige la fusión</label>'+
+         '<div style="font-size:15px;font-weight:650;padding:5px 0">'+
+         (n.nivelIng===null ? '—' : n.nivelIng)+'</div></div>';
+    return s + '</div>';
+  }
+
+  function rama(n, prof){
+    const m = minLv(n.rareza);
+    let s = '<div class="bloque">';
+    s += '<div class="nodo '+(prof?'':'raiz')+' '+(n.esHoja?'hoja':'')+'">';
+    s += foto(n.uuid, "foto", 64);
+    s += '<div class="cuerpo">';
+    s += '<div class="cab"><span class="nm">'+esc(n.nombre)+'</span>'+tag(n.rareza)+
+      (prof ? (n.esHoja ? '<span class="pill zona" title="'+esc(zonaTitulo(n.uuid))+'">'+
+                            esc(zonaDe(n.uuid, true))+'</span>' : '')
+            : '<span class="pill">raíz</span>')+
+      (cuenta[n.uuid] > 1 ? '<span class="pill" title="Esta criatura sale en '+
+        cuenta[n.uuid]+' ramas del árbol. Su ADN es una sola reserva: lo que tienes se cuenta una vez, '+
+        'y el total está en el informe de la calculadora.">sale ×'+cuenta[n.uuid]+'</span>' : '')+
+      (!n.creado ? '<span class="pill">sin crear</span>' : '')+
+      '</div>';
+
+    const tz = [];
+    if (n.cuentaSubir && n.adnSubir) tz.push('<b>'+nf(n.adnSubir)+'</b> para subir');
+    if (n.extra) tz.push('<b>'+nf(n.extra)+'</b> para fusionar');
+    s += '<div class="det">' +
+      (n.objetivo > n.desde ? 'subir <b>'+(n.creado?n.desde:'0 (sin crear)')+' → '+n.objetivo+'</b>'
+                            : 'ya en nivel <b>'+n.desde+'</b>') +
+      ' · ' + (tz.length ? tz.join(' + ') : 'nada que reunir') +
+      ' = <b>'+nf(n.adnNec)+'</b> ADN' +
+      (n.tengo ? ' · tienes <b>'+nf(n.tengo)+'</b>' : '') +
+      ' → <b style="color:'+(n.deficit>0?'var(--ambar)':'var(--verde)')+'">falta '+nf(n.deficit)+'</b>' +
+      (n.fusiones ? ' · <b>'+nf(n.fusiones)+'</b> fusiones ('+nf(n.monFus)+' monedas)' : '') +
+      '</div>';
+
+    /* Nivel maximo con el ADN que tiene esta criatura, acotado al nivel que la
+       fusion le pide: pasar de ahi no sirve para el arbol. */
+    const topeUtil = n.nivelIng === null ? M.nivelMax : Math.max(n.nivelIng, n.objetivo);
+    const mx = nivelMaximo(n.rareza, n.desde, n.tengo, n.creado, topeUtil);
+    let mn;
+    if (!n.creado && n.tengo < costeCreacion(n.rareza)){
+      mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN no llega ni a crearla (cuesta <b>'+
+           nf(costeCreacion(n.rareza))+'</b>).';
+    } else {
+      mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN llega al <b>nivel '+mx.nivel+'</b>' +
+           (mx.nivel >= n.objetivo ? ' <span style="color:var(--verde)">— ya cumple el objetivo '+
+             n.objetivo+'</span>' : ' — le faltan <b>'+nf(costeADN(n.rareza, n.desde, n.objetivo, !n.creado) - mx.gastado)+
+             '</b> ADN para el '+n.objetivo);
+    }
+    s += campos(n);
+    s += '<div class="maxn">'+mn+'</div>';
+    s += '</div></div>';
+
+    if (n.hijos.length) s += '<div class="rama">' + n.hijos.map(x => rama(x, prof+1)).join("") + '</div>';
+    return s + '</div>';
+  }
+
+  cont.innerHTML = h + rama(t, 0);
+
+  /* Recolocar el cursor donde estaba. Se hace dos veces a proposito: Firefox,
+     al desaparecer del DOM el elemento que tenia el foco, lo reasigna por su
+     cuenta de forma ASINCRONA (se lo lleva a otro input del formulario), y esa
+     recolocacion pisa la nuestra si solo la hacemos una vez. La segunda pasada,
+     ya en el siguiente turno del bucle de eventos, gana la carrera. */
+  if (foco){
+    const restaurar = () => {
+      const el = cont.querySelector('[data-u="'+foco.u+'"][data-campo="'+foco.campo+'"]');
+      if (!el) return;
+      if (el.type !== "checkbox") el.value = foco.val;
+      el.focus();
+      ponerCursor(el, foco.pos);
+    };
+    restaurar();
+    setTimeout(restaurar, 0);
+  }
+}
+
+/* La calculadora, el arbol y «Mis criaturas» leen el MISMO inventario, asi que
+   cualquier edicion tiene que repintar los tres. Antes el arbol solo se repintaba
+   a si mismo: poner ADN a la raiz en el arbol no se veia en la calculadora, que
+   seguia con las cifras viejas. */
+function refrescar(){
+  pintarArbol();
+  sincronizarCalculadora();
+  calcular();
+  pintarMios();
+  pintarFotos();
+  /* Los stats tambien: los lee de INV, y los escriben tanto los mandos del
+     propio panel como el arbol (que comparte el nivel). Sin esta linea, subir
+     el nivel desde el arbol dejaba los stats con la cifra vieja. */
+  pintarStats();
+}
+
+/* Poner en los campos de la calculadora lo que hay guardado. El nivel objetivo
+   NO se toca AQUI: lo pone `elegir` al cambiar de criatura y lo escribe
+   `fijarObjetivo` al mover el deslizador, asi que tiene su propio camino. Si se
+   tocara tambien desde aqui, cada repintado del arbol pisaria el deslizador.
+   Y nunca se pisa el campo que tiene el foco, para no arrancarle el cursor a
+   quien escribe (teclear «05» daria 5 y el campo saltaria a «5»). */
+function sincronizarCalculadora(){
+  if (!elegido) return;
+  const inv = invDe(elegido);
+  const na = document.getElementById("nivelAct"), at = document.getElementById("adnTengo");
+  const vN = String(inv.nivel), vA = String(inv.adn);
+  if (na !== document.activeElement && na.value !== vN) na.value = vN;
+  if (at !== document.activeElement && at.value !== vA) at.value = vA;
+}
+
+/* Un solo manejador para todo el arbol: los nodos se repintan enteros, asi que
+   enganchar listeners a cada campo seria trabajo perdido. */
+document.getElementById("arbolCuerpo").addEventListener("input", e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.u) return;
+  if (el.dataset.campo === "creado") return;          // los checkbox van en change
+  if (fijar(el.dataset.u, el.dataset.campo, limpiarNumero(el))) refrescar();
+});
+document.getElementById("arbolCuerpo").addEventListener("change", e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.u) return;
+  if (el.dataset.campo === "creado"){
+    if (fijar(el.dataset.u, "creado", el.checked)){ refrescar(); pintarLista(); }
+    return;
+  }
+  // Al salir del campo normalizamos: lo que se ve tiene que ser lo que se
+  // guarda. Solo repintamos si de verdad cambio algo — al repintar el arbol el
+  // campo se destruye, y eso dispara un `change` de despedida sobre el elemento
+  // ya suelto. Sin esta guarda, ese change fantasma provocaria un segundo
+  // repintado que se lleva el foco por delante.
+  if (fijar(el.dataset.u, el.dataset.campo, el.value)){ refrescar(); pintarLista(); }
+});
+
+/* ---------- mis criaturas ---------- */
+/* La lista es `MIS`, no `INV`. `INV` guarda los datos de todo lo que has tocado
+   (incluidos los ingredientes del arbol); `MIS` solo lo que has guardado. */
+/* ---------- tira de fotos de «Mis criaturas», arriba de la calculadora ------ */
+/* Hasta 10, las primeras por nombre (el mismo orden que la tabla de la pestaña
+   «Mis criaturas», para que las dos listas no se contradigan). Pulsar una foto
+   abre esa criatura en la calculadora, igual que pulsar su fila.
+   Vive dentro de `refrescar()`: si no, al guardar una criatura la tira se
+   quedaria con la lista de antes, que es el fallo que mas ha reaparecido aqui. */
+const TOPE_FOTOS = 10;
+function pintarFotos(){
+  const panel = document.getElementById("panelMisFotos");
+  const cont  = document.getElementById("misFotos");
+  const todas = MIS.filter(u => !!C[u])
+                   .sort((a,b) => C[a][0].localeCompare(C[b][0], "es"));
+  const us = todas.slice(0, TOPE_FOTOS);
+  panel.style.display = us.length ? "" : "none";
+  if (!us.length){ cont.innerHTML = ""; return; }
+  document.getElementById("nMisFotos").textContent =
+    todas.length > TOPE_FOTOS ? "· " + TOPE_FOTOS + " de " + todas.length
+                              : "· " + todas.length;
+  cont.innerHTML = us.map(u =>
+    '<button class="ir foto-btn" data-ir="'+u+'" title="'+
+      esc("Llevar "+C[u][0]+" a la calculadora")+'">'+
+      foto(u, "mini", 56, true) +
+      '<span class="tira-nm rc-'+CLASE[C[u][1]]+'">'+esc(C[u][0])+'</span>'+
+    '</button>').join("");
+}
+
+function pintarMios(){
+  const us = MIS.filter(u => !!C[u]);
+  const cont = document.getElementById("miosCuerpo");
+  if (!us.length){
+    cont.innerHTML = '<p class="vacio-txt">Todavía no has guardado ninguna criatura. Elige una en la '+
+      'pestaña «Calculadora» y pulsa <b>Guardar en «Mis criaturas»</b>. Lo que teclees en el '+
+      '«Árbol de fusión» sirve para el cálculo, pero <b>no entra en esta lista</b>: aquí solo '+
+      'aparece lo que guardas a propósito.</p>';
+  } else {
+    us.sort((a,b) => (C[a]?C[a][0]:a).localeCompare(C[b]?C[b][0]:b, "es"));
+    let h = '<div style="overflow:auto"><table><thead><tr><th></th><th>Criatura</th><th>Rareza</th>'+
+      '<th class="num">Nivel</th><th class="num">Mejoras</th><th class="num">ADN</th>'+
+      '<th class="num">Nivel máx. hoy</th>'+
+      '<th class="num">Objetivo</th><th class="num">Falta ADN</th><th class="num">Monedas</th><th></th></tr></thead><tbody>';
+    let tAdn = 0, tMon = 0, tFus = 0;
+    for (const u of us){
+      if (!C[u]) continue;
+      const r = C[u][1], m = minLv(r), inv = invDe(u);
+      const hasta = Math.max((INV[u] && INV[u].objetivo) || 35, m);
+      const desde = inv.creado ? Math.max(inv.nivel, m) : 0;
+      const adnNec = costeADN(r, desde, hasta, !inv.creado);
+      const deficit = Math.max(0, adnNec - inv.adn);
+      const mon = costeMon(r, desde, hasta) + nFus(deficit)*(M.monedasFusion[r]||0);
+      tAdn += deficit; tMon += mon; tFus += nFus(deficit);
+      const mx = nivelMaximo(r, desde, inv.adn, inv.creado);
+      /* Los puntos y la pista que el usuario haya puesto en ESTA criatura. Se
+         ensenan aqui para que se vea que se guardaron: si solo se vieran al
+         abrir la ficha, no habria forma de saber que el dato sigue ahi. */
+      const mej = mejDe(u), pts = mej.bVida + mej.bDano + mej.bVel;
+      const titulo = 'Ir a la calculadora de '+esc(C[u][0]);
+      h += '<tr class="fila-ir" data-ir="'+u+'">'+
+        '<td style="padding:4px 6px"><button class="ir foto-btn" data-ir="'+u+'" title="'+titulo+'">'+
+          foto(u,"mini g",38)+'</button></td>'+
+        '<td><button class="ir" data-ir="'+u+'" title="'+titulo+'">'+esc(C[u][0])+'</button></td>'+
+        '<td>'+tag(r)+'</td>'+
+        /* «sin crear» es un ESTADO, no una rareza: va con la pildora cian de
+           estado, no en ambar. En ambar era literalmente el color de la Épica
+           (mismo hex, --ambar = --r-epica), y la auditoria lo destapo en cuanto
+           «Mis criaturas» dejo de estar vacia en su pantalla. */
+        '<td class="num">'+(inv.creado ? desde : '<span class="pill" style="margin:0">sin crear</span>')+'</td>'+
+        '<td class="num">'+(pts || mej.mejora
+            ? '<b>+'+pts+'</b>'+(mej.mejora ? ' <span class="pill" style="margin:0">m'+mej.mejora+'</span>' : '')
+            : '<span style="color:var(--tx3)">—</span>')+'</td>'+
+        '<td class="num">'+nf(inv.adn)+'</td>'+
+        '<td class="num"><b>'+mx.nivel+'</b></td>'+
+        '<td class="num">'+hasta+'</td>'+
+        '<td class="num"><b style="color:'+(deficit>0?'var(--ambar)':'var(--verde)')+'">'+nf(deficit)+'</b></td>'+
+        '<td class="num">'+nf(mon)+'</td>'+
+        '<td style="text-align:right"><button class="gh" data-borrar="'+u+'" style="padding:3px 9px">×</button></td></tr>';
+    }
+    h += '</tbody></table></div>';
+    cont.innerHTML = h;
+    cont.querySelectorAll("[data-borrar]").forEach(b => b.onclick = () => {
+      /* La × quita de la lista Y olvida los datos de esa criatura: si solo se
+         quitara de la lista, seguiria apareciendo con sus cifras en el arbol y
+         pareceria que el borrado no ha hecho nada. */
+      const u = b.dataset.borrar;
+      quitarMia(u); delete INV[u];
+      /* Si era la que estaba abierta, su objetivo se ha ido con ella: el
+         deslizador vuelve al tope. */
+      if (elegido === u) ponerObjetivoEnDeslizador(u);
+      guardar(); refrescar(); pintarLista();
+    });
+    document.getElementById("miosResumen").innerHTML =
+      '<div class="cifra wa"><div class="k">ADN pendiente</div><div class="v">'+nf(tAdn)+'</div><div class="n">en '+us.length+' criaturas</div></div>'+
+      '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(tMon)+'</div></div>'+
+      '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(tFus)+'</div></div>';
+    return;
+  }
+  document.getElementById("miosResumen").innerHTML = "";
+}
+
+/* Un clic en cualquier elemento con `data-ir` lleva a la calculadora de esa
+   criatura. UN SOLO manejador para toda la pagina, en `document`: lo usan las
+   filas y las fotos de «Mis criaturas», los nombres del informe del arbol, los
+   de «Lleva a» y la tira de fotos. Antes vivia colgado de `#miosCuerpo`, y al
+   anadir nombres pulsables en otros sitios no habrian hecho nada — el fallo de
+   «el manejador cubre solo una parte de la interfaz», otra vez.
+   La × de borrar manda: si el clic fue en ella, no navega. */
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-borrar]")) return;
+  const el = e.target.closest("[data-ir]");
+  if (el) irACalculadora(el.dataset.ir);
+});
+
+/* ---------- catalizadores ---------- */
+const PESO = {common:1, rare:4, epic:15, legendary:50};
+document.getElementById("btnCat").onclick = () => {
+  const c = Number(document.getElementById("cComun").value)||0;
+  const r = Number(document.getElementById("cRara").value)||0;
+  const e = Number(document.getElementById("cEpica").value)||0;
+  const l = Number(document.getElementById("cLegend").value)||0;
+  const pts = c*1 + r*4 + e*15 + l*50;
+  const total = c+r+e+l;
+  if (!total){ document.getElementById("catSalida").innerHTML = '<p class="vacio-txt">Mete algo de ADN.</p>'; return; }
+  const frac = {common:c/total, rare:r/total, epic:e/total, legendary:l/total};
+  let tier, mayoria;
+  if (frac.legendary > .5){ tier = "Oro"; mayoria = "Legendaria"; }
+  else if (frac.rare + frac.epic > .5){ tier = "Plata"; mayoria = "Rara/Épica"; }
+  else { tier = "Bronce"; mayoria = "Común"; }
+  const falta = 75000 - pts;
+  let h = '<div class="cifras">' +
+    '<div class="cifra"><div class="k">Puntos del tanque</div><div class="v">'+nf(pts)+'</div><div class="n">objetivo 75.000</div></div>' +
+    '<div class="cifra al"><div class="k">Catalizador</div><div class="v">'+tier+'</div><div class="n">mayoría '+mayoria+'</div></div>' +
+    '<div class="cifra '+(falta>0?"wa":"al")+'"><div class="k">'+(falta>0?"Faltan":"Sobran")+'</div><div class="v">'+nf(Math.abs(falta))+'</div><div class="n">puntos</div></div>' +
+    '</div>';
+  h += '<div class="nota">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. '+
+       'El tanque objetivo son 75.000 puntos.</div>';
+  h += '<div style="overflow:auto;margin-top:14px"><table><thead><tr><th>Receta observada</th><th class="num">Rendimiento</th><th>Valoración</th></tr></thead><tbody>'+
+    '<tr><td>2.000 Épica + 3.500 Rara + 625 Legendaria</td><td class="num">36 Oro</td><td style="color:var(--verde)">buena</td></tr>'+
+    '<tr><td>10.500 Común + 2.000 Épica + 690 Legendaria</td><td class="num">36 Oro</td><td style="color:var(--verde)">buena</td></tr>'+
+    '<tr><td>1.500 Legendaria (sola)</td><td class="num">40 Oro</td><td style="color:var(--rojo)">mala: quema la más escasa</td></tr>'+
+    '<tr><td>20.000 Común + 2.000 Épica + 500 Legendaria</td><td class="num">79 Plata</td><td style="color:var(--verde)">buena</td></tr>'+
+    '<tr><td>5.000 Rara + 2.000 Épica + 500 Legendaria</td><td class="num">79 Plata</td><td style="color:var(--verde)">buena</td></tr>'+
+    '<tr><td>18.750 Rara (sola)</td><td class="num">43 Plata</td><td style="color:var(--rojo)">mala: desperdicia Rara</td></tr>'+
+    '<tr><td>25.500 Común + 1.634 Épica + 500 Legendaria</td><td class="num">159 Bronce</td><td style="color:var(--verde)">buena</td></tr>'+
+    '<tr><td>75.000 Común (sola)</td><td class="num">125 Bronce</td><td style="color:var(--rojo)">mala: la peor forma</td></tr>'+
+    '</tbody></table></div>';
+  document.getElementById("catSalida").innerHTML = h;
+};
+
+/* ---------- import / export ---------- */
+/* Se exportan las DOS cosas: la lista y los datos. El fichero lleva una marca
+   `jwa322` para poder distinguirlo. Un fichero de una version anterior (el objeto
+   plano de siempre, sin marca) se sigue leyendo: sus claves pasan a ser la lista,
+   que es exactamente lo que significaban entonces. */
+document.getElementById("btnExport").onclick = () => {
+  const b = new Blob([JSON.stringify({jwa322: 1, mios: MIS, inventario: INV}, null, 2)],
+                     {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = "jwa322-mis-criaturas.json"; a.click();
+};
+document.getElementById("btnImport").onclick = () => {
+  const i = document.createElement("input"); i.type = "file"; i.accept = ".json";
+  i.onchange = () => {
+    const f = i.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const d = JSON.parse(fr.result);
+        if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("no es un objeto");
+        // formato nuevo ({jwa322, mios, inventario}) o antiguo (objeto plano)
+        const datos = (d.jwa322 && d.inventario && typeof d.inventario === "object")
+                      ? d.inventario : d;
+        const lista = (d.jwa322 && Array.isArray(d.mios)) ? d.mios : Object.keys(datos);
+        let n = 0;
+        for (const k of Object.keys(datos)) if (C[k]) { INV[k] = datos[k]; n++; }
+        /* Lo importado puede traer puntos de mejora que no caben con el nivel que
+           trae, o una pista por debajo del nivel 30. Se acota ANTES de guardar:
+           si no, al recargar saldria otra cosa de la que se vio al importar. */
+        for (const k of Object.keys(INV)) if (C[k]) acotarMejoras(k);
+        let s = 0;
+        for (const u of lista) if (C[u]) { if (anadirMia(u)) s++; }
+        /* El fichero puede traer otro objetivo para la criatura que ya esta
+           abierta, asi que hay que volver a ponerlo en el deslizador antes de
+           repintar: si no, la ficha seguiria con el objetivo viejo. */
+        if (elegido) ponerObjetivoEnDeslizador(elegido);
+        guardar(); refrescar(); pintarLista();
+        alert("Importadas " + n + " criaturas, " + s + " añadidas a «Mis criaturas».");
+      } catch(e){ alert("Ese fichero no vale: " + e.message); }
+    };
+    fr.readAsText(f);
+  };
+  i.click();
+};
+document.getElementById("btnBorrar").onclick = () => {
+  if (confirm("¿Borrar todas tus criaturas guardadas? No se puede deshacer.")){
+    INV = {}; MIS = [];
+    /* Se ha borrado TODO, objetivos incluidos: el deslizador vuelve al tope. */
+    if (elegido) ponerObjetivoEnDeslizador(elegido);
+    guardar(); refrescar(); pintarLista();
+  }
+};
+
+/* ---------- (aqui estaban las tablas de referencia) ----------
+   La pestana «Referencia» se quito el 25-sep-2026 a peticion de n30, y con ella
+   este bloque, que rellenaba cuatro tablas: la escalera de ADN por nivel, el
+   coste por fusion, los topes de inventario y la fiabilidad de cada dato.
+
+   Los DATOS no se han ido a ningun sitio: siguen en el modelo (`M.L`,
+   `M.adn3135`, `M.creacion`, `M.topes`, `M.minIngrediente`, `M.adnPorFusion`) y
+   los verifican `verificar_motor.py` (960/960 y 9.408/9.408 contra `modelo.py`)
+   y `probar.py`. La tabla de fiabilidad esta entera en el LEEME, seccion
+   «Fiabilidad de cada dato». Y el uso real de las cifras es la pestana
+   «Calculadora», que las aplica a la criatura que elijas. */
+
+/* ---------- tema ---------- */
+/* Se guarda en localStorage y se aplica como atributo en <html>. El tema
+   «default» NO lleva atributo: asi el bloque `:root` es el del tema por defecto
+   y no hay que escribir dos veces la misma paleta. */
+const CLAVE_TEMA = "jwa322.tema";
+const selTema = document.getElementById("tema");
+function ponerTema(t){
+  if (t === "yellow") document.documentElement.setAttribute("data-tema", "yellow");
+  else document.documentElement.removeAttribute("data-tema");
+  selTema.value = (t === "yellow") ? "yellow" : "default";
+  try { localStorage.setItem(CLAVE_TEMA, selTema.value); } catch(e){}
+}
+selTema.addEventListener("change", () => ponerTema(selTema.value));
+/* Al arrancar NO se vuelve a aplicar el tema: ya lo puso el script del <head>,
+   antes de pintar. Aqui solo se pone el desplegable donde toca, para que no
+   ensene «Default» con el tema amarillo puesto. */
+selTema.value = (document.documentElement.getAttribute("data-tema") === "yellow")
+                ? "yellow" : "default";
+
+/* Arranque: la lista y la tira de fotos. `pintarFotos` vive dentro de
+   `refrescar()` para que no se quede vieja al guardar, pero al cargar la pagina
+   `refrescar()` no se llama (no hay criatura elegida todavia), asi que hay que
+   pintarla aqui o la tira no aparece hasta la primera edicion.
+   `montarStats` tiene que ir ANTES de `pintarStats`: la segunda escribe en los
+   elementos que crea la primera. */
+montarStats();
+pintarMios();
+pintarFotos();
+pintarStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Generated cache of scraped pages (92 MB, rebuild with scrape_paleo.py)
+cache/
+
+# Creature photos: third-party assets, not distributed.
+# Regenerate locally with descargar_imagenes.py
+img/*.webp
+
+# Private material: never committed, never deployed
+.privado/
+
+__pycache__/
+*.pyc
+.venv/

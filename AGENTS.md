@@ -74,6 +74,31 @@ Spanish: they are the schema, not prose. Translating them breaks the pipeline.
   skill, the conversation history and the daily working memory. Not published
   and not deployed.
 
+## Where the deep reference is, and how to read it
+
+`.privado/` is not published, so a fresh clone will not have it. When it is
+there, it holds the measured detail that does not belong in this file:
+
+| Path | What it holds |
+|---|---|
+| `.privado/LEEME.md` | The full manual: every rule the calculator implements, how each one was measured, and the mistakes corrected along the way |
+| `.privado/HISTORIA.md` | What was asked and decided while this was built, in the author's own words |
+| `.privado/conversaciones/MEMORIA-DIARIA.md` | The daily working log of the build, turn by turn |
+| `.privado/conocimiento/` | The domain knowledge on JWA costs and data, kept as a skill |
+| `.privado/sesiones/` | Exported transcripts of the sessions that built this |
+
+**Consult them; do not load them whole.** The manual is about 93 KB and the
+history about 305 KB, against an instruction budget of 64 KB per session, so
+either one loaded in full would crowd out the work itself. Search first, then
+read the part you need:
+
+    grep -n "the claim you are about to touch" .privado/LEEME.md
+    sed -n '440,520p' .privado/LEEME.md
+
+Do this before changing any cost or fusion rule. The manual records how each
+number was obtained and, in several places, which earlier claim turned out to
+be false — that second part is the one that saves you from repeating it.
+
 ## Third party
 
 Creature data comes from paleo.gg, which the app credits on screen. `LICENSE`

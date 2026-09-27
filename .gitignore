@@ -14,3 +14,6 @@ __pycache__/
 
 # Downloaded separately and never used: the LEEME declares them unused.
 img/clase/
+
+# Byte-identical duplicate of data/jwa-3.22.json; nothing reads it.
+jwa-3.22.json

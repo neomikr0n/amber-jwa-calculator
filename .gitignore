@@ -17,3 +17,6 @@ img/clase/
 
 # Byte-identical duplicate of data/jwa-3.22.json; nothing reads it.
 jwa-3.22.json
+
+# Personal working notes for this author; never published.
+AGENTS.local.md

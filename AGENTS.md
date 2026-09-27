@@ -137,6 +137,10 @@ read the old one and write the new one in the same step.
 The repository is **private and not deployed**, so there is no live URL. Nothing
 here should assume one.
 
+- **`AGENTS.local.md`.** Personal working notes for whoever is driving this
+  session, listed in `.gitignore`. If the file is there, it is read at startup;
+  if a clone does not have it, nothing is missing.
+
 ## Where the deep reference is, and how to read it
 
 `.privado/` is not published, so a fresh clone will not have it. When it is
@@ -161,16 +165,3 @@ read the part you need:
 Do this before changing any cost or fusion rule. The manual records how each
 number was obtained and, in several places, which earlier claim turned out to be
 false — that second part is the one that saves you from repeating it.
-
-## Working with the author
-
-He writes in Spanish and the project is in English: conversation in Spanish,
-everything committed in English.
-
-He asks for measurement, not assurance. State the confidence behind a claim and
-where it comes from; when two sources disagree, say so and give both. He has
-corrected this project more than once and was right to. Do not flatter a
-decision, and do not paper over a gap: say what is not known.
-
-Nothing destructive without a way back: copy and prove the copy with a hash, and
-prefer renaming or moving over deleting.

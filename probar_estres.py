@@ -1260,6 +1260,16 @@ if not os.path.exists(enlace):
     os.symlink(IMG, enlace)
 
 html = open(HTML, encoding="utf-8").read()
+# Pin the language for this run. The assertions below are written against the
+# Spanish rendering, and the app now boots in English. window.__lang beats
+# whatever a previous run stored, so the result does not depend on leftover
+# state; the storage is cleared too, as a second line of defence. It must go in
+# the <head>: the app resolves the language while parsing it.
+PIN = ('<script>window.__lang = "es";'
+       'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
+if "<head>" not in html:
+    raise SystemExit("no encuentro <head> para fijar el idioma")
+html = html.replace("<head>", "<head>\n" + PIN, 1)
 m = re.search(r"<body[^>]*>", html)
 html = html[:m.end()] + CAZA + html[m.end():] + DIAG.replace("__ENTREGA__", srv.js("__diag"))
 # Antes de abrir el navegador: si el diagnostico no compila junto a la aplicacion

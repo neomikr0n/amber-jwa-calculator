@@ -129,8 +129,16 @@ if not os.path.exists(en):
 srv = arrancar()
 DIAG = DIAG.replace("__US__", json.dumps(PRUEBA)).replace("__ENTREGA__", srv.js("__eq"))
 
-shutil.copy(os.path.join(RAIZ, "amber-jwa-3.22.html"), FUERA)
-open(FUERA, "a", encoding="utf-8").write(DIAG)
+# The page is loaded from a copy, so the language pin goes here. It has to be
+# inside the <head>: that is where the app resolves the language, and the
+# injected value beats whatever a previous run stored.
+html = open(os.path.join(RAIZ, "amber-jwa-3.22.html"), encoding="utf-8").read()
+PIN = ('<script>window.__lang = "es";'
+       'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
+if "<head>" not in html:
+    raise SystemExit("no encuentro <head> para fijar el idioma")
+html = html.replace("<head>", "<head>\n" + PIN, 1)
+open(FUERA, "w", encoding="utf-8").write(html + DIAG)
 
 env = dict(os.environ)
 env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",

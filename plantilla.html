@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__NOMBRE__ — calculadora de ADN de Jurassic World Alive 3.22</title>
+<title>__NOMBRE__ — Jurassic World Alive 3.22 DNA calculator</title>
 <!-- El icono de la pestana: es lo unico que se ve cuando el foco esta en otra
      pestana, asi que va EN LINEA (data URI) y no como un fichero al lado. Un
      <link href="img/favicon.svg"> se romperia en cuanto el HTML se copiara sin
@@ -20,6 +20,313 @@ try {
   if (localStorage.getItem("jwa322.tema") === "yellow")
     document.documentElement.setAttribute("data-tema", "yellow");
 } catch (e) {}
+
+/* ---- Language -----------------------------------------------------------
+   Every string in this file is authored in English, which is the source
+   language. Spanish lives in I18N_ES below, keyed by the English string:
+   The function is named i18n and not t: `t` is already used as a local
+   variable and as a parameter in several places in this file, and a global
+   `t` collides with them — inside those scopes the call hits the local binding
+   in its temporal dead zone and throws.
+   i18n("Common") returns "Común" when the language is Spanish.
+
+   Resolution order, and the order matters:
+     1. window.__lang, injected before this script runs. It wins over
+        everything so a test can pin the language and not depend on what a
+        previous run happened to store.
+     2. the stored choice, set by the switcher.
+     3. "en".
+   Reading the stored value first would make the rendered language depend on
+   leftover state, which is exactly how a test ends up asserting on the wrong
+   language while still passing. */
+const IDIOMA_CLAVE = "jwa322.idioma";
+const IDIOMA_DEFECTO = "en";
+const I18N_ES = {
+  "Common": "Común",
+  "Epic": "Épica",
+  "Unique": "Única",
+  "Non-Hybrid": "sin híbrido",
+  "Hybrid": "híbrido",
+  "Super Hybrid": "superhíbrido",
+  "Mega Hybrid": "megahíbrido",
+  "Giga Hybrid": "gigahíbrido",
+  "no source on the map": "sin fuente en el mapa",
+  "No origin data in the source": "Sin datos de origen en la fuente",
+  "In-game sources: ": "Fuentes en el juego: ",
+  " to the calculator": " a la calculadora",
+  "level 0": "nivel 0",
+  "level 1": "nivel 1",
+  "are already ready to fuse": "ya estan listos para fusionar",
+  "<div class=\"informe\"><h3>Full tree report</h3>": "<div class=\"informe\"><h3>Informe del árbol completo</h3>",
+  "<div class=\"sub\">All the DNA needed to take <b>": "<div class=\"sub\">Todo el ADN que hace falta para llevar <b>",
+  "</b> to level ": "</b> al nivel ",
+  ", creature by creature, down to the ones that are collected. «DNA needed» is what that ": ", criatura por criatura, hasta las que se recolectan. «ADN necesario» es lo que esa ",
+  "creature consumes across the whole tree: ": "criatura consume en todo el árbol: ",
+  "its ladder plus the DNA added on top when it is fused.": "su escalera más el ADN que se le echa encima al fusionarla.",
+  "only the DNA added on top when it is fused, because the ingredients are ": "solo el ADN que se le echa encima al fusionarla, porque los ingredientes se ",
+  "assumed to already be ready to fuse.": "suponen ya listos para fusionar.",
+  " What you already have is subtracted <b>only once</b>, even if the creature appears in several branches.</div>": " Lo que ya tienes se descuenta <b>una sola vez</b>, aunque la criatura salga en varias ramas.</div>",
+  "<div class=\"aviso info\" style=\"margin-top:12px\">The <b>«Count the DNA to level up the ": "<div class=\"aviso info\" style=\"margin-top:12px\">La casilla <b>«Contar el ADN de subir los ",
+  "ingredients»</b> checkbox is unchecked, so these figures follow the <b>paleo.gg</b> criterion. ": "ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. ",
+  "Check it on the <b>Fusion Tree</b> tab to see what you actually need to gather.</div>": "Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>",
+  ">Total DNA missing</div><div class=": ">ADN que falta en total</div><div class=",
+  " different creatures": " criaturas distintas",
+  "</div><div class=\"n\">of the ones that are not fused</div></div>": "</div><div class=\"n\">de las que no se fusionan</div></div>",
+  "<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">",
+  "</div><div class=\"n\">across the whole cascade</div></div>": "</div><div class=\"n\">en toda la cascada</div></div>",
+  "<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">",
+  "<th>Creature</th><th class=\"num\">Level</th>": "<th>Criatura</th><th class=\"num\">Nivel</th>",
+  "<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>": "<th class=\"num\">ADN necesario</th><th class=\"num\">Tienes</th>",
+  "<th class=\"num\">Missing</th><th class=\"num\">Fusions</th></tr></thead><tbody>": "<th class=\"num\">Falta</th><th class=\"num\">Fusiones</th></tr></thead><tbody>",
+  " to level ": " al nivel ",
+  ", which is the minimum required by the ": ", que es el mínimo que exige la ",
+  "fusion of this tree. It starts at ": "fusión de este árbol. Nace en el ",
+  " <span class=\"pill\">root</span>": " <span class=\"pill\">raíz</span>",
+  "<tr class=\"total\"><td>Tree total</td>": "<tr class=\"total\"><td>Total del árbol</td>",
+  "Sets to the level required by the fusion these ": "Pone al nivel que exige la fusión las ",
+  " creatures of the ": " criaturas del ",
+  "tree that are not yet created or are below that level. ": "árbol que aún no están creadas o que están por debajo de ese nivel. ",
+  "The root creature is NOT touched, and those already at that level or ": "La criatura raíz NO se toca, y las que ya están en ese nivel o por ",
+  "One creature appears": "Una criatura sale",
+  " creatures appear": " criaturas salen",
+  " in <b>several branches</b> of the tree. Its DNA is a single pool: you need the sum of what ": " en <b>varias ramas</b> del árbol. Su ADN es una sola reserva: hace falta la suma de lo que ",
+  "each branch asks for, and what you have counts once. That is why the rows <b>are not added up by hand</b>: ": "pide cada rama, y lo que tienes cuenta una vez. Por eso las filas <b>no se suman a mano</b>: ",
+  "the correct figure is <b>Total DNA missing</b>.</div>": "la cifra buena es la de <b>ADN que falta en total</b>.</div>",
+  "<div class=\"nota\" style=\"margin-top:12px\">DNA you have to <b>go and collect</b>, by rarity ": "<div class=\"nota\" style=\"margin-top:12px\">ADN que hay que <b>ir a recolectar</b>, por rareza ",
+  "(only creatures that don't get fused):</div><div class=\"rr\">": "(solo las criaturas que no se fusionan):</div><div class=\"rr\">",
+  "<div class=\"nota\" style=\"margin-top:12px\">Nothing left to collect: with what you have ": "<div class=\"nota\" style=\"margin-top:12px\">No falta nada por recolectar: con lo que tienes ",
+  "you already cover the whole tree.</div>": "ya cubres todo el árbol.</div>",
+  "<div class=\"vacio\">No results.</div>": "<div class=\"vacio\">Sin resultados.</div>",
+  "level ": "nivel ",
+  "not created": "sin crear",
+  "Damage": "Daño",
+  "Crit": "Crítico",
+  "Crit Dmg": "Daño crít.",
+  "coins": "monedas",
+  " title=\"Remove one point of ": " title=\"Quitar un punto de ",
+  " title=\"Add one point of ": " title=\"Añadir un punto de ",
+  "Select a creature to see its stats.": "Elige una criatura para ver sus stats.",
+  " · base at level 26: ": " · base a nivel 26: ",
+  " · at level ": " · a nivel ",
+  "</b> of <b>": "</b> de <b>",
+  "</b> · cap = level ": "</b> · tope = nivel ",
+  " from the track": " de la pista",
+  "<br>The Enhancement track needs level <b>": "<br>La pista de mejoras necesita nivel <b>",
+  "</b> or higher.": "</b> o más.",
+  "<span class=\"st-ct\">Enhancement track</span>": "<span class=\"st-ct\">Pista de mejoras</span>",
+  "<span class=\"st-cq\">Complete: the ": "<span class=\"st-cq\">Completa: los ",
+  " steps are in place.</span>": " pasos están puestos.</span>",
+  "<div>Hatches at <b style=\"color:var(--tx)\">level ": "<div>Nace en <b style=\"color:var(--tx)\">nivel ",
+  "</b> · creating costs <b style=\"color:var(--tx)\">": "</b> · crear cuesta <b style=\"color:var(--tx)\">",
+  " DNA</b> · DNA cap <b style=\"color:var(--tx)\">": " ADN</b> · tope de ADN <b style=\"color:var(--tx)\">",
+  "cap ": "tope ",
+  "0 = not created (hatches at ": "0 = sin crear (nace en ",
+  "<div class=\"t\">Max level with what you have now</div>": "<div class=\"t\">Nivel máximo con lo que tienes ahora</div>",
+  "<div class=\"v\" style=\"color:var(--ambar)\">Not even enough to create it</div>": "<div class=\"v\" style=\"color:var(--ambar)\">Aún no llega ni a crearla</div>",
+  "<div class=\"d\">Creating this creature costs <b>": "<div class=\"d\">Crear esta criatura cuesta <b>",
+  " DNA</b> and you have <b>": " ADN</b> y tienes <b>",
+  "</b>. You are missing <b>": "</b>. Te faltan <b>",
+  "</b> for it to exist. Its hatch level is <b>": "</b> para que exista. Su nivel de nacimiento es el <b>",
+  "<div class=\"v\">Level <b>": "<div class=\"v\">Nivel <b>",
+  "<div class=\"d\">With <b>": "<div class=\"d\">Con <b>",
+  " DNA</b>": " ADN</b>",
+  " from level <b>": " desde el nivel <b>",
+  " from scratch": " partiendo de cero",
+  " you reach level <b>": " llegas al nivel <b>",
+  "</b> level": "</b> nivel",
+  ". You would spend <b>": ". Gastarías <b>",
+  "</b> and would be left with <b>": "</b> y te sobrarían <b>",
+  " <b style=\"color:var(--verde)\">You now have enough for the target ": " <b style=\"color:var(--verde)\">Ya te alcanza para el objetivo ",
+  " You are missing <b style=\"color:var(--ambar)\">": " Te faltan <b style=\"color:var(--ambar)\">",
+  " DNA</b> for level ": " ADN</b> para el nivel ",
+  "<div class=\"d\">It's at the <b>game cap (level ": "<div class=\"d\">Está en el <b>tope del juego (nivel ",
+  "<div class=\"cifra al\"><div class=\"k\">DNA needed</div><div class=\"v\">": "<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">",
+  "</div><div class=\"n\">from ": "</div><div class=\"n\">de ",
+  ">DNA missing</div><div class=": ">ADN que falta</div><div class=",
+  "</div><div class=\"n\">only from leveling up</div></div>": "</div><div class=\"n\">solo por subir de nivel</div></div>",
+  "<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>": "<div class=\"aviso\" style=\"margin-top:14px\">El tope de ADN de una criatura <b>",
+  "</b> is <b>": "</b> es <b>",
+  " → you'll have to gather it in <b>": " → tendrás que reunirlo en <b>",
+  " batches</b>, converting the surplus into catalysts or spending it.</div>": " tandas</b>, convirtiendo el sobrante en catalizadores o gastándolo.</div>",
+  "<h2 style=\"margin-top:20px\">Fusions needed</h2>": "<h2 style=\"margin-top:20px\">Fusiones necesarias</h2>",
+  " DNA per fusion</div></div>": " ADN por fusión</div></div>",
+  "<div class=\"cifra\"><div class=\"k\">Fusion coins</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Monedas de fusión</div><div class=\"v\">",
+  " per fusion</div></div>": " por fusión</div></div>",
+  "<div class=\"cifra\"><div class=\"k\">Ingredient level</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Nivel de los ingredientes</div><div class=\"v\">",
+  "</div><div class=\"n\">minimum required</div></div>": "</div><div class=\"n\">mínimo exigido</div></div>",
+  "<th class=\"num\">DNA per fusion</th><th class=\"num\">Total DNA to gather</th></tr></thead><tbody>": "<th class=\"num\">ADN por fusión</th><th class=\"num\">ADN total a reunir</th></tr></thead><tbody>",
+  "<div class=\"nota\">Fusions are an <b>estimate</b>: each fusion gives a random amount of DNA and the average is ": "<div class=\"nota\">Las fusiones son una <b>estimación</b>: cada fusión da una cantidad aleatoria de ADN y la media es ",
+  ". In practice you may need a few more.</div>": ". En la práctica puede hacerte falta alguna más.</div>",
+  "<div class=\"aviso info\" style=\"margin-top:14px\">This creature is not obtained by fusion: you have to ": "<div class=\"aviso info\" style=\"margin-top:14px\">Esta criatura no se obtiene por fusión: hay que ",
+  "<b>gather the DNA</b> in encounters, incubators or events.</div>": "<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>",
+  "<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>": "<button class=\"acc\" id=\"btnGuardar\">Guardar en «Mis criaturas»</button></div></div>",
+  "Save to «My creatures»": "Guardar en «Mis criaturas»",
+  "<p class=\"vacio-txt\">Choose a creature in the «Calculator» tab.</p>": "<p class=\"vacio-txt\">Elige una criatura en la pestaña «Calculadora».</p>",
+  "<div class=\"cifra al\"><div class=\"k\">DNA to collect</div><div class=\"v\">": "<div class=\"cifra al\"><div class=\"k\">ADN a recolectar</div><div class=\"v\">",
+  "<div class=\"n\">of the ": "<div class=\"n\">de las ",
+  " creatures that are not fused": " criaturas que no se fusionan",
+  " shared, counted once": " compartidas, contadas una vez",
+  "<div class=\"cifra\"><div class=\"k\">Total fusions</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Fusiones totales</div><div class=\"v\">",
+  "<div class=\"cifra\"><div class=\"k\">Total coins</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Monedas totales</div><div class=\"v\">",
+  "<div class=\"cifra\"><div class=\"k\">Creatures in the tree</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Criaturas en el árbol</div><div class=\"v\">",
+  "<div class=\"n\">root + cascading ingredients</div></div>": "<div class=\"n\">raíz + ingredientes en cascada</div></div>",
+  "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edit the <b>level</b> and <b>DNA</b> of ": "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edita el <b>nivel</b> y el <b>ADN</b> de ",
+  "any creature in the tree. It saves instantly and recalculates everything that hangs from it. ": "cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. ",
+  "If you uncheck <b>Created</b>, the DNA to create it is added to the calculation.</div>": "Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>",
+  "<label class=\"chk\" title=\"If it is not created, the DNA to create it is added\">": "<label class=\"chk\" title=\"Si no está creada, se suma el ADN de crearla\">",
+  "\">Level</label>": "\">Nivel</label>",
+  "\">DNA you have</label>": "\">ADN que tienes</label>",
+  "<div><label>Level required for the fusion</label>": "<div><label>Nivel que exige la fusión</label>",
+  "<span class=\"pill\">root</span>": "<span class=\"pill\">raíz</span>",
+  "<span class=\"pill\" title=\"This creature appears in ": "<span class=\"pill\" title=\"Esta criatura sale en ",
+  " branches of the tree. Its DNA is a single pool: what you have is counted once, ": " ramas del árbol. Su ADN es una sola reserva: lo que tienes se cuenta una vez, ",
+  "and the total is in the calculator report.\">appears ×": "y el total está en el informe de la calculadora.\">sale ×",
+  "<span class=\"pill\">not created</span>": "<span class=\"pill\">sin crear</span>",
+  "</b> to level up": "</b> para subir",
+  "</b> to fuse": "</b> para fusionar",
+  "0 (not created)": "0 (sin crear)",
+  "already at level <b>": "ya en nivel <b>",
+  "nothing to gather": "nada que reunir",
+  "</b> DNA": "</b> ADN",
+  " · you have <b>": " · tienes <b>",
+  "\">missing ": "\">falta ",
+  "</b> fusions (": "</b> fusiones (",
+  " coins)": " monedas)",
+  "With its <b>": "Con sus <b>",
+  "</b> DNA it cannot even create it (costs <b>": "</b> ADN no llega ni a crearla (cuesta <b>",
+  "</b> DNA it reaches <b>level ": "</b> ADN llega al <b>nivel ",
+  " <span style=\"color:var(--verde)\">— already meets the target ": " <span style=\"color:var(--verde)\">— ya cumple el objetivo ",
+  "</b> DNA for level ": "</b> ADN para el ",
+  "<p class=\"vacio-txt\">You have not saved any creature yet. Pick one in the ": "<p class=\"vacio-txt\">Todavía no has guardado ninguna criatura. Elige una en la ",
+  "tab «Calculator» and press <b>Save to «My Creatures»</b>. What you type in the ": "pestaña «Calculadora» y pulsa <b>Guardar en «Mis criaturas»</b>. Lo que teclees en el ",
+  "«Fusion Tree» is used for the calculation, but <b>does not go into this list</b>: here only ": "«Árbol de fusión» sirve para el cálculo, pero <b>no entra en esta lista</b>: aquí solo ",
+  "what you save on purpose appears.</p>": "aparece lo que guardas a propósito.</p>",
+  "<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Creature</th><th>Rarity</th>": "<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Criatura</th><th>Rareza</th>",
+  "<th class=\"num\">Level</th><th class=\"num\">Boosts</th><th class=\"num\">DNA</th>": "<th class=\"num\">Nivel</th><th class=\"num\">Mejoras</th><th class=\"num\">ADN</th>",
+  "<th class=\"num\">Max level today</th>": "<th class=\"num\">Nivel máx. hoy</th>",
+  "<th class=\"num\">Target</th><th class=\"num\">Missing DNA</th><th class=\"num\">Coins</th><th></th></tr></thead><tbody>": "<th class=\"num\">Objetivo</th><th class=\"num\">Falta ADN</th><th class=\"num\">Monedas</th><th></th></tr></thead><tbody>",
+  "Go to the calculator for ": "Ir a la calculadora de ",
+  "<span class=\"pill\" style=\"margin:0\">not created</span>": "<span class=\"pill\" style=\"margin:0\">sin crear</span>",
+  "<div class=\"cifra wa\"><div class=\"k\">Pending DNA</div><div class=\"v\">": "<div class=\"cifra wa\"><div class=\"k\">ADN pendiente</div><div class=\"v\">",
+  " creatures</div></div>": " criaturas</div></div>",
+  "<p class=\"vacio-txt\">Enter some DNA.</p>": "<p class=\"vacio-txt\">Mete algo de ADN.</p>",
+  "Rare/Epic": "Rara/Épica",
+  "<div class=\"cifra\"><div class=\"k\">Tank points</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Puntos del tanque</div><div class=\"v\">",
+  "</div><div class=\"n\">mostly ": "</div><div class=\"n\">mayoría ",
+  "<div class=\"nota\">Weights per unit of DNA: Common 1 · Rare 4 · Epic 15 · Legendary 50. ": "<div class=\"nota\">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. ",
+  "The target tank is 75.000 points.</div>": "El tanque objetivo son 75.000 puntos.</div>",
+  "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Observed recipe</th><th class=\"num\">Yield</th><th>Rating</th></tr></thead><tbody>": "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Receta observada</th><th class=\"num\">Rendimiento</th><th>Valoración</th></tr></thead><tbody>",
+  "<tr><td>2.000 Epic + 3.500 Rare + 625 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>": "<tr><td>2.000 Épica + 3.500 Rara + 625 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>",
+  "<tr><td>10.500 Common + 2.000 Epic + 690 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>": "<tr><td>10.500 Común + 2.000 Épica + 690 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>",
+  "<tr><td>1.500 Legendary (alone)</td><td class=\"num\">40 Gold</td><td style=\"color:var(--rojo)\">bad: burns the scarcest</td></tr>": "<tr><td>1.500 Legendaria (sola)</td><td class=\"num\">40 Oro</td><td style=\"color:var(--rojo)\">mala: quema la más escasa</td></tr>",
+  "<tr><td>20.000 Common + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>": "<tr><td>20.000 Común + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>",
+  "<tr><td>5.000 Rare + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>": "<tr><td>5.000 Rara + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>",
+  "<tr><td>25.500 Common + 1.634 Epic + 500 Legendary</td><td class=\"num\">159 Bronze</td><td style=\"color:var(--verde)\">good</td></tr>": "<tr><td>25.500 Común + 1.634 Épica + 500 Legendaria</td><td class=\"num\">159 Bronce</td><td style=\"color:var(--verde)\">buena</td></tr>",
+  "<tr><td>75.000 Common (alone)</td><td class=\"num\">125 Bronze</td><td style=\"color:var(--rojo)\">bad: the worst form</td></tr>": "<tr><td>75.000 Común (sola)</td><td class=\"num\">125 Bronce</td><td style=\"color:var(--rojo)\">mala: la peor forma</td></tr>",
+  "not an object": "no es un objeto",
+  " creatures, ": " criaturas, ",
+  " added to «My Creatures».": " añadidas a «Mis criaturas».",
+  "That file is not valid: ": "Ese fichero no vale: ",
+  "Delete all your saved creatures? This cannot be undone.": "¿Borrar todas tus criaturas guardadas? No se puede deshacer.",
+  "To gather": "A recolectar",
+  "above keep their value.": "encima conservan su valor.",
+  "Rare": "Rara",
+  "Legendary": "Legendaria",
+  "Health": "Vida",
+  "Speed": "Velocidad",
+  "Armor": "Armadura",
+  "cat. bronze": "cat. bronce",
+  "cat. silver": "cat. plata",
+  "cat. gold": "cat. oro",
+  "Enhancement": "Mejora",
+  " speed": " de velocidad",
+  "% health": "% de vida",
+  "% damage": "% de daño",
+  " to the stat cap": " al tope de puntos",
+  "reactive move": "movimiento reactivo",
+  "Points <b>": "Puntos <b>",
+  " · remaining <b>": " · quedan <b>",
+  " (this creature has no enhancement track)": " (esta criatura no tiene pista)",
+  "Enhancement ": "Mejora ",
+  " — it is missing <b>": " — le faltan <b>",
+  "Gold": "Oro",
+  "Silver": "Plata",
+  "Bronze": "Bronce",
+  "</div><div class=\"n\">target 75,000</div></div>": "</div><div class=\"n\">objetivo 75.000</div></div>",
+  "Catalyst": "Catalizador",
+  "Missing": "Faltan",
+  "Extra": "Sobran",
+  "</div><div class=\"n\">points</div></div>": "</div><div class=\"n\">puntos</div></div>",
+  "<div>Ingredients: <b style=\"color:var(--tx)\">": "<div>Ingredientes: <b style=\"color:var(--tx)\">",
+  "<div class=\"lleva\">Leads to: ": "<div class=\"lleva\">Lleva a: ",
+  "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Ingredient</th><th>Rarity</th>": "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Ingrediente</th><th>Rareza</th>",
+  "<tr><td>18,750 Rare (alone)</td><td class=\"num\">43 Silver</td><td style=\"color:var(--rojo)\">bad: wastes Rare</td></tr>": "<tr><td>18.750 Rara (sola)</td><td class=\"num\">43 Plata</td><td style=\"color:var(--rojo)\">mala: desperdicia Rara</td></tr>",
+  "DNA missing": "ADN que falta",
+  "Total DNA missing": "ADN que falta en total",
+  "you have ": "tienes ",
+  "Calculator": "Calculadora",
+  "Fusion Tree": "Árbol de fusión",
+  "My creatures": "Mis criaturas",
+  "Catalysts": "Catalizadores",
+  "1 · The creature": "1 · La criatura",
+  "Pick a creature in the search box above to see its stats.": "Elige una criatura en el buscador de arriba para ver sus stats.",
+  "2 · Your data": "2 · Tus datos",
+  "Current level": "Nivel actual",
+  "0 = not created": "0 = sin crear",
+  "DNA you have": "ADN que tienes",
+  "Drag it or use the arrow keys": "Arrastra o usa las flechas del teclado",
+  "Fusion tree — top to bottom": "Árbol de fusión — de arriba abajo",
+  "Created": "Creada",
+  "Summary": "Resumen",
+  "Pick a creature on the «Calculator» tab.": "Elige una criatura en la pestaña «Calculadora».",
+  "What you have saved": "Lo que has guardado",
+  "Export JSON": "Exportar JSON",
+  "Import JSON": "Importar JSON",
+  "Clear all": "Borrar todo",
+  "Calculate": "Calcular",
+  "Common DNA in the tank": "ADN Común en el tanque",
+  "Rare DNA": "ADN Rara",
+  "Epic DNA": "ADN Épica",
+  "Legendary DNA": "ADN Legendaria",
+  "Catalysts — recombination planner": "Catalizadores — planificador de recombinación",
+  "UNVERIFIED data.": "Datos NO verificados.",
+  "Search among the": "Buscar entre las",
+  "Target level:": "Nivel objetivo:",
+  "Creature data:": "Datos de criaturas:",
+  "Generated on": "Generado el",
+  "Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class=\"mono\">jurassic-journal</span> database.": "Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias), el comunicado oficial de la 3.22 y la base de datos de <span class=\"mono\">jurassic-journal</span>.",
+  "The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.": "El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las fusiones calculadas son una estimación, no una promesa.",
+  "Unofficial tool, not affiliated with Ludia.": "Herramienta no oficial, sin relación con Ludia.",
+  "creatures": "criaturas",
+  "data from": "datos de",
+  "updated": "actualizados el",
+  "costs verified against": "costes verificados contra",
+  "entries": "fichas",
+  "with no discrepancies": "sin discrepancias",
+  "works": "funciona",
+  "offline": "sin conexión",
+};
+
+function idiomaInicial(){
+  try {
+    if (window.__lang === "en" || window.__lang === "es") return window.__lang;
+    const guardado = localStorage.getItem(IDIOMA_CLAVE);
+    if (guardado === "en" || guardado === "es") return guardado;
+  } catch (e) {}
+  return IDIOMA_DEFECTO;
+}
+
+let LANG = idiomaInicial();
+document.documentElement.lang = LANG;
+
+/* t(source, params): returns the source string in English, or its Spanish
+   translation. {name} placeholders are filled from `params`. */
+function i18n(texto, params){
+  let salida = (LANG === "es" && Object.prototype.hasOwnProperty.call(I18N_ES, texto))
+             ? I18N_ES[texto] : texto;
+  if (params) for (const k in params) salida = salida.split("{" + k + "}").join(params[k]);
+  return salida;
+}
 </script>
 <style>
 :root{
@@ -100,8 +407,19 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,mono
 /* cabecera */
 header{border-bottom:1px solid var(--borde);padding-bottom:16px;margin-bottom:20px}
 header .cab{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+header .controles{display:flex;gap:16px;align-items:flex-start;flex:0 0 auto}
 header .tema{flex:0 0 auto;min-width:128px}
 header .tema label{margin-bottom:5px}
+/* Language switch. Both labels are always visible so the control reads as a
+   choice between two named languages, not as a flag standing for a country. */
+header .idioma{display:flex;border:1px solid var(--borde);border-radius:7px;overflow:hidden}
+header .idioma button{
+  background:var(--bg);color:var(--tx2);border:0;cursor:pointer;
+  font:600 10.5px/1 inherit;letter-spacing:.09em;padding:8px 10px;
+}
+header .idioma button + button{border-left:1px solid var(--borde)}
+header .idioma button[aria-pressed=true]{background:var(--marca);color:#fff}
+header .idioma button:hover{color:var(--tx)}
 h1{font-size:21px;margin:0 0 6px;letter-spacing:-.2px}
 h1 .v{color:var(--marca);font-weight:600}
 .sub{color:var(--tx2);font-size:12.5px}
@@ -408,18 +726,23 @@ footer code{color:var(--tx2)}
   <div class="cab">
     <div>
       <h1>__NOMBRE__ <span class="v">JWA 3.22</span></h1>
-      <div class="sub">
-        <b id="hTotal">—</b> criaturas · datos de <b>paleo.gg</b> actualizados el <b id="hFecha">—</b> ·
-        costes verificados contra <b>221 fichas</b> sin discrepancias · funciona <b>sin conexión</b>
-      </div>
+      <div class="sub" id="hSub"></div>
     </div>
-    <!-- El tema. Los nombres son los que pidio n30: «default» y «yellow». -->
-    <div class="tema">
-      <label for="tema">Tema</label>
-      <select id="tema">
-        <option value="default">Default</option>
-        <option value="yellow">Yellow</option>
-      </select>
+    <div class="controles">
+      <!-- Language. English is the default; the choice is stored. The injected
+           window.__lang takes precedence over what is stored, so tests can pin
+           it. Labels stay in their own language on purpose. -->
+      <div class="idioma" role="group" aria-label="Language">
+        <button type="button" data-idioma="en">ENGLISH</button>
+        <button type="button" data-idioma="es">ESPAÑOL</button>
+      </div>
+      <div class="tema">
+        <label for="tema">Theme</label>
+        <select id="tema">
+          <option value="default">Default</option>
+          <option value="yellow">Yellow</option>
+        </select>
+      </div>
     </div>
   </div>
 </header>
@@ -434,16 +757,16 @@ footer code{color:var(--tx2)}
      elegida que no ve. -->
 <div class="barra-sup">
   <div class="buscador">
-    <label for="q">Buscar entre las <span id="nTotal">—</span> criaturas</label>
+    <label for="q"><span data-i18n="Search among the">Search among the</span> <span id="nTotal">—</span> <span data-i18n="creatures">creatures</span></label>
     <input type="text" id="q" placeholder="Escribe un nombre… (ej. Indoraptor)" autocomplete="off"
            role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list">
     <div class="lista" id="lista" role="listbox"></div>
   </div>
   <nav>
-    <button class="on" data-t="calc">Calculadora</button>
+    <button class="on" data-t="calc" data-i18n="Calculator">Calculator</button>
     <button data-t="arbol">Árbol de fusión</button>
-    <button data-t="mios">Mis criaturas</button>
-    <button data-t="cat">Catalizadores</button>
+    <button data-t="mios" data-i18n="My creatures">My creatures</button>
+    <button data-t="cat" data-i18n="Catalysts">Catalysts</button>
   </nav>
 </div>
 
@@ -458,7 +781,7 @@ footer code{color:var(--tx2)}
   </div>
 
   <div class="panel">
-    <h2>1 · La criatura</h2>
+    <h2 data-i18n="1 · The creature">1 · The creature</h2>
     <!-- La ficha va DENTRO de la rejilla, en la columna izquierda, a la par de los
          stats. n30: «donde la foto y pequeña descripcion de la criatura quedan
          abajo, debería de estar arriba y a la par de los stats». Antes ocupaba el
@@ -478,18 +801,18 @@ footer code{color:var(--tx2)}
         <div class="st-rejilla" id="stRejilla"></div>
         <div class="st-mej" id="stMej"></div>
         <div class="st-coste" id="stCoste"></div>
-        <div class="st-nota" id="stNota">Elige una criatura en el buscador de arriba para ver sus stats.</div>
+        <div class="st-nota" id="stNota" data-i18n="Pick a creature in the search box above to see its stats.">Pick a creature in the search box above to see its stats.</div>
       </div>
     </div>
   </div>
 
   <div class="panel" id="pEntrada" style="display:none">
-    <h2>2 · Tus datos</h2>
+    <h2 data-i18n="2 · Your data">2 · Your data</h2>
     <div class="grid g3">
       <div>
-        <label for="nivelAct">Nivel actual</label>
+        <label for="nivelAct" data-i18n="Current level">Current level</label>
         <input type="number" id="nivelAct" min="0" max="35" step="1" value="0">
-        <div class="nota" id="notaNivel">0 = sin crear</div>
+        <div class="nota" id="notaNivel" data-i18n="0 = not created">0 = not created</div>
       </div>
       <div>
         <label for="adnTengo">ADN que tienes</label>
@@ -497,9 +820,9 @@ footer code{color:var(--tx2)}
         <div class="nota" id="notaAdn">—</div>
       </div>
       <div>
-        <label for="nivelObj">Nivel objetivo: <b id="lblObj">—</b></label>
+        <label for="nivelObj"><span data-i18n="Target level:">Target level:</span> <b id="lblObj">—</b></label>
         <input type="range" id="nivelObj" min="1" max="35" value="35">
-        <div class="nota">Arrastra o usa las flechas del teclado</div>
+        <div class="nota" data-i18n="Drag it or use the arrow keys">Drag it or use the arrow keys</div>
       </div>
     </div>
     <div id="informeArbol"></div>
@@ -512,7 +835,7 @@ footer code{color:var(--tx2)}
 <!-- ============ ARBOL ============ -->
 <section id="s-arbol">
   <div class="panel">
-    <h2>Árbol de fusión — de arriba abajo</h2>
+    <h2 data-i18n="Fusion tree — top to bottom">Fusion tree — top to bottom</h2>
     <div class="aviso info">
       Se recorre <b>hacia abajo</b>: partimos de la criatura elegida y bajamos por todos los
       ingredientes que hacen falta para crearla, en cascada. Las cifras de ADN son
@@ -538,7 +861,7 @@ footer code{color:var(--tx2)}
 <!-- ============ MIS CRIATURAS ============ -->
 <section id="s-mios">
   <div class="panel">
-    <h2>Lo que has guardado</h2>
+    <h2 data-i18n="What you have saved">What you have saved</h2>
     <div class="aviso info" style="margin-bottom:14px">
       <b>Pulsa cualquier fila</b> —el nombre, la foto o cualquier hueco de la línea— y te lleva
       a la calculadora de esa criatura, con su nivel, su ADN y su objetivo tal y como los dejaste.
@@ -546,16 +869,16 @@ footer code{color:var(--tx2)}
     <div id="miosCuerpo"></div>
   </div>
   <div class="panel">
-    <h2>Resumen</h2>
+    <h2 data-i18n="Summary">Summary</h2>
     <div class="cifras" id="miosResumen"></div>
     <div class="nota">
       Los datos se guardan en el navegador (<code>localStorage</code>), en este dispositivo.
       No se envía nada a ningún sitio. Usa «Exportar» para llevártelos.
     </div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="gh" id="btnExport">Exportar JSON</button>
-      <button class="gh" id="btnImport">Importar JSON</button>
-      <button class="gh" id="btnBorrar">Borrar todo</button>
+      <button class="gh" id="btnExport" data-i18n="Export JSON">Export JSON</button>
+      <button class="gh" id="btnImport" data-i18n="Import JSON">Import JSON</button>
+      <button class="gh" id="btnBorrar" data-i18n="Clear all">Clear all</button>
     </div>
   </div>
 </section>
@@ -563,34 +886,34 @@ footer code{color:var(--tx2)}
 <!-- ============ CATALIZADORES ============ -->
 <section id="s-cat">
   <div class="panel">
-    <h2>Catalizadores — planificador de recombinación</h2>
+    <h2 data-i18n="Catalysts — recombination planner">Catalysts — recombination planner</h2>
     <div class="aviso">
-      <b>Datos NO verificados.</b> A diferencia del resto de la calculadora, las tasas de
+      <b data-i18n="UNVERIFIED data.">UNVERIFIED data.</b> A diferencia del resto de la calculadora, las tasas de
       recombinación <b>no están publicadas por el juego</b> y aquí se usan los pesos y las
       recetas observadas por <b>idgt902</b> (guía de ago-2025). Los catalizadores sirven para
       <b>mejoras (enhancements)</b>, no para subir de nivel: es un eje aparte.
     </div>
     <div class="grid g3">
       <div>
-        <label for="cComun">ADN Común en el tanque</label>
+        <label for="cComun" data-i18n="Common DNA in the tank">Common DNA in the tank</label>
         <input type="number" id="cComun" min="0" step="100" value="0">
       </div>
       <div>
-        <label for="cRara">ADN Rara</label>
+        <label for="cRara" data-i18n="Rare DNA">Rare DNA</label>
         <input type="number" id="cRara" min="0" step="100" value="0">
       </div>
       <div>
-        <label for="cEpica">ADN Épica</label>
+        <label for="cEpica" data-i18n="Epic DNA">Epic DNA</label>
         <input type="number" id="cEpica" min="0" step="100" value="0">
       </div>
     </div>
     <div class="grid g2" style="margin-top:14px">
       <div>
-        <label for="cLegend">ADN Legendaria</label>
+        <label for="cLegend" data-i18n="Legendary DNA">Legendary DNA</label>
         <input type="number" id="cLegend" min="0" step="50" value="0">
       </div>
       <div style="display:flex;align-items:flex-end">
-        <button class="acc" id="btnCat">Calcular</button>
+        <button class="acc" id="btnCat" data-i18n="Calculate">Calculate</button>
       </div>
     </div>
     <div id="catSalida" style="margin-top:16px"></div>
@@ -606,26 +929,37 @@ footer code{color:var(--tx2)}
      tabla. Para consultarlos, la pestana «Calculadora» los aplica al caso real. -->
 
 <footer>
-  Datos de criaturas: <span class="mono" id="fFuente">—</span>.<br>
-  Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias),
-  el comunicado oficial de la 3.22 y la base de datos de <span class="mono">jurassic-journal</span>.<br>
-  El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las
-  fusiones calculadas son una estimación, no una promesa.<br>
-  Generado el <span class="mono" id="fGen">—</span>. Herramienta no oficial, sin relación con Ludia.
+  <span data-i18n="Creature data:">Creature data:</span> <span class="mono" id="fFuente">—</span>.<br>
+  <span data-i18n-html="Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class=&quot;mono&quot;>jurassic-journal</span> database.">Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class="mono">jurassic-journal</span> database.</span><br>
+  <span data-i18n-html="The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.">The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.</span><br>
+  <span data-i18n="Generated on">Generated on</span> <span class="mono" id="fGen">—</span>. <span data-i18n="Unofficial tool, not affiliated with Ludia.">Unofficial tool, not affiliated with Ludia.</span>
 </footer>
 </div>
 
 <script>
 "use strict";
 const D = __DATOS__, M = D.modelo, C = D.criaturas;
-const RAREZAS = {common:"Común",rare:"Rara",epic:"Épica",legendary:"Legendaria",unique:"Única",apex:"Apex",omega:"Omega"};
+const RAREZAS = {common:i18n("Common"),rare:i18n("Rare"),epic:i18n("Epic"),legendary:i18n("Legendary"),unique:i18n("Unique"),apex:"Apex",omega:"Omega"};
 const CLASE   = {common:"comun",rare:"rara",epic:"epica",legendary:"legendaria",unique:"unica",apex:"apex",omega:"omega"};
-const TIPOS   = {non_hybrid:"sin híbrido",hybrid:"híbrido",super_hybrid:"superhíbrido",mega_hybrid:"megahíbrido",giga_hybrid:"gigahíbrido"};
+const TIPOS   = {non_hybrid:i18n("Non-Hybrid"),hybrid:i18n("Hybrid"),super_hybrid:i18n("Super Hybrid"),mega_hybrid:i18n("Mega Hybrid"),giga_hybrid:i18n("Giga Hybrid")};
 
-const nf = n => (n==null?"—":n.toLocaleString("es-MX"));
+/* Thousands separator follows the language: Spanish uses 1.000, English 1,000.
+   Reading LANG at call time, not at definition time, is what makes the number
+   format change with the switch. */
+const nf = n => (n==null?"—":n.toLocaleString(LANG === "es" ? "es-MX" : "en-US"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const tag = r => '<span class="tag rc-'+CLASE[r]+'">'+RAREZAS[r]+'</span>';
 const minLv = r => M.minLv[r] || 1;
+
+/* Plural agreement, the one place an English-keyed dictionary cannot do the
+   job: English does not inflect an adjective after a count ("2 shared"),
+   Spanish does ("1 compartida" / "2 compartidas"). Keying both by the same
+   English string would collapse the two and Spanish would print the wrong
+   agreement. The rule therefore lives here, in the open, instead of hiding a
+   marker inside user-visible text. */
+const compartidas = n => LANG === "es"
+  ? (n === 1 ? " compartida, contada una vez" : " compartidas, contadas una vez")
+  : " shared, counted once";
 
 /* ---------- donde se consigue una criatura ---------- */
 /* Los codigos crudos viven en C[u][7] y la etiqueta se resuelve aqui contra
@@ -660,12 +994,12 @@ function zonaDe(u, corta){
   if (pelea.length)  partes.push(pelea.map(et).join(" · ") + " · combate");
   if (partes.length) return partes.join(" · ");
   if (f.includes("sanctuary")) return "solo en santuario";
-  return "sin fuente en el mapa";
+  return i18n("no source on the map");
 }
 function zonaTitulo(u){
   const f = (C[u] && C[u][7]) || [];
-  if (!f.length) return "Sin datos de origen en la fuente";
-  return "Fuentes en el juego: " + f.map(etiqLoc).join(" · ");
+  if (!f.length) return i18n("No origin data in the source");
+  return i18n("In-game sources: ") + f.map(etiqLoc).join(" · ");
 }
 /* ¿La zona aporta algo aqui? De las 518, 248 son hibridos y su fuente es `none`:
    a esos no se les busca en el mapa, se fusionan, asi que decirles «sin fuente en
@@ -686,7 +1020,7 @@ const nombreIr = (u, titulo) => {
   const c = C[u];
   if (!c) return esc(u);
   return '<button class="ir rc-'+CLASE[c[1]]+'" data-ir="'+u+'" title="'+
-         esc(titulo || ("Llevar "+c[0]+" a la calculadora"))+'">'+esc(c[0])+'</button>';
+         esc(titulo || ("Llevar "+c[0]+i18n(" to the calculator")))+'">'+esc(c[0])+'</button>';
 };
 
 /* ---------- todas las criaturas de las ramas SUPERIORES ---------------------- */
@@ -786,8 +1120,8 @@ const anadirMia = u => { if (esMia(u)) return false; MIS.push(u); return true; }
 const quitarMia = u => { const i = MIS.indexOf(u); if (i === -1) return false; MIS.splice(i, 1); return true; };
 
 /* Cada criatura guarda {nivel, adn, creado, objetivo, bVida, bDano, bVel, mejora}.
-   `creado` es explicito porque hay una diferencia real entre "nivel 0" y
-   "nivel 1": una criatura sin crear cuesta ADN de creacion ademas de la escalera.
+   `creado` es explicito porque hay una diferencia real entre i18n("level 0") y
+   i18n("level 1"): una criatura sin crear cuesta ADN de creacion ademas de la escalera.
    Los datos guardados por versiones anteriores no tienen el campo, asi que se
    deduce del nivel. */
 const invDe = u => {
@@ -983,7 +1317,7 @@ const foto = (u, clase, tam, ansiosa) => {
 
 /* ---------- plan recursivo (hacia abajo) ---------- */
 /* `contarSubida`: si es false, imita el criterio de paleo.gg, que NO cuenta el
-   ADN de subir los ingredientes (asume que "ya estan listos para fusionar").
+   ADN de subir los ingredientes (asume que i18n("are already ready to fuse")).
    Para la criatura raiz siempre se cuenta: es el objetivo del calculo.        */
 function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv){
   const c = C[uuid], rareza = c[1], ings = c[5];
@@ -1104,20 +1438,20 @@ function informeHTML(t, tt){
   const porRareza = {};
   cri.forEach(p => { if (p.base && p.falta > 0) porRareza[p.rareza] = (porRareza[p.rareza] || 0) + p.falta; });
 
-  let h = '<div class="informe"><h3>Informe del árbol completo</h3>';
-  h += '<div class="sub">Todo el ADN que hace falta para llevar <b>'+esc(t.nombre)+'</b> al nivel '+
-       t.objetivo+', criatura por criatura, hasta las que se recolectan. «ADN necesario» es lo que esa '+
-       'criatura consume en todo el árbol: '+
-       (contarSubida ? 'su escalera más el ADN que se le echa encima al fusionarla.'
-                     : 'solo el ADN que se le echa encima al fusionarla, porque los ingredientes se '+
-                       'suponen ya listos para fusionar.')+
-       ' Lo que ya tienes se descuenta <b>una sola vez</b>, aunque la criatura salga en varias ramas.</div>';
+  let h = i18n("<div class=\"informe\"><h3>Full tree report</h3>");
+  h += i18n("<div class=\"sub\">All the DNA needed to take <b>")+esc(t.nombre)+i18n("</b> to level ")+
+       t.objetivo+i18n(", creature by creature, down to the ones that are collected. «DNA needed» is what that ")+
+       i18n("creature consumes across the whole tree: ")+
+       (contarSubida ? i18n("its ladder plus the DNA added on top when it is fused.")
+                     : i18n("only the DNA added on top when it is fused, because the ingredients are ")+
+                       i18n("assumed to already be ready to fuse."))+
+       i18n(" What you already have is subtracted <b>only once</b>, even if the creature appears in several branches.</div>");
   if (!contarSubida){
     /* Sin esto, la misma pantalla da dos respuestas segun una casilla que esta
        en otra pestana. Hay que decir cual de las dos se esta viendo. */
-    h += '<div class="aviso info" style="margin-top:12px">La casilla <b>«Contar el ADN de subir los '+
-         'ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. '+
-         'Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>';
+    h += i18n("<div class=\"aviso info\" style=\"margin-top:12px\">The <b>«Count the DNA to level up the ")+
+         i18n("ingredients»</b> checkbox is unchecked, so these figures follow the <b>paleo.gg</b> criterion. ")+
+         i18n("Check it on the <b>Fusion Tree</b> tab to see what you actually need to gather.</div>");
   }
 
   h += '<div class="cifras">' +
@@ -1125,22 +1459,22 @@ function informeHTML(t, tt){
        con la etiqueta «ADN que falta», que es solo la de esta criatura. Sin la
        coletilla, dos numeros distintos con el mismo nombre y uno encima del
        otro. */
-    '<div class="cifra '+(tt.adn>0?"wa":"al")+'"><div class="k">ADN que falta en total</div><div class="v">'+
-      nf(tt.adn)+'</div><div class="n">en '+cri.length+' criaturas distintas'+
+    '<div class="cifra '+(tt.adn>0?"wa":"al")+'"><div class="k">'+i18n("Total DNA missing")+'</div><div class="v">'+
+      nf(tt.adn)+'</div><div class="n">en '+cri.length+i18n(" different creatures")+
       (tt.repetidas ? ', '+tt.repetidas+(tt.repetidas===1?' compartida':' compartidas') : '')+
       '</div></div>' +
-    '<div class="cifra al"><div class="k">A recolectar</div><div class="v">'+nf(tt.recolectar)+
-      '</div><div class="n">de las que no se fusionan</div></div>' +
-    '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(tt.fus)+
-      '</div><div class="n">en toda la cascada</div></div>' +
-    '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(tt.mon + tt.monFus)+
+    '<div class="cifra al"><div class="k">'+i18n("To gather")+'</div><div class="v">'+nf(tt.recolectar)+
+      i18n("</div><div class=\"n\">of the ones that are not fused</div></div>") +
+    i18n("<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">")+nf(tt.fus)+
+      i18n("</div><div class=\"n\">across the whole cascade</div></div>") +
+    i18n("<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">")+nf(tt.mon + tt.monFus)+
       '</div><div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
     '</div>';
 
   h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
-        '<th>Criatura</th><th class="num">Nivel</th>' +
-       '<th class="num">ADN necesario</th><th class="num">Tienes</th>' +
-       '<th class="num">Falta</th><th class="num">Fusiones</th></tr></thead><tbody>';
+        i18n("<th>Creature</th><th class=\"num\">Level</th>") +
+       i18n("<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>") +
+       i18n("<th class=\"num\">Missing</th><th class=\"num\">Fusions</th></tr></thead><tbody>");
   /* Los botones de criar. El texto del individual es corto porque va DENTRO de
      una celda de la columna «Nivel», junto a la flecha y al objetivo.
      El nivel al que ponen la criatura NO es el de nacimiento de su rareza, es
@@ -1182,15 +1516,15 @@ function informeHTML(t, tt){
        objetivo: la fusion lo exige igual, lo pague o no el informe. */
     const nivel = p.sinCrear
       ? btnCriar(p.uuid, nivelFusion(p),
-          'Pone '+p.nombre+' al nivel '+nivelFusion(p)+', que es el mínimo que exige la '+
-          'fusión de este árbol. Nace en el '+minLv(p.rareza)+'.') +
+          'Pone '+p.nombre+i18n(" to level ")+nivelFusion(p)+i18n(", which is the minimum required by the ")+
+          i18n("fusion of this tree. It starts at ")+minLv(p.rareza)+'.') +
         ' → ' + nivelFusion(p)
       : (!p.cuentaSubir ? String(p.objetivo)
          : p.objetivo <= p.desde ? String(p.objetivo)
          : p.desde + ' → ' + p.objetivo);
     h += '<tr'+(p.uuid === t.uuid ? ' class="raiz-fila"' : '')+'>' +
-      '<td>'+nombreIr(p.uuid, "Llevar "+p.nombre+" a la calculadora") +
-        (p.uuid === t.uuid ? ' <span class="pill">raíz</span>' : '') +
+      '<td>'+nombreIr(p.uuid, "Llevar "+p.nombre+i18n(" to the calculator")) +
+        (p.uuid === t.uuid ? i18n(" <span class=\"pill\">root</span>") : '') +
         (p.base ? ' <span class="pill zona" title="'+esc(zonaTitulo(p.uuid))+'">'+
                   esc(zonaDe(p.uuid, true))+'</span>' : '') +
       '</td>' +
@@ -1224,12 +1558,12 @@ function informeHTML(t, tt){
      no salga en el informe ni saltarse una que si. */
   POR_CRIAR = cri.filter(p => p.uuid !== t.uuid && (p.sinCrear || p.desde < p.objetivo))
                 .map(p => ({uuid:p.uuid, nivel:nivelFusion(p)}));
-  h += '<tr class="total"><td>Total del árbol</td>' +
+  h += i18n("<tr class=\"total\"><td>Tree total</td>") +
        '<td class="num">' + (POR_CRIAR.length
-         ? btnCriarTodas('Pone al nivel que exige la fusión las '+POR_CRIAR.length+' criaturas del '+
-                         'árbol que aún no están creadas o que están por debajo de ese nivel. '+
-                         'La criatura raíz NO se toca, y las que ya están en ese nivel o por '+
-                         'encima conservan su valor.')
+         ? btnCriarTodas(i18n("Sets to the level required by the fusion these ")+POR_CRIAR.length+i18n(" creatures of the ")+
+                         i18n("tree that are not yet created or are below that level. ")+
+                         i18n("The root creature is NOT touched, and those already at that level or ")+
+                         i18n("above keep their value."))
          : '') + '</td>' +
        '<td class="num">'+nf(tt.adnNec)+'</td><td class="num">'+nf(tt.tengo)+'</td>' +
        '<td class="num">'+nf(tt.adn)+'</td><td class="num">'+nf(tt.fus)+'</td></tr>';
@@ -1243,19 +1577,19 @@ function informeHTML(t, tt){
      que el usuario puede hacer mal aqui: sumar las filas a mano. */
   if (tt.repetidas){
     h += '<div class="nota" style="margin-top:12px">'+
-         (tt.repetidas === 1 ? 'Una criatura sale' : tt.repetidas + ' criaturas salen')+
-         ' en <b>varias ramas</b> del árbol. Su ADN es una sola reserva: hace falta la suma de lo que '+
-         'pide cada rama, y lo que tienes cuenta una vez. Por eso las filas <b>no se suman a mano</b>: '+
-         'la cifra buena es la de <b>ADN que falta en total</b>.</div>';
+         (tt.repetidas === 1 ? i18n("One creature appears") : tt.repetidas + i18n(" creatures appear"))+
+         i18n(" in <b>several branches</b> of the tree. Its DNA is a single pool: you need the sum of what ")+
+         i18n("each branch asks for, and what you have counts once. That is why the rows <b>are not added up by hand</b>: ")+
+         i18n("the correct figure is <b>Total DNA missing</b>.</div>");
   }
   const rs = orden.filter(r => porRareza[r] > 0);
   if (rs.length){
-    h += '<div class="nota" style="margin-top:12px">ADN que hay que <b>ir a recolectar</b>, por rareza ' +
-         '(solo las criaturas que no se fusionan):</div><div class="rr">' +
+    h += i18n("<div class=\"nota\" style=\"margin-top:12px\">DNA you have to <b>go and collect</b>, by rarity ") +
+         i18n("(only creatures that don't get fused):</div><div class=\"rr\">") +
          rs.map(r => '<span>'+tag(r)+'<b>'+nf(porRareza[r])+'</b></span>').join("") + '</div>';
   } else if (tt.recolectar === 0){
-    h += '<div class="nota" style="margin-top:12px">No falta nada por recolectar: con lo que tienes ' +
-         'ya cubres todo el árbol.</div>';
+    h += i18n("<div class=\"nota\" style=\"margin-top:12px\">Nothing left to collect: with what you have ") +
+         i18n("you already cover the whole tree.</div>");
   }
   return h + '</div>';
 }
@@ -1311,11 +1645,20 @@ const TODAS = Object.keys(C).sort((a,b) => C[a][0].localeCompare(C[b][0], "es"))
 let elegido = null;
 let contarSubida = true;
 
-document.getElementById("hTotal").textContent = nf(D.meta.total);
-document.getElementById("nTotal").textContent = nf(D.meta.total);
-document.getElementById("hFecha").textContent = D.meta.fuenteActualizada;
-document.getElementById("fFuente").textContent = D.meta.fuente;
-document.getElementById("fGen").textContent = D.meta.descargado.slice(0,10);
+/* The header line interleaves text and values, and the word order changes with
+   the language, so it is built here rather than in static markup. */
+function pintarCabecera(){
+  document.getElementById("hSub").innerHTML =
+    "<b>" + nf(D.meta.total) + "</b> " + i18n("creatures") + " · " +
+    i18n("data from") + " <b>paleo.gg</b> " + i18n("updated") + " <b>" +
+    esc(D.meta.fuenteActualizada) + "</b> · " +
+    i18n("costs verified against") + " <b>221 " + i18n("entries") + "</b> " +
+    i18n("with no discrepancies") + " · " + i18n("works") + " <b>" + i18n("offline") + "</b>";
+  document.getElementById("nTotal").textContent = nf(D.meta.total);
+  document.getElementById("fFuente").textContent = D.meta.fuente;
+  document.getElementById("fGen").textContent = D.meta.descargado.slice(0,10);
+}
+pintarCabecera();
 
 /* Solo por nombre. Antes habia ademas un filtro por rareza; se quito el
    25-sep-2026 y con el su `select`. Si algun dia vuelve a hacer falta, el sitio
@@ -1380,7 +1723,7 @@ function pintarLista(){
   if (selIdx >= resBusqueda.length) selIdx = resBusqueda.length - 1;
   if (!resBusqueda.length){
     selIdx = -1;
-    lista.innerHTML = '<div class="vacio">Sin resultados.</div>';
+    lista.innerHTML = i18n("<div class=\"vacio\">No results.</div>");
     return;
   }
   lista.innerHTML = resBusqueda.map((u, i) => {
@@ -1388,7 +1731,7 @@ function pintarLista(){
     const h = c[5].length ? '<span style="color:var(--tx3);font-size:11.5px">← ' + c[5].length + ' ing.</span>' : "";
     const inv = INV[u] ? invDe(u) : null;
     const mio = inv ? '<span class="pill" style="margin:0">'+
-        (inv.creado ? "nivel "+inv.nivel : "sin crear")+'</span>' : "";
+        (inv.creado ? i18n("level ")+inv.nivel : i18n("not created"))+'</span>' : "";
     return '<div class="it'+(i === selIdx ? " sel" : "")+'" id="it-'+i+'" role="option" '+
       'aria-selected="'+(i === selIdx)+'" data-u="'+u+'">'+foto(u,"mini",30)+
       '<span class="nm">'+esc(c[0])+'</span>'+tag(c[1])+mio+h+'</div>';
@@ -1472,8 +1815,8 @@ lista.addEventListener("mousemove", e => {
 document.addEventListener("click", e => { if (!e.target.closest(".buscador")) cerrarLista(); });
 
 /* ---------- stats del dino, donde estaba «Filtrar por rareza» ---------- */
-const ETIQ_STAT = {vida:"Vida", dano:"Daño", velocidad:"Velocidad",
-                   armadura:"Armadura", critico:"Crítico", dano_critico:"Daño crít."};
+const ETIQ_STAT = {vida:i18n("Health"), dano:i18n("Damage"), velocidad:i18n("Speed"),
+                   armadura:i18n("Armor"), critico:i18n("Crit"), dano_critico:i18n("Crit Dmg")};
 const ICONO_STAT = {vida:"health", dano:"damage", velocidad:"speed",
                     armadura:"armor", critico:"crit", dano_critico:"critm"};
 /* La armadura y los dos criticos se ensenan en PORCENTAJE (paleo.gg pone «40%»,
@@ -1486,8 +1829,8 @@ const PCT_STAT = {armadura:1, critico:1, dano_critico:1};
    cotejar sin salir de la pagina. */
 const RES_ICONO = {coins:"img/res/coin.png", catalyst_minor:"img/cat/catalyst_minor.png",
                    catalyst:"img/cat/catalyst.png", catalyst_major:"img/cat/catalyst_major.png"};
-const RES_CORTO = {coins:"monedas", catalyst_minor:"cat. bronce",
-                   catalyst:"cat. plata", catalyst_major:"cat. oro"};
+const RES_CORTO = {coins:i18n("coins"), catalyst_minor:i18n("cat. bronze"),
+                   catalyst:i18n("cat. silver"), catalyst_major:i18n("cat. gold")};
 const RES_LARGO = {coins:"Coins", catalyst_minor:"Bronze Catalyst",
                    catalyst:"Silver Catalyst", catalyst_major:"Gold Catalyst"};
 
@@ -1506,16 +1849,16 @@ function montarStats(){
       '<img class="st-i" src="img/stat/' + icono + '.png" alt="" width="18" height="18">' +
       '<span class="st-k">' + txt + '</span>' +
       '<button class="st-b" data-boost="' + campo + '" data-paso="-1"' +
-        ' title="Quitar un punto de ' + txt + '">−</button>' +
+        i18n(" title=\"Remove one point of ") + txt + '">−</button>' +
       '<span class="st-p" id="stP_' + campo + '">0</span>' +
       '<button class="st-b" data-boost="' + campo + '" data-paso="1"' +
-        ' title="Añadir un punto de ' + txt + '">+</button>' +
+        i18n(" title=\"Add one point of ") + txt + '">+</button>' +
     '</div>';
   document.getElementById("stMej").innerHTML =
-    fila("bVida", "health", "Vida") +
-    fila("bDano", "damage", "Daño") +
-    fila("bVel", "speed", "Velocidad") +
-    fila("mejora", "enhancement", "Mejora", "stFilaMej");
+    fila("bVida", "health", i18n("Health")) +
+    fila("bDano", "damage", i18n("Damage")) +
+    fila("bVel", "speed", i18n("Speed")) +
+    fila("mejora", "enhancement", i18n("Enhancement"), "stFilaMej");
 }
 
 /* Lo que da un paso de la pista, en palabras. El valor de vida y dano es un
@@ -1523,11 +1866,11 @@ function montarStats(){
    donde los pasos de vida y dano son 110 y el de velocidad es 2 plano. */
 function efectoMejora(rwd){
   const tipo = rwd[0], valor = rwd[1];
-  if (tipo === "speed")         return "+" + valor + " de velocidad";
-  if (tipo === "health")        return "+" + (valor - 100) + "% de vida";
-  if (tipo === "damage")        return "+" + (valor - 100) + "% de daño";
-  if (tipo === "boost_max")     return "+" + valor + " al tope de puntos";
-  if (tipo === "moves_reactive") return "movimiento reactivo";
+  if (tipo === "speed")         return "+" + valor + i18n(" speed");
+  if (tipo === "health")        return "+" + (valor - 100) + i18n("% health");
+  if (tipo === "damage")        return "+" + (valor - 100) + i18n("% damage");
+  if (tipo === "boost_max")     return "+" + valor + i18n(" to the stat cap");
+  if (tipo === "moves_reactive") return i18n("reactive move");
   return tipo;   // los cinco tipos estan medidos: 147 de 147 criaturas
 }
 
@@ -1541,7 +1884,7 @@ function pintarStats(){
       document.getElementById("stV_" + k).textContent = "—";
       document.getElementById("stD_" + k).textContent = "";
     });
-    nota.textContent = "Elige una criatura para ver sus stats.";
+    nota.textContent = i18n("Select a creature to see its stats.");
     coste.innerHTML = "";
     return;
   }
@@ -1554,7 +1897,7 @@ function pintarStats(){
      stats. El nivel 26 se sigue viendo, pero en el `title`. */
   const sinNada = {bVida:0, bDano:0, bVel:0, mejora:0};
   const base = statsDe(u, niv, sinNada), b26 = statsDe(u, 26, sinNada);
-  document.getElementById("stNivel").textContent = "nivel " + niv;
+  document.getElementById("stNivel").textContent = i18n("level ") + niv;
   M.statsOrden.forEach((k, i) => {
     const v = document.getElementById("stV_" + k), d = document.getElementById("stD_" + k);
     v.textContent = nf(ahora[i]) + (PCT_STAT[k] ? "%" : "");
@@ -1562,8 +1905,8 @@ function pintarStats(){
     d.textContent = dif > 0 ? "+" + nf(dif) : "";
     /* El `title` va en la FICHA, y se localiza con closest: la estructura de
        dentro puede cambiar sin que esto deje de apuntar al sitio correcto. */
-    v.closest(".st").title = ETIQ_STAT[k] + " · base a nivel 26: " + nf(b26[i]) +
-      " · a nivel " + niv + ": " + nf(base[i]) + " · con lo tuyo: " + nf(ahora[i]);
+    v.closest(".st").title = ETIQ_STAT[k] + i18n(" · base at level 26: ") + nf(b26[i]) +
+      i18n(" · at level ") + niv + ": " + nf(base[i]) + " · con lo tuyo: " + nf(ahora[i]);
   });
 
   const pts = m.bVida + m.bDano + m.bVel;
@@ -1586,11 +1929,11 @@ function pintarStats(){
   }
 
   const bono = bonoMejora(u, m.mejora);
-  let nh = 'Puntos <b>' + pts + '</b> de <b>' + m.tope + '</b> · tope = nivel ' + niv +
-           (pista ? (bono ? ' + ' + bono + ' de la pista' : '') : ' (esta criatura no tiene pista)');
-  if (pts < m.tope) nh += ' · quedan <b>' + (m.tope - pts) + '</b>';
+  let nh = i18n("Points <b>") + pts + i18n("</b> of <b>") + m.tope + i18n("</b> · cap = level ") + niv +
+           (pista ? (bono ? ' + ' + bono + i18n(" from the track") : '') : i18n(" (this creature has no enhancement track)"));
+  if (pts < m.tope) nh += i18n(" · remaining <b>") + (m.tope - pts) + '</b>';
   if (pista && niv < M.mejoraNivelMin)
-    nh += '<br>La pista de mejoras necesita nivel <b>' + M.mejoraNivelMin + '</b> o más.';
+    nh += i18n("<br>The Enhancement track needs level <b>") + M.mejoraNivelMin + i18n("</b> or higher.");
   nota.innerHTML = nh;
 
   /* Lo que cuesta y lo que da el SIGUIENTE paso. Se ensena aunque no se pueda
@@ -1598,15 +1941,15 @@ function pintarStats(){
   if (!pista){
     coste.innerHTML = "";
   } else if (m.mejora >= pista.length){
-    coste.innerHTML = '<span class="st-ct">Pista de mejoras</span>' +
-      '<span class="st-cq">Completa: los ' + pista.length + ' pasos están puestos.</span>';
+    coste.innerHTML = i18n("<span class=\"st-ct\">Enhancement track</span>") +
+      i18n("<span class=\"st-cq\">Complete: the ") + pista.length + i18n(" steps are in place.</span>");
   } else {
     const paso = m.mejora + 1, adn = pista[m.mejora][0], req = pista[m.mejora][1];
     const ic = (src, txt, tit) => '<span title="' + esc(tit) + '"><img src="' + src +
       '" alt="" width="18" height="18">' + esc(txt) + '</span>';
     let cr = ic("img/res/dna.png", nf(adn), "DNA");
     req.forEach(r => { cr += ic(RES_ICONO[r[0]], nf(r[1]), RES_LARGO[r[0]]); });
-    coste.innerHTML = '<span class="st-ct">Mejora ' + m.mejora + ' → ' + paso + '</span>' +
+    coste.innerHTML = '<span class="st-ct">'+i18n("Enhancement ")+ + m.mejora + ' → ' + paso + '</span>' +
       '<span class="st-cr">' + cr + '</span>' +
       '<span class="st-cq">→ ' + esc(efectoMejora(pista[m.mejora][2])) + '</span>';
   }
@@ -1649,7 +1992,7 @@ function elegir(u){
      una etiqueta al lado sobraria. */
   const asc = ascendientes(u);
   const llevaTxt = asc.length
-    ? asc.map(niv => niv.map(h => nombreIr(h, "Llevar "+C[h][0]+" a la calculadora")).join(", "))
+    ? asc.map(niv => niv.map(h => nombreIr(h, "Llevar "+C[h][0]+i18n(" to the calculator"))).join(", "))
          .join('<span style="color:var(--tx3)"> · </span>')
     : "—";
   const ingsTxt = c[5].length ? c[5].map(h => esc(C[h] ? C[h][0] : h)).join(" + ") : "—";
@@ -1663,10 +2006,10 @@ function elegir(u){
           (zonaUtil(u) ? '<span class="pill zona" title="'+esc(zonaTitulo(u))+'">'+esc(zonaDe(u, true))+'</span>' : '')+
         '</div>' +
         '<div style="font-size:12.5px;color:var(--tx2);line-height:1.7">' +
-          '<div>Nace en <b style="color:var(--tx)">nivel '+m+'</b> · crear cuesta <b style="color:var(--tx)">'+
-            nf(costeCreacion(r))+' ADN</b> · tope de ADN <b style="color:var(--tx)">'+nf(M.topes[r])+'</b></div>' +
-          '<div>Ingredientes: <b style="color:var(--tx)">'+ingsTxt+'</b></div>' +
-          '<div class="lleva">Lleva a: '+llevaTxt+'</div>' +
+          i18n("<div>Hatches at <b style=\"color:var(--tx)\">level ")+m+i18n("</b> · creating costs <b style=\"color:var(--tx)\">")+
+            nf(costeCreacion(r))+i18n(" DNA</b> · DNA cap <b style=\"color:var(--tx)\">")+nf(M.topes[r])+'</b></div>' +
+          i18n('<div>Ingredients: <b style="color:var(--tx)">')+ingsTxt+'</b></div>' +
+          i18n('<div class="lleva">Leads to: ')+llevaTxt+'</div>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -1675,8 +2018,8 @@ function elegir(u){
   na.min = 0; na.max = 35;
   na.value = inv.nivel; at.value = inv.adn;
   ponerObjetivoEnDeslizador(u);
-  document.getElementById("notaAdn").textContent = "tope " + nf(M.topes[r]);
-  document.getElementById("notaNivel").textContent = "0 = sin crear (nace en " + m + ")";
+  document.getElementById("notaAdn").textContent = i18n("cap ") + nf(M.topes[r]);
+  document.getElementById("notaNivel").textContent = i18n("0 = not created (hatches at ") + m + ")";
   /* Los stats son de ESTA criatura: se repintan al cambiarla. `elegir` no llama
      a `refrescar` (no toca el arbol ni la lista), asi que hay que decirlo. */
   pintarStats();
@@ -1793,30 +2136,30 @@ function calcular(){
   /* --- nivel maximo alcanzable con lo que hay ahora mismo --- */
   const mx = nivelMaximo(r, desde, tengo, inv.creado);
   const cCrear = costeCreacion(r);
-  let mh = '<div class="t">Nivel máximo con lo que tienes ahora</div>';
+  let mh = i18n("<div class=\"t\">Max level with what you have now</div>");
   if (!inv.creado && tengo < cCrear){
-    mh += '<div class="v" style="color:var(--ambar)">Aún no llega ni a crearla</div>' +
-          '<div class="d">Crear esta criatura cuesta <b>'+nf(cCrear)+' ADN</b> y tienes <b>'+nf(tengo)+
-          '</b>. Te faltan <b>'+nf(cCrear-tengo)+'</b> para que exista. Su nivel de nacimiento es el <b>'+m+'</b>.</div>';
+    mh += i18n("<div class=\"v\" style=\"color:var(--ambar)\">Not even enough to create it</div>") +
+          i18n("<div class=\"d\">Creating this creature costs <b>")+nf(cCrear)+i18n(" DNA</b> and you have <b>")+nf(tengo)+
+          i18n("</b>. You are missing <b>")+nf(cCrear-tengo)+i18n("</b> for it to exist. Its hatch level is <b>")+m+'</b>.</div>';
   } else {
     const subio = mx.nivel - (inv.creado ? desde : 0);
-    mh += '<div class="v">Nivel <b>'+mx.nivel+'</b>' +
+    mh += i18n("<div class=\"v\">Level <b>")+mx.nivel+'</b>' +
           (inv.creado ? '' : ' <span style="font-size:12px;font-weight:400;color:var(--tx2)">(recién creada, nace en '+m+')</span>') +
           '</div>';
-    mh += '<div class="d">Con <b>'+nf(tengo)+' ADN</b>' +
-          (inv.creado ? ' desde el nivel <b>'+desde+'</b>' : ' partiendo de cero') +
-          ' llegas al nivel <b>'+mx.nivel+'</b>' +
-          (subio > 0 ? ' (subes <b>'+subio+'</b> nivel'+(subio===1?'':'es')+')' : '') +
-          '. Gastarías <b>'+nf(mx.gastado)+'</b> y te sobrarían <b>'+nf(mx.sobra)+'</b>.';
+    mh += i18n("<div class=\"d\">With <b>")+nf(tengo)+i18n(" DNA</b>") +
+          (inv.creado ? i18n(" from level <b>")+desde+'</b>' : i18n(" from scratch")) +
+          i18n(" you reach level <b>")+mx.nivel+'</b>' +
+          (subio > 0 ? ' (subes <b>'+subio+i18n("</b> level")+(subio===1?'':'es')+')' : '') +
+          i18n(". You would spend <b>")+nf(mx.gastado)+i18n("</b> and would be left with <b>")+nf(mx.sobra)+'</b>.';
     if (mx.nivel >= hasta){
-      mh += ' <b style="color:var(--verde)">Ya te alcanza para el objetivo '+hasta+'.</b>';
+      mh += i18n(" <b style=\"color:var(--verde)\">You now have enough for the target ")+hasta+'.</b>';
     } else {
       const falta = costeADN(r, desde, hasta, sinCrear) - mx.gastado;
-      mh += ' Te faltan <b style="color:var(--ambar)">'+nf(falta)+' ADN</b> para el nivel '+hasta+'.';
+      mh += i18n(" You are missing <b style=\"color:var(--ambar)\">")+nf(falta)+i18n(" DNA</b> for level ")+hasta+'.';
     }
     mh += '</div>';
     if (mx.nivel >= M.nivelMax){
-      mh += '<div class="d">Está en el <b>tope del juego (nivel '+M.nivelMax+')</b>.</div>';
+      mh += i18n("<div class=\"d\">It's at the <b>game cap (level ")+M.nivelMax+')</b>.</div>';
     }
   }
   /* --- informe completo del arbol, ARRIBA del bloque de nivel maximo --- */
@@ -1825,27 +2168,27 @@ function calcular(){
 
   document.getElementById("maxNivel").innerHTML = mh;
   let h = '<div class="panel"><h2>3 · Resultado</h2><div class="cifras">';
-  h += '<div class="cifra al"><div class="k">ADN necesario</div><div class="v">'+nf(adnNec)+'</div><div class="n">de '+(sinCrear?"sin crear":"nivel "+desde)+' a '+hasta+'</div></div>';
-  h += '<div class="cifra '+(deficit>0?"wa":"al")+'"><div class="k">ADN que falta</div><div class="v">'+nf(deficit)+'</div><div class="n">tienes '+nf(tengo)+'</div></div>';
-  h += '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(monNec)+'</div><div class="n">solo por subir de nivel</div></div>';
+  h += i18n("<div class=\"cifra al\"><div class=\"k\">DNA needed</div><div class=\"v\">")+nf(adnNec)+i18n("</div><div class=\"n\">from ")+(sinCrear?i18n("not created"):i18n("level ")+desde)+' a '+hasta+'</div></div>';
+  h += '<div class="cifra '+(deficit>0?"wa":"al")+'"><div class="k">'+i18n("DNA missing")+'</div><div class="v">'+nf(deficit)+'</div><div class="n">'+i18n("you have ")+nf(tengo)+'</div></div>';
+  h += i18n("<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">")+nf(monNec)+i18n("</div><div class=\"n\">only from leveling up</div></div>");
   h += '</div>';
 
   if (deficit > tope){
-    h += '<div class="aviso" style="margin-top:14px">El tope de ADN de una criatura <b>'+RAREZAS[r].toLowerCase()+
-         '</b> es <b>'+nf(tope)+'</b>. Necesitas '+nf(deficit)+' → tendrás que reunirlo en <b>'+vueltas+
-         ' tandas</b>, convirtiendo el sobrante en catalizadores o gastándolo.</div>';
+    h += i18n("<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>")+RAREZAS[r].toLowerCase()+
+         i18n("</b> is <b>")+nf(tope)+'</b>. Necesitas '+nf(deficit)+i18n(" → you'll have to gather it in <b>")+vueltas+
+         i18n(" batches</b>, converting the surplus into catalysts or spending it.</div>");
   }
 
   if (deficit > 0 && c[5].length){
     const nivelIng = M.minIngrediente[r];
-    h += '<h2 style="margin-top:20px">Fusiones necesarias</h2>';
+    h += i18n("<h2 style=\"margin-top:20px\">Fusions needed</h2>");
     h += '<div class="cifras">';
-    h += '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(f)+'</div><div class="n">a '+M.media+' ADN por fusión</div></div>';
-    h += '<div class="cifra"><div class="k">Monedas de fusión</div><div class="v">'+nf(f*(M.monedasFusion[r]||0))+'</div><div class="n">'+nf(M.monedasFusion[r])+' por fusión</div></div>';
-    h += '<div class="cifra"><div class="k">Nivel de los ingredientes</div><div class="v">'+nivelIng+'</div><div class="n">mínimo exigido</div></div>';
+    h += i18n("<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">")+nf(f)+'</div><div class="n">a '+M.media+i18n(" DNA per fusion</div></div>");
+    h += i18n("<div class=\"cifra\"><div class=\"k\">Fusion coins</div><div class=\"v\">")+nf(f*(M.monedasFusion[r]||0))+'</div><div class="n">'+nf(M.monedasFusion[r])+i18n(" per fusion</div></div>");
+    h += i18n("<div class=\"cifra\"><div class=\"k\">Ingredient level</div><div class=\"v\">")+nivelIng+i18n("</div><div class=\"n\">minimum required</div></div>");
     h += '</div>';
-    h += '<div style="overflow:auto;margin-top:14px"><table><thead><tr><th>Ingrediente</th><th>Rareza</th>'+
-         '<th class="num">ADN por fusión</th><th class="num">ADN total a reunir</th></tr></thead><tbody>';
+    h += i18n('<div style="overflow:auto;margin-top:14px"><table><thead><tr><th>Ingredient</th><th>Rarity</th>')+
+         i18n("<th class=\"num\">DNA per fusion</th><th class=\"num\">Total DNA to gather</th></tr></thead><tbody>");
     for (const ing of c[5]){
       const ri = C[ing] ? C[ing][1] : "common";
       const apf = adnFus(ri, r);
@@ -1853,15 +2196,15 @@ function calcular(){
            '</td><td class="num"><b>'+nf(f*apf)+'</b></td></tr>';
     }
     h += '</tbody></table></div>';
-    h += '<div class="nota">Las fusiones son una <b>estimación</b>: cada fusión da una cantidad aleatoria de ADN y la media es '+
-         M.media+'. En la práctica puede hacerte falta alguna más.</div>';
+    h += i18n("<div class=\"nota\">Fusions are an <b>estimate</b>: each fusion gives a random amount of DNA and the average is ")+
+         M.media+i18n(". In practice you may need a few more.</div>");
   } else if (deficit > 0){
-    h += '<div class="aviso info" style="margin-top:14px">Esta criatura no se obtiene por fusión: hay que '+
-         '<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>';
+    h += i18n("<div class=\"aviso info\" style=\"margin-top:14px\">This creature is not obtained by fusion: you have to ")+
+         i18n("<b>gather the DNA</b> in encounters, incubators or events.</div>");
   }
 
   h += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">' +
-       '<button class="acc" id="btnGuardar">Guardar en «Mis criaturas»</button></div></div>';
+       i18n("<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>");
   document.getElementById("resultado").innerHTML = h;
 
   document.getElementById("btnGuardar").onclick = () => {
@@ -1877,7 +2220,7 @@ function calcular(){
     guardar(); refrescar(); pintarLista();
     const b = document.getElementById("btnGuardar");
     b.textContent = yaEstaba ? "Actualizado ✓" : "Guardado ✓";
-    setTimeout(() => b.textContent = "Guardar en «Mis criaturas»", 1400);
+    setTimeout(() => b.textContent = i18n("Save to «My creatures»"), 1400);
   };
 
   pintarArbol();
@@ -1910,7 +2253,7 @@ function limpiarNumero(el){
 
 function pintarArbol(){
   const cont = document.getElementById("arbolCuerpo");
-  if (!elegido){ cont.innerHTML = '<p class="vacio-txt">Elige una criatura en la pestaña «Calculadora».</p>'; return; }
+  if (!elegido){ cont.innerHTML = i18n("<p class=\"vacio-txt\">Choose a creature in the «Calculator» tab.</p>"); return; }
 
   /* Antes de repintar, guardamos donde estaba el cursor. Sin esto, cada tecla
      rehace el arbol entero y el campo pierde el foco a la primera cifra. */
@@ -1930,26 +2273,25 @@ function pintarArbol(){
   (function contar(x){ cuenta[x.uuid] = (cuenta[x.uuid] || 0) + 1; x.hijos.forEach(contar); })(t);
 
   let h = '<div class="cifras" style="margin-bottom:16px">' +
-    '<div class="cifra al"><div class="k">ADN a recolectar</div><div class="v">'+nf(tt.recolectar)+'</div>'+
-      '<div class="n">de las '+tt.hojas+' criaturas que no se fusionan'+
-      (tt.repetidas ? ' · '+tt.repetidas+(tt.repetidas===1 ? ' compartida, contada una vez'
-                                                          : ' compartidas, contadas una vez') : '')+
+    i18n("<div class=\"cifra al\"><div class=\"k\">DNA to collect</div><div class=\"v\">")+nf(tt.recolectar)+'</div>'+
+      i18n("<div class=\"n\">of the ")+tt.hojas+i18n(" creatures that are not fused")+
+      (tt.repetidas ? ' · '+tt.repetidas+compartidas(tt.repetidas) : '')+
       '</div></div>' +
-    '<div class="cifra"><div class="k">Fusiones totales</div><div class="v">'+nf(tt.fus)+'</div></div>' +
-    '<div class="cifra"><div class="k">Monedas totales</div><div class="v">'+nf(tt.mon + tt.monFus)+'</div>'+
+    i18n("<div class=\"cifra\"><div class=\"k\">Total fusions</div><div class=\"v\">")+nf(tt.fus)+'</div></div>' +
+    i18n("<div class=\"cifra\"><div class=\"k\">Total coins</div><div class=\"v\">")+nf(tt.mon + tt.monFus)+'</div>'+
       '<div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
-    '<div class="cifra"><div class="k">Criaturas en el árbol</div><div class="v">'+tt.nodos+'</div>'+
-      '<div class="n">raíz + ingredientes en cascada</div></div>' +
+    i18n("<div class=\"cifra\"><div class=\"k\">Creatures in the tree</div><div class=\"v\">")+tt.nodos+'</div>'+
+      i18n("<div class=\"n\">root + cascading ingredients</div></div>") +
     '</div>';
 
-  h += '<div class="aviso info" style="margin-bottom:16px">Edita el <b>nivel</b> y el <b>ADN</b> de '+
-       'cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. '+
-       'Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>';
+  h += i18n("<div class=\"aviso info\" style=\"margin-bottom:16px\">Edit the <b>level</b> and <b>DNA</b> of ")+
+       i18n("any creature in the tree. It saves instantly and recalculates everything that hangs from it. ")+
+       i18n("If you uncheck <b>Created</b>, the DNA to create it is added to the calculation.</div>");
 
   function campos(n){
     const m = minLv(n.rareza);
     let s = '<div class="campos">';
-    s += '<label class="chk" title="Si no está creada, se suma el ADN de crearla">'+
+    s += i18n("<label class=\"chk\" title=\"If it is not created, the DNA to create it is added\">")+
          '<input type="checkbox" data-u="'+n.uuid+'" data-campo="creado"'+(n.creado?' checked':'')+'> Creada</label>';
     /* type="text" + inputmode="numeric", NO type="number". Medido en Firefox 156: en
        un input number `setSelectionRange` lanza InvalidStateError y `selectionStart`
@@ -1958,13 +2300,13 @@ function pintarArbol(){
        guardaba 51 (y «300», 3). Con type=text el cursor se lee y se devuelve, y el
        teclado del movil sigue saliendo numerico. Lo que el number filtraba solo
        (letras, signos) lo limpia `limpiarNumero`. */
-    s += '<div><label for="lv-'+n.uuid+'">Nivel</label>'+
+    s += '<div><label for="lv-'+n.uuid+i18n("\">Level</label>")+
          '<input type="text" inputmode="numeric" autocomplete="off" id="lv-'+n.uuid+'" '+
          'data-u="'+n.uuid+'" data-campo="nivel" value="'+(n.creado?n.desde:0)+'"></div>';
-    s += '<div><label for="ad-'+n.uuid+'">ADN que tienes</label>'+
+    s += '<div><label for="ad-'+n.uuid+i18n("\">DNA you have</label>")+
          '<input type="text" inputmode="numeric" autocomplete="off" id="ad-'+n.uuid+'" '+
          'data-u="'+n.uuid+'" data-campo="adn" value="'+n.tengo+'"></div>';
-    s += '<div><label>Nivel que exige la fusión</label>'+
+    s += i18n("<div><label>Level required for the fusion</label>")+
          '<div style="font-size:15px;font-weight:650;padding:5px 0">'+
          (n.nivelIng===null ? '—' : n.nivelIng)+'</div></div>';
     return s + '</div>';
@@ -1979,24 +2321,24 @@ function pintarArbol(){
     s += '<div class="cab"><span class="nm">'+esc(n.nombre)+'</span>'+tag(n.rareza)+
       (prof ? (n.esHoja ? '<span class="pill zona" title="'+esc(zonaTitulo(n.uuid))+'">'+
                             esc(zonaDe(n.uuid, true))+'</span>' : '')
-            : '<span class="pill">raíz</span>')+
-      (cuenta[n.uuid] > 1 ? '<span class="pill" title="Esta criatura sale en '+
-        cuenta[n.uuid]+' ramas del árbol. Su ADN es una sola reserva: lo que tienes se cuenta una vez, '+
-        'y el total está en el informe de la calculadora.">sale ×'+cuenta[n.uuid]+'</span>' : '')+
-      (!n.creado ? '<span class="pill">sin crear</span>' : '')+
+            : i18n("<span class=\"pill\">root</span>"))+
+      (cuenta[n.uuid] > 1 ? i18n("<span class=\"pill\" title=\"This creature appears in ")+
+        cuenta[n.uuid]+i18n(" branches of the tree. Its DNA is a single pool: what you have is counted once, ")+
+        i18n("and the total is in the calculator report.\">appears ×")+cuenta[n.uuid]+'</span>' : '')+
+      (!n.creado ? i18n("<span class=\"pill\">not created</span>") : '')+
       '</div>';
 
     const tz = [];
-    if (n.cuentaSubir && n.adnSubir) tz.push('<b>'+nf(n.adnSubir)+'</b> para subir');
-    if (n.extra) tz.push('<b>'+nf(n.extra)+'</b> para fusionar');
+    if (n.cuentaSubir && n.adnSubir) tz.push('<b>'+nf(n.adnSubir)+i18n("</b> to level up"));
+    if (n.extra) tz.push('<b>'+nf(n.extra)+i18n("</b> to fuse"));
     s += '<div class="det">' +
-      (n.objetivo > n.desde ? 'subir <b>'+(n.creado?n.desde:'0 (sin crear)')+' → '+n.objetivo+'</b>'
-                            : 'ya en nivel <b>'+n.desde+'</b>') +
-      ' · ' + (tz.length ? tz.join(' + ') : 'nada que reunir') +
-      ' = <b>'+nf(n.adnNec)+'</b> ADN' +
-      (n.tengo ? ' · tienes <b>'+nf(n.tengo)+'</b>' : '') +
-      ' → <b style="color:'+(n.deficit>0?'var(--ambar)':'var(--verde)')+'">falta '+nf(n.deficit)+'</b>' +
-      (n.fusiones ? ' · <b>'+nf(n.fusiones)+'</b> fusiones ('+nf(n.monFus)+' monedas)' : '') +
+      (n.objetivo > n.desde ? 'subir <b>'+(n.creado?n.desde:i18n("0 (not created)"))+' → '+n.objetivo+'</b>'
+                            : i18n("already at level <b>")+n.desde+'</b>') +
+      ' · ' + (tz.length ? tz.join(' + ') : i18n("nothing to gather")) +
+      ' = <b>'+nf(n.adnNec)+i18n("</b> DNA") +
+      (n.tengo ? i18n(" · you have <b>")+nf(n.tengo)+'</b>' : '') +
+      ' → <b style="color:'+(n.deficit>0?'var(--ambar)':'var(--verde)')+i18n("\">missing ")+nf(n.deficit)+'</b>' +
+      (n.fusiones ? ' · <b>'+nf(n.fusiones)+i18n("</b> fusions (")+nf(n.monFus)+i18n(" coins)") : '') +
       '</div>';
 
     /* Nivel maximo con el ADN que tiene esta criatura, acotado al nivel que la
@@ -2005,13 +2347,13 @@ function pintarArbol(){
     const mx = nivelMaximo(n.rareza, n.desde, n.tengo, n.creado, topeUtil);
     let mn;
     if (!n.creado && n.tengo < costeCreacion(n.rareza)){
-      mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN no llega ni a crearla (cuesta <b>'+
+      mn = i18n("With its <b>")+nf(n.tengo)+i18n("</b> DNA it cannot even create it (costs <b>")+
            nf(costeCreacion(n.rareza))+'</b>).';
     } else {
-      mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN llega al <b>nivel '+mx.nivel+'</b>' +
-           (mx.nivel >= n.objetivo ? ' <span style="color:var(--verde)">— ya cumple el objetivo '+
-             n.objetivo+'</span>' : ' — le faltan <b>'+nf(costeADN(n.rareza, n.desde, n.objetivo, !n.creado) - mx.gastado)+
-             '</b> ADN para el '+n.objetivo);
+      mn = i18n("With its <b>")+nf(n.tengo)+i18n("</b> DNA it reaches <b>level ")+mx.nivel+'</b>' +
+           (mx.nivel >= n.objetivo ? i18n(" <span style=\"color:var(--verde)\">— already meets the target ")+
+             n.objetivo+'</span>' : i18n(" — it is missing <b>")+nf(costeADN(n.rareza, n.desde, n.objetivo, !n.creado) - mx.gastado)+
+             i18n("</b> DNA for level ")+n.objetivo);
     }
     s += campos(n);
     s += '<div class="maxn">'+mn+'</div>';
@@ -2118,7 +2460,7 @@ function pintarFotos(){
                               : "· " + todas.length;
   cont.innerHTML = us.map(u =>
     '<button class="ir foto-btn" data-ir="'+u+'" title="'+
-      esc("Llevar "+C[u][0]+" a la calculadora")+'">'+
+      esc("Llevar "+C[u][0]+i18n(" to the calculator"))+'">'+
       foto(u, "mini", 56, true) +
       '<span class="tira-nm rc-'+CLASE[C[u][1]]+'">'+esc(C[u][0])+'</span>'+
     '</button>').join("");
@@ -2128,16 +2470,16 @@ function pintarMios(){
   const us = MIS.filter(u => !!C[u]);
   const cont = document.getElementById("miosCuerpo");
   if (!us.length){
-    cont.innerHTML = '<p class="vacio-txt">Todavía no has guardado ninguna criatura. Elige una en la '+
-      'pestaña «Calculadora» y pulsa <b>Guardar en «Mis criaturas»</b>. Lo que teclees en el '+
-      '«Árbol de fusión» sirve para el cálculo, pero <b>no entra en esta lista</b>: aquí solo '+
-      'aparece lo que guardas a propósito.</p>';
+    cont.innerHTML = i18n("<p class=\"vacio-txt\">You have not saved any creature yet. Pick one in the ")+
+      i18n("tab «Calculator» and press <b>Save to «My Creatures»</b>. What you type in the ")+
+      i18n("«Fusion Tree» is used for the calculation, but <b>does not go into this list</b>: here only ")+
+      i18n("what you save on purpose appears.</p>");
   } else {
     us.sort((a,b) => (C[a]?C[a][0]:a).localeCompare(C[b]?C[b][0]:b, "es"));
-    let h = '<div style="overflow:auto"><table><thead><tr><th></th><th>Criatura</th><th>Rareza</th>'+
-      '<th class="num">Nivel</th><th class="num">Mejoras</th><th class="num">ADN</th>'+
-      '<th class="num">Nivel máx. hoy</th>'+
-      '<th class="num">Objetivo</th><th class="num">Falta ADN</th><th class="num">Monedas</th><th></th></tr></thead><tbody>';
+    let h = i18n("<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Creature</th><th>Rarity</th>")+
+      i18n("<th class=\"num\">Level</th><th class=\"num\">Boosts</th><th class=\"num\">DNA</th>")+
+      i18n("<th class=\"num\">Max level today</th>")+
+      i18n("<th class=\"num\">Target</th><th class=\"num\">Missing DNA</th><th class=\"num\">Coins</th><th></th></tr></thead><tbody>");
     let tAdn = 0, tMon = 0, tFus = 0;
     for (const u of us){
       if (!C[u]) continue;
@@ -2153,7 +2495,7 @@ function pintarMios(){
          ensenan aqui para que se vea que se guardaron: si solo se vieran al
          abrir la ficha, no habria forma de saber que el dato sigue ahi. */
       const mej = mejDe(u), pts = mej.bVida + mej.bDano + mej.bVel;
-      const titulo = 'Ir a la calculadora de '+esc(C[u][0]);
+      const titulo = i18n("Go to the calculator for ")+esc(C[u][0]);
       h += '<tr class="fila-ir" data-ir="'+u+'">'+
         '<td style="padding:4px 6px"><button class="ir foto-btn" data-ir="'+u+'" title="'+titulo+'">'+
           foto(u,"mini g",38)+'</button></td>'+
@@ -2163,7 +2505,7 @@ function pintarMios(){
            estado, no en ambar. En ambar era literalmente el color de la Épica
            (mismo hex, --ambar = --r-epica), y la auditoria lo destapo en cuanto
            «Mis criaturas» dejo de estar vacia en su pantalla. */
-        '<td class="num">'+(inv.creado ? desde : '<span class="pill" style="margin:0">sin crear</span>')+'</td>'+
+        '<td class="num">'+(inv.creado ? desde : i18n("<span class=\"pill\" style=\"margin:0\">not created</span>"))+'</td>'+
         '<td class="num">'+(pts || mej.mejora
             ? '<b>+'+pts+'</b>'+(mej.mejora ? ' <span class="pill" style="margin:0">m'+mej.mejora+'</span>' : '')
             : '<span style="color:var(--tx3)">—</span>')+'</td>'+
@@ -2188,9 +2530,9 @@ function pintarMios(){
       guardar(); refrescar(); pintarLista();
     });
     document.getElementById("miosResumen").innerHTML =
-      '<div class="cifra wa"><div class="k">ADN pendiente</div><div class="v">'+nf(tAdn)+'</div><div class="n">en '+us.length+' criaturas</div></div>'+
-      '<div class="cifra"><div class="k">Monedas</div><div class="v">'+nf(tMon)+'</div></div>'+
-      '<div class="cifra"><div class="k">Fusiones</div><div class="v">'+nf(tFus)+'</div></div>';
+      i18n("<div class=\"cifra wa\"><div class=\"k\">Pending DNA</div><div class=\"v\">")+nf(tAdn)+'</div><div class="n">en '+us.length+i18n(" creatures</div></div>")+
+      i18n("<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">")+nf(tMon)+'</div></div>'+
+      i18n("<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">")+nf(tFus)+'</div></div>';
     return;
   }
   document.getElementById("miosResumen").innerHTML = "";
@@ -2218,29 +2560,29 @@ document.getElementById("btnCat").onclick = () => {
   const l = Number(document.getElementById("cLegend").value)||0;
   const pts = c*1 + r*4 + e*15 + l*50;
   const total = c+r+e+l;
-  if (!total){ document.getElementById("catSalida").innerHTML = '<p class="vacio-txt">Mete algo de ADN.</p>'; return; }
+  if (!total){ document.getElementById("catSalida").innerHTML = i18n("<p class=\"vacio-txt\">Enter some DNA.</p>"); return; }
   const frac = {common:c/total, rare:r/total, epic:e/total, legendary:l/total};
   let tier, mayoria;
-  if (frac.legendary > .5){ tier = "Oro"; mayoria = "Legendaria"; }
-  else if (frac.rare + frac.epic > .5){ tier = "Plata"; mayoria = "Rara/Épica"; }
-  else { tier = "Bronce"; mayoria = "Común"; }
+  if (frac.legendary > .5){ tier = i18n("Gold"); mayoria = i18n("Legendary"); }
+  else if (frac.rare + frac.epic > .5){ tier = i18n("Silver"); mayoria = i18n("Rare/Epic"); }
+  else { tier = i18n("Bronze"); mayoria = i18n("Common"); }
   const falta = 75000 - pts;
   let h = '<div class="cifras">' +
-    '<div class="cifra"><div class="k">Puntos del tanque</div><div class="v">'+nf(pts)+'</div><div class="n">objetivo 75.000</div></div>' +
-    '<div class="cifra al"><div class="k">Catalizador</div><div class="v">'+tier+'</div><div class="n">mayoría '+mayoria+'</div></div>' +
-    '<div class="cifra '+(falta>0?"wa":"al")+'"><div class="k">'+(falta>0?"Faltan":"Sobran")+'</div><div class="v">'+nf(Math.abs(falta))+'</div><div class="n">puntos</div></div>' +
+    i18n("<div class=\"cifra\"><div class=\"k\">Tank points</div><div class=\"v\">")+nf(pts)+i18n('</div><div class="n">target 75,000</div></div>') +
+    '<div class="cifra al"><div class="k">'+i18n("Catalyst")+'</div><div class="v">'+tier+i18n("</div><div class=\"n\">mostly ")+mayoria+'</div></div>' +
+    '<div class="cifra '+(falta>0?"wa":"al")+'"><div class="k">'+(falta>0?i18n("Missing"):i18n("Extra"))+'</div><div class="v">'+nf(Math.abs(falta))+i18n('</div><div class="n">points</div></div>') +
     '</div>';
-  h += '<div class="nota">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. '+
-       'El tanque objetivo son 75.000 puntos.</div>';
-  h += '<div style="overflow:auto;margin-top:14px"><table><thead><tr><th>Receta observada</th><th class="num">Rendimiento</th><th>Valoración</th></tr></thead><tbody>'+
-    '<tr><td>2.000 Épica + 3.500 Rara + 625 Legendaria</td><td class="num">36 Oro</td><td style="color:var(--verde)">buena</td></tr>'+
-    '<tr><td>10.500 Común + 2.000 Épica + 690 Legendaria</td><td class="num">36 Oro</td><td style="color:var(--verde)">buena</td></tr>'+
-    '<tr><td>1.500 Legendaria (sola)</td><td class="num">40 Oro</td><td style="color:var(--rojo)">mala: quema la más escasa</td></tr>'+
-    '<tr><td>20.000 Común + 2.000 Épica + 500 Legendaria</td><td class="num">79 Plata</td><td style="color:var(--verde)">buena</td></tr>'+
-    '<tr><td>5.000 Rara + 2.000 Épica + 500 Legendaria</td><td class="num">79 Plata</td><td style="color:var(--verde)">buena</td></tr>'+
-    '<tr><td>18.750 Rara (sola)</td><td class="num">43 Plata</td><td style="color:var(--rojo)">mala: desperdicia Rara</td></tr>'+
-    '<tr><td>25.500 Común + 1.634 Épica + 500 Legendaria</td><td class="num">159 Bronce</td><td style="color:var(--verde)">buena</td></tr>'+
-    '<tr><td>75.000 Común (sola)</td><td class="num">125 Bronce</td><td style="color:var(--rojo)">mala: la peor forma</td></tr>'+
+  h += i18n("<div class=\"nota\">Weights per unit of DNA: Common 1 · Rare 4 · Epic 15 · Legendary 50. ")+
+       i18n("The target tank is 75.000 points.</div>");
+  h += i18n("<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Observed recipe</th><th class=\"num\">Yield</th><th>Rating</th></tr></thead><tbody>")+
+    i18n("<tr><td>2.000 Epic + 3.500 Rare + 625 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>")+
+    i18n("<tr><td>10.500 Common + 2.000 Epic + 690 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>")+
+    i18n("<tr><td>1.500 Legendary (alone)</td><td class=\"num\">40 Gold</td><td style=\"color:var(--rojo)\">bad: burns the scarcest</td></tr>")+
+    i18n("<tr><td>20.000 Common + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>")+
+    i18n("<tr><td>5.000 Rare + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>")+
+    i18n('<tr><td>18,750 Rare (alone)</td><td class="num">43 Silver</td><td style="color:var(--rojo)">bad: wastes Rare</td></tr>')+
+    i18n("<tr><td>25.500 Common + 1.634 Epic + 500 Legendary</td><td class=\"num\">159 Bronze</td><td style=\"color:var(--verde)\">good</td></tr>")+
+    i18n("<tr><td>75.000 Common (alone)</td><td class=\"num\">125 Bronze</td><td style=\"color:var(--rojo)\">bad: the worst form</td></tr>")+
     '</tbody></table></div>';
   document.getElementById("catSalida").innerHTML = h;
 };
@@ -2264,7 +2606,7 @@ document.getElementById("btnImport").onclick = () => {
     fr.onload = () => {
       try {
         const d = JSON.parse(fr.result);
-        if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("no es un objeto");
+        if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error(i18n("not an object"));
         // formato nuevo ({jwa322, mios, inventario}) o antiguo (objeto plano)
         const datos = (d.jwa322 && d.inventario && typeof d.inventario === "object")
                       ? d.inventario : d;
@@ -2282,15 +2624,15 @@ document.getElementById("btnImport").onclick = () => {
            repintar: si no, la ficha seguiria con el objetivo viejo. */
         if (elegido) ponerObjetivoEnDeslizador(elegido);
         guardar(); refrescar(); pintarLista();
-        alert("Importadas " + n + " criaturas, " + s + " añadidas a «Mis criaturas».");
-      } catch(e){ alert("Ese fichero no vale: " + e.message); }
+        alert("Importadas " + n + i18n(" creatures, ") + s + i18n(" added to «My Creatures»."));
+      } catch(e){ alert(i18n("That file is not valid: ") + e.message); }
     };
     fr.readAsText(f);
   };
   i.click();
 };
 document.getElementById("btnBorrar").onclick = () => {
-  if (confirm("¿Borrar todas tus criaturas guardadas? No se puede deshacer.")){
+  if (confirm(i18n("Delete all your saved creatures? This cannot be undone."))){
     INV = {}; MIS = [];
     /* Se ha borrado TODO, objetivos incluidos: el deslizador vuelve al tope. */
     if (elegido) ponerObjetivoEnDeslizador(elegido);
@@ -2339,6 +2681,49 @@ montarStats();
 pintarMios();
 pintarFotos();
 pintarStats();
+
+/* ---------- language ---------- */
+/* Static markup carries data-i18n (plain text) or data-i18n-html (markup with
+   nested tags). In both cases the attribute value is the English source, which
+   is also the dictionary key, so the Spanish original is restored verbatim. */
+const TITULO = {en: "Jurassic World Alive 3.22 DNA calculator",
+                es: "calculadora de ADN de Jurassic World Alive 3.22"};
+const NOMBRE_APP = document.querySelector("h1").textContent.replace(/\s*JWA 3\.22\s*$/, "").trim();
+
+function aplicarIdioma(){
+  document.documentElement.lang = LANG;
+  document.title = NOMBRE_APP + " — " + (LANG === "es" ? TITULO.es : TITULO.en);
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = i18n(el.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => {
+    el.innerHTML = i18n(el.getAttribute("data-i18n-html"));
+  });
+  document.querySelectorAll("[data-idioma]").forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.idioma === LANG ? "true" : "false");
+  });
+}
+
+function setIdioma(nuevo){
+  if (nuevo !== "en" && nuevo !== "es") return;
+  LANG = nuevo;
+  try { localStorage.setItem(IDIOMA_CLAVE, LANG); } catch(e){}
+  aplicarIdioma();
+  /* Re-render the generated parts. `refrescar()` reads the chosen creature, so
+     it only runs when there is one; the others are safe at any time, which is
+     exactly why start-up calls these. */
+  pintarCabecera();
+  pintarMios();
+  pintarFotos();
+  pintarStats();
+  if (elegido) refrescar();
+}
+
+document.querySelectorAll("[data-idioma]").forEach(b => {
+  b.addEventListener("click", () => setIdioma(b.dataset.idioma));
+});
+/* Static markup is authored in English, so English needs no pass. Spanish does. */
+if (LANG !== "en") aplicarIdioma();
 </script>
 </body>
 </html>

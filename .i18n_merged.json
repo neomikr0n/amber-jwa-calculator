@@ -1,0 +1,1504 @@
+{
+ "inventario": [
+  {
+   "n": 1,
+   "line": 621,
+   "text": "Común",
+   "code": "const RAREZAS = {common:\"Común\",rare:\"Rara\",epic:\"Épica\",legendary:\"Legendaria\",unique:\"Única\",apex:\"Apex\",omega:\"Omega\"};"
+  },
+  {
+   "n": 2,
+   "line": 621,
+   "text": "Épica",
+   "code": "const RAREZAS = {common:\"Común\",rare:\"Rara\",epic:\"Épica\",legendary:\"Legendaria\",unique:\"Única\",apex:\"Apex\",omega:\"Omega\"};"
+  },
+  {
+   "n": 3,
+   "line": 621,
+   "text": "Única",
+   "code": "const RAREZAS = {common:\"Común\",rare:\"Rara\",epic:\"Épica\",legendary:\"Legendaria\",unique:\"Única\",apex:\"Apex\",omega:\"Omega\"};"
+  },
+  {
+   "n": 4,
+   "line": 623,
+   "text": "sin híbrido",
+   "code": "const TIPOS   = {non_hybrid:\"sin híbrido\",hybrid:\"híbrido\",super_hybrid:\"superhíbrido\",mega_hybrid:\"megahíbrido\",giga_hybrid:\"gigahíbrido\"};"
+  },
+  {
+   "n": 5,
+   "line": 623,
+   "text": "híbrido",
+   "code": "const TIPOS   = {non_hybrid:\"sin híbrido\",hybrid:\"híbrido\",super_hybrid:\"superhíbrido\",mega_hybrid:\"megahíbrido\",giga_hybrid:\"gigahíbrido\"};"
+  },
+  {
+   "n": 6,
+   "line": 623,
+   "text": "superhíbrido",
+   "code": "const TIPOS   = {non_hybrid:\"sin híbrido\",hybrid:\"híbrido\",super_hybrid:\"superhíbrido\",mega_hybrid:\"megahíbrido\",giga_hybrid:\"gigahíbrido\"};"
+  },
+  {
+   "n": 7,
+   "line": 623,
+   "text": "megahíbrido",
+   "code": "const TIPOS   = {non_hybrid:\"sin híbrido\",hybrid:\"híbrido\",super_hybrid:\"superhíbrido\",mega_hybrid:\"megahíbrido\",giga_hybrid:\"gigahíbrido\"};"
+  },
+  {
+   "n": 8,
+   "line": 623,
+   "text": "gigahíbrido",
+   "code": "const TIPOS   = {non_hybrid:\"sin híbrido\",hybrid:\"híbrido\",super_hybrid:\"superhíbrido\",mega_hybrid:\"megahíbrido\",giga_hybrid:\"gigahíbrido\"};"
+  },
+  {
+   "n": 9,
+   "line": 663,
+   "text": "sin fuente en el mapa",
+   "code": "return \"sin fuente en el mapa\";"
+  },
+  {
+   "n": 10,
+   "line": 667,
+   "text": "Sin datos de origen en la fuente",
+   "code": "if (!f.length) return \"Sin datos de origen en la fuente\";"
+  },
+  {
+   "n": 11,
+   "line": 668,
+   "text": "Fuentes en el juego: ",
+   "code": "return \"Fuentes en el juego: \" + f.map(etiqLoc).join(\" · \");"
+  },
+  {
+   "n": 12,
+   "line": 689,
+   "text": " a la calculadora",
+   "code": "esc(titulo || (\"Llevar \"+c[0]+\" a la calculadora\"))+'\">'+esc(c[0])+'</button>';"
+  },
+  {
+   "n": 13,
+   "line": 789,
+   "text": "nivel 0",
+   "code": "`creado` es explicito porque hay una diferencia real entre \"nivel 0\" y"
+  },
+  {
+   "n": 14,
+   "line": 790,
+   "text": "nivel 1",
+   "code": "\"nivel 1\": una criatura sin crear cuesta ADN de creacion ademas de la escalera."
+  },
+  {
+   "n": 15,
+   "line": 915,
+   "text": "nivel",
+   "code": "} else if (campo === \"nivel\"){"
+  },
+  {
+   "n": 16,
+   "line": 919,
+   "text": "adn",
+   "code": "} else if (campo === \"adn\"){"
+  },
+  {
+   "n": 17,
+   "line": 986,
+   "text": "ya estan listos para fusionar",
+   "code": "ADN de subir los ingredientes (asume que \"ya estan listos para fusionar\")."
+  },
+  {
+   "n": 18,
+   "line": 1107,
+   "text": "<div class=\"informe\"><h3>Informe del árbol completo</h3>",
+   "code": "let h = '<div class=\"informe\"><h3>Informe del árbol completo</h3>';"
+  },
+  {
+   "n": 19,
+   "line": 1108,
+   "text": "<div class=\"sub\">Todo el ADN que hace falta para llevar <b>",
+   "code": "h += '<div class=\"sub\">Todo el ADN que hace falta para llevar <b>'+esc(t.nombre)+'</b> al nivel '+"
+  },
+  {
+   "n": 20,
+   "line": 1108,
+   "text": "</b> al nivel ",
+   "code": "h += '<div class=\"sub\">Todo el ADN que hace falta para llevar <b>'+esc(t.nombre)+'</b> al nivel '+"
+  },
+  {
+   "n": 21,
+   "line": 1109,
+   "text": ", criatura por criatura, hasta las que se recolectan. «ADN necesario» es lo que esa ",
+   "code": "t.objetivo+', criatura por criatura, hasta las que se recolectan. «ADN necesario» es lo que esa '+"
+  },
+  {
+   "n": 22,
+   "line": 1110,
+   "text": "criatura consume en todo el árbol: ",
+   "code": "'criatura consume en todo el árbol: '+"
+  },
+  {
+   "n": 23,
+   "line": 1111,
+   "text": "su escalera más el ADN que se le echa encima al fusionarla.",
+   "code": "(contarSubida ? 'su escalera más el ADN que se le echa encima al fusionarla.'"
+  },
+  {
+   "n": 24,
+   "line": 1112,
+   "text": "solo el ADN que se le echa encima al fusionarla, porque los ingredientes se ",
+   "code": ": 'solo el ADN que se le echa encima al fusionarla, porque los ingredientes se '+"
+  },
+  {
+   "n": 25,
+   "line": 1113,
+   "text": "suponen ya listos para fusionar.",
+   "code": "'suponen ya listos para fusionar.')+"
+  },
+  {
+   "n": 26,
+   "line": 1114,
+   "text": " Lo que ya tienes se descuenta <b>una sola vez</b>, aunque la criatura salga en varias ramas.</div>",
+   "code": "' Lo que ya tienes se descuenta <b>una sola vez</b>, aunque la criatura salga en varias ramas.</div>';"
+  },
+  {
+   "n": 27,
+   "line": 1118,
+   "text": "<div class=\"aviso info\" style=\"margin-top:12px\">La casilla <b>«Contar el ADN de subir los ",
+   "code": "h += '<div class=\"aviso info\" style=\"margin-top:12px\">La casilla <b>«Contar el ADN de subir los '+"
+  },
+  {
+   "n": 28,
+   "line": 1119,
+   "text": "ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. ",
+   "code": "'ingredientes»</b> está desmarcada, así que estas cifras siguen el criterio de <b>paleo.gg</b>. '+"
+  },
+  {
+   "n": 29,
+   "line": 1120,
+   "text": "Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>",
+   "code": "'Márcala en la pestaña <b>Árbol de fusión</b> para ver lo que de verdad hay que reunir.</div>';"
+  },
+  {
+   "n": 30,
+   "line": 1128,
+   "text": ">ADN que falta en total</div><div class=",
+   "code": "'<div class=\"cifra '+(tt.adn>0?\"wa\":\"al\")+'\"><div class=\"k\">ADN que falta en total</div><div class=\"v\">'+"
+  },
+  {
+   "n": 31,
+   "line": 1129,
+   "text": " criaturas distintas",
+   "code": "nf(tt.adn)+'</div><div class=\"n\">en '+cri.length+' criaturas distintas'+"
+  },
+  {
+   "n": 32,
+   "line": 1133,
+   "text": "</div><div class=\"n\">de las que no se fusionan</div></div>",
+   "code": "'</div><div class=\"n\">de las que no se fusionan</div></div>' +"
+  },
+  {
+   "n": 33,
+   "line": 1134,
+   "text": "<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">'+nf(tt.fus)+"
+  },
+  {
+   "n": 34,
+   "line": 1135,
+   "text": "</div><div class=\"n\">en toda la cascada</div></div>",
+   "code": "'</div><div class=\"n\">en toda la cascada</div></div>' +"
+  },
+  {
+   "n": 35,
+   "line": 1136,
+   "text": "<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">'+nf(tt.mon + tt.monFus)+"
+  },
+  {
+   "n": 36,
+   "line": 1141,
+   "text": "<th>Criatura</th><th class=\"num\">Nivel</th>",
+   "code": "'<th>Criatura</th><th class=\"num\">Nivel</th>' +"
+  },
+  {
+   "n": 37,
+   "line": 1142,
+   "text": "<th class=\"num\">ADN necesario</th><th class=\"num\">Tienes</th>",
+   "code": "'<th class=\"num\">ADN necesario</th><th class=\"num\">Tienes</th>' +"
+  },
+  {
+   "n": 38,
+   "line": 1143,
+   "text": "<th class=\"num\">Falta</th><th class=\"num\">Fusiones</th></tr></thead><tbody>",
+   "code": "'<th class=\"num\">Falta</th><th class=\"num\">Fusiones</th></tr></thead><tbody>';"
+  },
+  {
+   "n": 39,
+   "line": 1161,
+   "text": "\" data-nivel=\"",
+   "code": "'<button class=\"criar\" data-criar=\"'+u+'\" data-nivel=\"'+nivel+'\" title=\"'+esc(titulo)+'\">criar</button>';"
+  },
+  {
+   "n": 40,
+   "line": 1185,
+   "text": " al nivel ",
+   "code": "'Pone '+p.nombre+' al nivel '+nivelFusion(p)+', que es el mínimo que exige la '+"
+  },
+  {
+   "n": 41,
+   "line": 1185,
+   "text": ", que es el mínimo que exige la ",
+   "code": "'Pone '+p.nombre+' al nivel '+nivelFusion(p)+', que es el mínimo que exige la '+"
+  },
+  {
+   "n": 42,
+   "line": 1186,
+   "text": "fusión de este árbol. Nace en el ",
+   "code": "'fusión de este árbol. Nace en el '+minLv(p.rareza)+'.') +"
+  },
+  {
+   "n": 43,
+   "line": 1192,
+   "text": " a la calculadora",
+   "code": "'<td>'+nombreIr(p.uuid, \"Llevar \"+p.nombre+\" a la calculadora\") +"
+  },
+  {
+   "n": 44,
+   "line": 1193,
+   "text": " <span class=\"pill\">raíz</span>",
+   "code": "(p.uuid === t.uuid ? ' <span class=\"pill\">raíz</span>' : '') +"
+  },
+  {
+   "n": 45,
+   "line": 1227,
+   "text": "<tr class=\"total\"><td>Total del árbol</td>",
+   "code": "h += '<tr class=\"total\"><td>Total del árbol</td>' +"
+  },
+  {
+   "n": 46,
+   "line": 1229,
+   "text": "Pone al nivel que exige la fusión las ",
+   "code": "? btnCriarTodas('Pone al nivel que exige la fusión las '+POR_CRIAR.length+' criaturas del '+"
+  },
+  {
+   "n": 47,
+   "line": 1229,
+   "text": " criaturas del ",
+   "code": "? btnCriarTodas('Pone al nivel que exige la fusión las '+POR_CRIAR.length+' criaturas del '+"
+  },
+  {
+   "n": 48,
+   "line": 1230,
+   "text": "árbol que aún no están creadas o que están por debajo de ese nivel. ",
+   "code": "'árbol que aún no están creadas o que están por debajo de ese nivel. '+"
+  },
+  {
+   "n": 49,
+   "line": 1231,
+   "text": "La criatura raíz NO se toca, y las que ya están en ese nivel o por ",
+   "code": "'La criatura raíz NO se toca, y las que ya están en ese nivel o por '+"
+  },
+  {
+   "n": 50,
+   "line": 1246,
+   "text": "Una criatura sale",
+   "code": "(tt.repetidas === 1 ? 'Una criatura sale' : tt.repetidas + ' criaturas salen')+"
+  },
+  {
+   "n": 51,
+   "line": 1246,
+   "text": " criaturas salen",
+   "code": "(tt.repetidas === 1 ? 'Una criatura sale' : tt.repetidas + ' criaturas salen')+"
+  },
+  {
+   "n": 52,
+   "line": 1247,
+   "text": " en <b>varias ramas</b> del árbol. Su ADN es una sola reserva: hace falta la suma de lo que ",
+   "code": "' en <b>varias ramas</b> del árbol. Su ADN es una sola reserva: hace falta la suma de lo que '+"
+  },
+  {
+   "n": 53,
+   "line": 1248,
+   "text": "pide cada rama, y lo que tienes cuenta una vez. Por eso las filas <b>no se suman a mano</b>: ",
+   "code": "'pide cada rama, y lo que tienes cuenta una vez. Por eso las filas <b>no se suman a mano</b>: '+"
+  },
+  {
+   "n": 54,
+   "line": 1249,
+   "text": "la cifra buena es la de <b>ADN que falta en total</b>.</div>",
+   "code": "'la cifra buena es la de <b>ADN que falta en total</b>.</div>';"
+  },
+  {
+   "n": 55,
+   "line": 1253,
+   "text": "<div class=\"nota\" style=\"margin-top:12px\">ADN que hay que <b>ir a recolectar</b>, por rareza ",
+   "code": "h += '<div class=\"nota\" style=\"margin-top:12px\">ADN que hay que <b>ir a recolectar</b>, por rareza ' +"
+  },
+  {
+   "n": 56,
+   "line": 1254,
+   "text": "(solo las criaturas que no se fusionan):</div><div class=\"rr\">",
+   "code": "'(solo las criaturas que no se fusionan):</div><div class=\"rr\">' +"
+  },
+  {
+   "n": 57,
+   "line": 1257,
+   "text": "<div class=\"nota\" style=\"margin-top:12px\">No falta nada por recolectar: con lo que tienes ",
+   "code": "h += '<div class=\"nota\" style=\"margin-top:12px\">No falta nada por recolectar: con lo que tienes ' +"
+  },
+  {
+   "n": 58,
+   "line": 1258,
+   "text": "ya cubres todo el árbol.</div>",
+   "code": "'ya cubres todo el árbol.</div>';"
+  },
+  {
+   "n": 59,
+   "line": 1270,
+   "text": "nivel",
+   "code": "Lo que hace el clic NO se reimplementa aqui: `fijar(u, \"nivel\", n)` es el mismo"
+  },
+  {
+   "n": 60,
+   "line": 1290,
+   "text": "nivel",
+   "code": "if (fijar(x.uuid, \"nivel\", x.nivel)) n++;"
+  },
+  {
+   "n": 61,
+   "line": 1295,
+   "text": "nivel",
+   "code": "if (el.dataset.criar && fijar(el.dataset.criar, \"nivel\", Number(el.dataset.nivel))){"
+  },
+  {
+   "n": 62,
+   "line": 1383,
+   "text": "<div class=\"vacio\">Sin resultados.</div>",
+   "code": "lista.innerHTML = '<div class=\"vacio\">Sin resultados.</div>';"
+  },
+  {
+   "n": 63,
+   "line": 1391,
+   "text": "nivel ",
+   "code": "(inv.creado ? \"nivel \"+inv.nivel : \"sin crear\")+'</span>' : \"\";"
+  },
+  {
+   "n": 64,
+   "line": 1391,
+   "text": "sin crear",
+   "code": "(inv.creado ? \"nivel \"+inv.nivel : \"sin crear\")+'</span>' : \"\";"
+  },
+  {
+   "n": 65,
+   "line": 1475,
+   "text": "Daño",
+   "code": "const ETIQ_STAT = {vida:\"Vida\", dano:\"Daño\", velocidad:\"Velocidad\","
+  },
+  {
+   "n": 66,
+   "line": 1476,
+   "text": "Crítico",
+   "code": "armadura:\"Armadura\", critico:\"Crítico\", dano_critico:\"Daño crít.\"};"
+  },
+  {
+   "n": 67,
+   "line": 1476,
+   "text": "Daño crít.",
+   "code": "armadura:\"Armadura\", critico:\"Crítico\", dano_critico:\"Daño crít.\"};"
+  },
+  {
+   "n": 68,
+   "line": 1489,
+   "text": "monedas",
+   "code": "const RES_CORTO = {coins:\"monedas\", catalyst_minor:\"cat. bronce\","
+  },
+  {
+   "n": 69,
+   "line": 1509,
+   "text": " title=\"Quitar un punto de ",
+   "code": "' title=\"Quitar un punto de ' + txt + '\">−</button>' +"
+  },
+  {
+   "n": 70,
+   "line": 1512,
+   "text": " title=\"Añadir un punto de ",
+   "code": "' title=\"Añadir un punto de ' + txt + '\">+</button>' +"
+  },
+  {
+   "n": 71,
+   "line": 1516,
+   "text": "Daño",
+   "code": "fila(\"bDano\", \"damage\", \"Daño\") +"
+  },
+  {
+   "n": 72,
+   "line": 1544,
+   "text": "Elige una criatura para ver sus stats.",
+   "code": "nota.textContent = \"Elige una criatura para ver sus stats.\";"
+  },
+  {
+   "n": 73,
+   "line": 1557,
+   "text": "nivel ",
+   "code": "document.getElementById(\"stNivel\").textContent = \"nivel \" + niv;"
+  },
+  {
+   "n": 74,
+   "line": 1565,
+   "text": " · base a nivel 26: ",
+   "code": "v.closest(\".st\").title = ETIQ_STAT[k] + \" · base a nivel 26: \" + nf(b26[i]) +"
+  },
+  {
+   "n": 75,
+   "line": 1566,
+   "text": " · a nivel ",
+   "code": "\" · a nivel \" + niv + \": \" + nf(base[i]) + \" · con lo tuyo: \" + nf(ahora[i]);"
+  },
+  {
+   "n": 76,
+   "line": 1589,
+   "text": "</b> de <b>",
+   "code": "let nh = 'Puntos <b>' + pts + '</b> de <b>' + m.tope + '</b> · tope = nivel ' + niv +"
+  },
+  {
+   "n": 77,
+   "line": 1589,
+   "text": "</b> · tope = nivel ",
+   "code": "let nh = 'Puntos <b>' + pts + '</b> de <b>' + m.tope + '</b> · tope = nivel ' + niv +"
+  },
+  {
+   "n": 78,
+   "line": 1590,
+   "text": " de la pista",
+   "code": "(pista ? (bono ? ' + ' + bono + ' de la pista' : '') : ' (esta criatura no tiene pista)');"
+  },
+  {
+   "n": 79,
+   "line": 1593,
+   "text": "<br>La pista de mejoras necesita nivel <b>",
+   "code": "nh += '<br>La pista de mejoras necesita nivel <b>' + M.mejoraNivelMin + '</b> o más.';"
+  },
+  {
+   "n": 80,
+   "line": 1593,
+   "text": "</b> o más.",
+   "code": "nh += '<br>La pista de mejoras necesita nivel <b>' + M.mejoraNivelMin + '</b> o más.';"
+  },
+  {
+   "n": 81,
+   "line": 1601,
+   "text": "<span class=\"st-ct\">Pista de mejoras</span>",
+   "code": "coste.innerHTML = '<span class=\"st-ct\">Pista de mejoras</span>' +"
+  },
+  {
+   "n": 82,
+   "line": 1602,
+   "text": "<span class=\"st-cq\">Completa: los ",
+   "code": "'<span class=\"st-cq\">Completa: los ' + pista.length + ' pasos están puestos.</span>';"
+  },
+  {
+   "n": 83,
+   "line": 1602,
+   "text": " pasos están puestos.</span>",
+   "code": "'<span class=\"st-cq\">Completa: los ' + pista.length + ' pasos están puestos.</span>';"
+  },
+  {
+   "n": 84,
+   "line": 1652,
+   "text": " a la calculadora",
+   "code": "? asc.map(niv => niv.map(h => nombreIr(h, \"Llevar \"+C[h][0]+\" a la calculadora\")).join(\", \"))"
+  },
+  {
+   "n": 85,
+   "line": 1666,
+   "text": "<div>Nace en <b style=\"color:var(--tx)\">nivel ",
+   "code": "'<div>Nace en <b style=\"color:var(--tx)\">nivel '+m+'</b> · crear cuesta <b style=\"color:var(--tx)\">'+"
+  },
+  {
+   "n": 86,
+   "line": 1666,
+   "text": "</b> · crear cuesta <b style=\"color:var(--tx)\">",
+   "code": "'<div>Nace en <b style=\"color:var(--tx)\">nivel '+m+'</b> · crear cuesta <b style=\"color:var(--tx)\">'+"
+  },
+  {
+   "n": 87,
+   "line": 1667,
+   "text": " ADN</b> · tope de ADN <b style=\"color:var(--tx)\">",
+   "code": "nf(costeCreacion(r))+' ADN</b> · tope de ADN <b style=\"color:var(--tx)\">'+nf(M.topes[r])+'</b></div>' +"
+  },
+  {
+   "n": 88,
+   "line": 1678,
+   "text": "tope ",
+   "code": "document.getElementById(\"notaAdn\").textContent = \"tope \" + nf(M.topes[r]);"
+  },
+  {
+   "n": 89,
+   "line": 1679,
+   "text": "0 = sin crear (nace en ",
+   "code": "document.getElementById(\"notaNivel\").textContent = \"0 = sin crear (nace en \" + m + \")\";"
+  },
+  {
+   "n": 90,
+   "line": 1746,
+   "text": "nivel",
+   "code": "const cambioN = fijar(elegido, \"nivel\", document.getElementById(\"nivelAct\").value);"
+  },
+  {
+   "n": 91,
+   "line": 1747,
+   "text": "adn",
+   "code": "const cambioA = fijar(elegido, \"adn\", document.getElementById(\"adnTengo\").value);"
+  },
+  {
+   "n": 92,
+   "line": 1763,
+   "text": "nivel",
+   "code": "document.getElementById(\"nivelAct\").addEventListener(\"change\", () => normalizarCampo(\"nivelAct\", \"nivel\"));"
+  },
+  {
+   "n": 93,
+   "line": 1764,
+   "text": "adn",
+   "code": "document.getElementById(\"adnTengo\").addEventListener(\"change\", () => normalizarCampo(\"adnTengo\", \"adn\"));"
+  },
+  {
+   "n": 94,
+   "line": 1796,
+   "text": "<div class=\"t\">Nivel máximo con lo que tienes ahora</div>",
+   "code": "let mh = '<div class=\"t\">Nivel máximo con lo que tienes ahora</div>';"
+  },
+  {
+   "n": 95,
+   "line": 1798,
+   "text": "<div class=\"v\" style=\"color:var(--ambar)\">Aún no llega ni a crearla</div>",
+   "code": "mh += '<div class=\"v\" style=\"color:var(--ambar)\">Aún no llega ni a crearla</div>' +"
+  },
+  {
+   "n": 96,
+   "line": 1799,
+   "text": "<div class=\"d\">Crear esta criatura cuesta <b>",
+   "code": "'<div class=\"d\">Crear esta criatura cuesta <b>'+nf(cCrear)+' ADN</b> y tienes <b>'+nf(tengo)+"
+  },
+  {
+   "n": 97,
+   "line": 1799,
+   "text": " ADN</b> y tienes <b>",
+   "code": "'<div class=\"d\">Crear esta criatura cuesta <b>'+nf(cCrear)+' ADN</b> y tienes <b>'+nf(tengo)+"
+  },
+  {
+   "n": 98,
+   "line": 1800,
+   "text": "</b>. Te faltan <b>",
+   "code": "'</b>. Te faltan <b>'+nf(cCrear-tengo)+'</b> para que exista. Su nivel de nacimiento es el <b>'+m+'</b>.</div>';"
+  },
+  {
+   "n": 99,
+   "line": 1800,
+   "text": "</b> para que exista. Su nivel de nacimiento es el <b>",
+   "code": "'</b>. Te faltan <b>'+nf(cCrear-tengo)+'</b> para que exista. Su nivel de nacimiento es el <b>'+m+'</b>.</div>';"
+  },
+  {
+   "n": 100,
+   "line": 1803,
+   "text": "<div class=\"v\">Nivel <b>",
+   "code": "mh += '<div class=\"v\">Nivel <b>'+mx.nivel+'</b>' +"
+  },
+  {
+   "n": 101,
+   "line": 1806,
+   "text": "<div class=\"d\">Con <b>",
+   "code": "mh += '<div class=\"d\">Con <b>'+nf(tengo)+' ADN</b>' +"
+  },
+  {
+   "n": 102,
+   "line": 1806,
+   "text": " ADN</b>",
+   "code": "mh += '<div class=\"d\">Con <b>'+nf(tengo)+' ADN</b>' +"
+  },
+  {
+   "n": 103,
+   "line": 1807,
+   "text": " desde el nivel <b>",
+   "code": "(inv.creado ? ' desde el nivel <b>'+desde+'</b>' : ' partiendo de cero') +"
+  },
+  {
+   "n": 104,
+   "line": 1807,
+   "text": " partiendo de cero",
+   "code": "(inv.creado ? ' desde el nivel <b>'+desde+'</b>' : ' partiendo de cero') +"
+  },
+  {
+   "n": 105,
+   "line": 1808,
+   "text": " llegas al nivel <b>",
+   "code": "' llegas al nivel <b>'+mx.nivel+'</b>' +"
+  },
+  {
+   "n": 106,
+   "line": 1809,
+   "text": "</b> nivel",
+   "code": "(subio > 0 ? ' (subes <b>'+subio+'</b> nivel'+(subio===1?'':'es')+')' : '') +"
+  },
+  {
+   "n": 107,
+   "line": 1810,
+   "text": ". Gastarías <b>",
+   "code": "'. Gastarías <b>'+nf(mx.gastado)+'</b> y te sobrarían <b>'+nf(mx.sobra)+'</b>.';"
+  },
+  {
+   "n": 108,
+   "line": 1810,
+   "text": "</b> y te sobrarían <b>",
+   "code": "'. Gastarías <b>'+nf(mx.gastado)+'</b> y te sobrarían <b>'+nf(mx.sobra)+'</b>.';"
+  },
+  {
+   "n": 109,
+   "line": 1812,
+   "text": " <b style=\"color:var(--verde)\">Ya te alcanza para el objetivo ",
+   "code": "mh += ' <b style=\"color:var(--verde)\">Ya te alcanza para el objetivo '+hasta+'.</b>';"
+  },
+  {
+   "n": 110,
+   "line": 1815,
+   "text": " Te faltan <b style=\"color:var(--ambar)\">",
+   "code": "mh += ' Te faltan <b style=\"color:var(--ambar)\">'+nf(falta)+' ADN</b> para el nivel '+hasta+'.';"
+  },
+  {
+   "n": 111,
+   "line": 1815,
+   "text": " ADN</b> para el nivel ",
+   "code": "mh += ' Te faltan <b style=\"color:var(--ambar)\">'+nf(falta)+' ADN</b> para el nivel '+hasta+'.';"
+  },
+  {
+   "n": 112,
+   "line": 1819,
+   "text": "<div class=\"d\">Está en el <b>tope del juego (nivel ",
+   "code": "mh += '<div class=\"d\">Está en el <b>tope del juego (nivel '+M.nivelMax+')</b>.</div>';"
+  },
+  {
+   "n": 113,
+   "line": 1828,
+   "text": "<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">",
+   "code": "h += '<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">'+nf(adnNec)+'</div><div class=\"n\">de '+(sinCrear?\"sin crear\":\"nivel \"+desde)+' a '+hasta+'</div></div>';"
+  },
+  {
+   "n": 114,
+   "line": 1828,
+   "text": "</div><div class=\"n\">de ",
+   "code": "h += '<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">'+nf(adnNec)+'</div><div class=\"n\">de '+(sinCrear?\"sin crear\":\"nivel \"+desde)+' a '+hasta+'</div></div>';"
+  },
+  {
+   "n": 115,
+   "line": 1828,
+   "text": "sin crear",
+   "code": "h += '<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">'+nf(adnNec)+'</div><div class=\"n\">de '+(sinCrear?\"sin crear\":\"nivel \"+desde)+' a '+hasta+'</div></div>';"
+  },
+  {
+   "n": 116,
+   "line": 1828,
+   "text": "nivel ",
+   "code": "h += '<div class=\"cifra al\"><div class=\"k\">ADN necesario</div><div class=\"v\">'+nf(adnNec)+'</div><div class=\"n\">de '+(sinCrear?\"sin crear\":\"nivel \"+desde)+' a '+hasta+'</div></div>';"
+  },
+  {
+   "n": 117,
+   "line": 1829,
+   "text": ">ADN que falta</div><div class=",
+   "code": "h += '<div class=\"cifra '+(deficit>0?\"wa\":\"al\")+'\"><div class=\"k\">ADN que falta</div><div class=\"v\">'+nf(deficit)+'</div><div class=\"n\">tienes '+nf(tengo)+'</div></div>';"
+  },
+  {
+   "n": 118,
+   "line": 1830,
+   "text": "<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">'+nf(monNec)+'</div><div class=\"n\">solo por subir de nivel</div></div>';"
+  },
+  {
+   "n": 119,
+   "line": 1830,
+   "text": "</div><div class=\"n\">solo por subir de nivel</div></div>",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">'+nf(monNec)+'</div><div class=\"n\">solo por subir de nivel</div></div>';"
+  },
+  {
+   "n": 120,
+   "line": 1834,
+   "text": "<div class=\"aviso\" style=\"margin-top:14px\">El tope de ADN de una criatura <b>",
+   "code": "h += '<div class=\"aviso\" style=\"margin-top:14px\">El tope de ADN de una criatura <b>'+RAREZAS[r].toLowerCase()+"
+  },
+  {
+   "n": 121,
+   "line": 1835,
+   "text": "</b> es <b>",
+   "code": "'</b> es <b>'+nf(tope)+'</b>. Necesitas '+nf(deficit)+' → tendrás que reunirlo en <b>'+vueltas+"
+  },
+  {
+   "n": 122,
+   "line": 1835,
+   "text": " → tendrás que reunirlo en <b>",
+   "code": "'</b> es <b>'+nf(tope)+'</b>. Necesitas '+nf(deficit)+' → tendrás que reunirlo en <b>'+vueltas+"
+  },
+  {
+   "n": 123,
+   "line": 1836,
+   "text": " tandas</b>, convirtiendo el sobrante en catalizadores o gastándolo.</div>",
+   "code": "' tandas</b>, convirtiendo el sobrante en catalizadores o gastándolo.</div>';"
+  },
+  {
+   "n": 124,
+   "line": 1841,
+   "text": "<h2 style=\"margin-top:20px\">Fusiones necesarias</h2>",
+   "code": "h += '<h2 style=\"margin-top:20px\">Fusiones necesarias</h2>';"
+  },
+  {
+   "n": 125,
+   "line": 1843,
+   "text": "<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">'+nf(f)+'</div><div class=\"n\">a '+M.media+' ADN por fusión</div></div>';"
+  },
+  {
+   "n": 126,
+   "line": 1843,
+   "text": " ADN por fusión</div></div>",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">'+nf(f)+'</div><div class=\"n\">a '+M.media+' ADN por fusión</div></div>';"
+  },
+  {
+   "n": 127,
+   "line": 1844,
+   "text": "<div class=\"cifra\"><div class=\"k\">Monedas de fusión</div><div class=\"v\">",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Monedas de fusión</div><div class=\"v\">'+nf(f*(M.monedasFusion[r]||0))+'</div><div class=\"n\">'+nf(M.monedasFusion[r])+' por fusión</div></div>';"
+  },
+  {
+   "n": 128,
+   "line": 1844,
+   "text": " por fusión</div></div>",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Monedas de fusión</div><div class=\"v\">'+nf(f*(M.monedasFusion[r]||0))+'</div><div class=\"n\">'+nf(M.monedasFusion[r])+' por fusión</div></div>';"
+  },
+  {
+   "n": 129,
+   "line": 1845,
+   "text": "<div class=\"cifra\"><div class=\"k\">Nivel de los ingredientes</div><div class=\"v\">",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Nivel de los ingredientes</div><div class=\"v\">'+nivelIng+'</div><div class=\"n\">mínimo exigido</div></div>';"
+  },
+  {
+   "n": 130,
+   "line": 1845,
+   "text": "</div><div class=\"n\">mínimo exigido</div></div>",
+   "code": "h += '<div class=\"cifra\"><div class=\"k\">Nivel de los ingredientes</div><div class=\"v\">'+nivelIng+'</div><div class=\"n\">mínimo exigido</div></div>';"
+  },
+  {
+   "n": 131,
+   "line": 1848,
+   "text": "<th class=\"num\">ADN por fusión</th><th class=\"num\">ADN total a reunir</th></tr></thead><tbody>",
+   "code": "'<th class=\"num\">ADN por fusión</th><th class=\"num\">ADN total a reunir</th></tr></thead><tbody>';"
+  },
+  {
+   "n": 132,
+   "line": 1856,
+   "text": "<div class=\"nota\">Las fusiones son una <b>estimación</b>: cada fusión da una cantidad aleatoria de ADN y la media es ",
+   "code": "h += '<div class=\"nota\">Las fusiones son una <b>estimación</b>: cada fusión da una cantidad aleatoria de ADN y la media es '+"
+  },
+  {
+   "n": 133,
+   "line": 1857,
+   "text": ". En la práctica puede hacerte falta alguna más.</div>",
+   "code": "M.media+'. En la práctica puede hacerte falta alguna más.</div>';"
+  },
+  {
+   "n": 134,
+   "line": 1859,
+   "text": "<div class=\"aviso info\" style=\"margin-top:14px\">Esta criatura no se obtiene por fusión: hay que ",
+   "code": "h += '<div class=\"aviso info\" style=\"margin-top:14px\">Esta criatura no se obtiene por fusión: hay que '+"
+  },
+  {
+   "n": 135,
+   "line": 1860,
+   "text": "<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>",
+   "code": "'<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>';"
+  },
+  {
+   "n": 136,
+   "line": 1864,
+   "text": "<button class=\"acc\" id=\"btnGuardar\">Guardar en «Mis criaturas»</button></div></div>",
+   "code": "'<button class=\"acc\" id=\"btnGuardar\">Guardar en «Mis criaturas»</button></div></div>';"
+  },
+  {
+   "n": 137,
+   "line": 1880,
+   "text": "Guardar en «Mis criaturas»",
+   "code": "setTimeout(() => b.textContent = \"Guardar en «Mis criaturas»\", 1400);"
+  },
+  {
+   "n": 138,
+   "line": 1913,
+   "text": "<p class=\"vacio-txt\">Elige una criatura en la pestaña «Calculadora».</p>",
+   "code": "if (!elegido){ cont.innerHTML = '<p class=\"vacio-txt\">Elige una criatura en la pestaña «Calculadora».</p>'; return; }"
+  },
+  {
+   "n": 139,
+   "line": 1933,
+   "text": "<div class=\"cifra al\"><div class=\"k\">ADN a recolectar</div><div class=\"v\">",
+   "code": "'<div class=\"cifra al\"><div class=\"k\">ADN a recolectar</div><div class=\"v\">'+nf(tt.recolectar)+'</div>'+"
+  },
+  {
+   "n": 140,
+   "line": 1934,
+   "text": "<div class=\"n\">de las ",
+   "code": "'<div class=\"n\">de las '+tt.hojas+' criaturas que no se fusionan'+"
+  },
+  {
+   "n": 141,
+   "line": 1934,
+   "text": " criaturas que no se fusionan",
+   "code": "'<div class=\"n\">de las '+tt.hojas+' criaturas que no se fusionan'+"
+  },
+  {
+   "n": 142,
+   "line": 1935,
+   "text": " compartida, contada una vez",
+   "code": "(tt.repetidas ? ' · '+tt.repetidas+(tt.repetidas===1 ? ' compartida, contada una vez'"
+  },
+  {
+   "n": 143,
+   "line": 1936,
+   "text": " compartidas, contadas una vez",
+   "code": ": ' compartidas, contadas una vez') : '')+"
+  },
+  {
+   "n": 144,
+   "line": 1938,
+   "text": "<div class=\"cifra\"><div class=\"k\">Fusiones totales</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Fusiones totales</div><div class=\"v\">'+nf(tt.fus)+'</div></div>' +"
+  },
+  {
+   "n": 145,
+   "line": 1939,
+   "text": "<div class=\"cifra\"><div class=\"k\">Monedas totales</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Monedas totales</div><div class=\"v\">'+nf(tt.mon + tt.monFus)+'</div>'+"
+  },
+  {
+   "n": 146,
+   "line": 1941,
+   "text": "<div class=\"cifra\"><div class=\"k\">Criaturas en el árbol</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Criaturas en el árbol</div><div class=\"v\">'+tt.nodos+'</div>'+"
+  },
+  {
+   "n": 147,
+   "line": 1942,
+   "text": "<div class=\"n\">raíz + ingredientes en cascada</div></div>",
+   "code": "'<div class=\"n\">raíz + ingredientes en cascada</div></div>' +"
+  },
+  {
+   "n": 148,
+   "line": 1945,
+   "text": "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edita el <b>nivel</b> y el <b>ADN</b> de ",
+   "code": "h += '<div class=\"aviso info\" style=\"margin-bottom:16px\">Edita el <b>nivel</b> y el <b>ADN</b> de '+"
+  },
+  {
+   "n": 149,
+   "line": 1946,
+   "text": "cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. ",
+   "code": "'cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. '+"
+  },
+  {
+   "n": 150,
+   "line": 1947,
+   "text": "Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>",
+   "code": "'Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>';"
+  },
+  {
+   "n": 151,
+   "line": 1952,
+   "text": "<label class=\"chk\" title=\"Si no está creada, se suma el ADN de crearla\">",
+   "code": "s += '<label class=\"chk\" title=\"Si no está creada, se suma el ADN de crearla\">'+"
+  },
+  {
+   "n": 152,
+   "line": 1961,
+   "text": "\">Nivel</label>",
+   "code": "s += '<div><label for=\"lv-'+n.uuid+'\">Nivel</label>'+"
+  },
+  {
+   "n": 153,
+   "line": 1963,
+   "text": "\" data-campo=\"nivel\" value=\"",
+   "code": "'data-u=\"'+n.uuid+'\" data-campo=\"nivel\" value=\"'+(n.creado?n.desde:0)+'\"></div>';"
+  },
+  {
+   "n": 154,
+   "line": 1964,
+   "text": "\">ADN que tienes</label>",
+   "code": "s += '<div><label for=\"ad-'+n.uuid+'\">ADN que tienes</label>'+"
+  },
+  {
+   "n": 155,
+   "line": 1966,
+   "text": "\" data-campo=\"adn\" value=\"",
+   "code": "'data-u=\"'+n.uuid+'\" data-campo=\"adn\" value=\"'+n.tengo+'\"></div>';"
+  },
+  {
+   "n": 156,
+   "line": 1967,
+   "text": "<div><label>Nivel que exige la fusión</label>",
+   "code": "s += '<div><label>Nivel que exige la fusión</label>'+"
+  },
+  {
+   "n": 157,
+   "line": 1976,
+   "text": "<div class=\"nodo ",
+   "code": "s += '<div class=\"nodo '+(prof?'':'raiz')+' '+(n.esHoja?'hoja':'')+'\">';"
+  },
+  {
+   "n": 158,
+   "line": 1982,
+   "text": "<span class=\"pill\">raíz</span>",
+   "code": ": '<span class=\"pill\">raíz</span>')+"
+  },
+  {
+   "n": 159,
+   "line": 1983,
+   "text": "<span class=\"pill\" title=\"Esta criatura sale en ",
+   "code": "(cuenta[n.uuid] > 1 ? '<span class=\"pill\" title=\"Esta criatura sale en '+"
+  },
+  {
+   "n": 160,
+   "line": 1984,
+   "text": " ramas del árbol. Su ADN es una sola reserva: lo que tienes se cuenta una vez, ",
+   "code": "cuenta[n.uuid]+' ramas del árbol. Su ADN es una sola reserva: lo que tienes se cuenta una vez, '+"
+  },
+  {
+   "n": 161,
+   "line": 1985,
+   "text": "y el total está en el informe de la calculadora.\">sale ×",
+   "code": "'y el total está en el informe de la calculadora.\">sale ×'+cuenta[n.uuid]+'</span>' : '')+"
+  },
+  {
+   "n": 162,
+   "line": 1986,
+   "text": "<span class=\"pill\">sin crear</span>",
+   "code": "(!n.creado ? '<span class=\"pill\">sin crear</span>' : '')+"
+  },
+  {
+   "n": 163,
+   "line": 1990,
+   "text": "</b> para subir",
+   "code": "if (n.cuentaSubir && n.adnSubir) tz.push('<b>'+nf(n.adnSubir)+'</b> para subir');"
+  },
+  {
+   "n": 164,
+   "line": 1991,
+   "text": "</b> para fusionar",
+   "code": "if (n.extra) tz.push('<b>'+nf(n.extra)+'</b> para fusionar');"
+  },
+  {
+   "n": 165,
+   "line": 1993,
+   "text": "0 (sin crear)",
+   "code": "(n.objetivo > n.desde ? 'subir <b>'+(n.creado?n.desde:'0 (sin crear)')+' → '+n.objetivo+'</b>'"
+  },
+  {
+   "n": 166,
+   "line": 1994,
+   "text": "ya en nivel <b>",
+   "code": ": 'ya en nivel <b>'+n.desde+'</b>') +"
+  },
+  {
+   "n": 167,
+   "line": 1995,
+   "text": "nada que reunir",
+   "code": "' · ' + (tz.length ? tz.join(' + ') : 'nada que reunir') +"
+  },
+  {
+   "n": 168,
+   "line": 1996,
+   "text": "</b> ADN",
+   "code": "' = <b>'+nf(n.adnNec)+'</b> ADN' +"
+  },
+  {
+   "n": 169,
+   "line": 1997,
+   "text": " · tienes <b>",
+   "code": "(n.tengo ? ' · tienes <b>'+nf(n.tengo)+'</b>' : '') +"
+  },
+  {
+   "n": 170,
+   "line": 1998,
+   "text": "\">falta ",
+   "code": "' → <b style=\"color:'+(n.deficit>0?'var(--ambar)':'var(--verde)')+'\">falta '+nf(n.deficit)+'</b>' +"
+  },
+  {
+   "n": 171,
+   "line": 1999,
+   "text": "</b> fusiones (",
+   "code": "(n.fusiones ? ' · <b>'+nf(n.fusiones)+'</b> fusiones ('+nf(n.monFus)+' monedas)' : '') +"
+  },
+  {
+   "n": 172,
+   "line": 1999,
+   "text": " monedas)",
+   "code": "(n.fusiones ? ' · <b>'+nf(n.fusiones)+'</b> fusiones ('+nf(n.monFus)+' monedas)' : '') +"
+  },
+  {
+   "n": 173,
+   "line": 2008,
+   "text": "Con sus <b>",
+   "code": "mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN no llega ni a crearla (cuesta <b>'+"
+  },
+  {
+   "n": 174,
+   "line": 2008,
+   "text": "</b> ADN no llega ni a crearla (cuesta <b>",
+   "code": "mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN no llega ni a crearla (cuesta <b>'+"
+  },
+  {
+   "n": 175,
+   "line": 2011,
+   "text": "Con sus <b>",
+   "code": "mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN llega al <b>nivel '+mx.nivel+'</b>' +"
+  },
+  {
+   "n": 176,
+   "line": 2011,
+   "text": "</b> ADN llega al <b>nivel ",
+   "code": "mn = 'Con sus <b>'+nf(n.tengo)+'</b> ADN llega al <b>nivel '+mx.nivel+'</b>' +"
+  },
+  {
+   "n": 177,
+   "line": 2012,
+   "text": " <span style=\"color:var(--verde)\">— ya cumple el objetivo ",
+   "code": "(mx.nivel >= n.objetivo ? ' <span style=\"color:var(--verde)\">— ya cumple el objetivo '+"
+  },
+  {
+   "n": 178,
+   "line": 2014,
+   "text": "</b> ADN para el ",
+   "code": "'</b> ADN para el '+n.objetivo);"
+  },
+  {
+   "n": 179,
+   "line": 2121,
+   "text": " a la calculadora",
+   "code": "esc(\"Llevar \"+C[u][0]+\" a la calculadora\")+'\">'+"
+  },
+  {
+   "n": 180,
+   "line": 2131,
+   "text": "<p class=\"vacio-txt\">Todavía no has guardado ninguna criatura. Elige una en la ",
+   "code": "cont.innerHTML = '<p class=\"vacio-txt\">Todavía no has guardado ninguna criatura. Elige una en la '+"
+  },
+  {
+   "n": 181,
+   "line": 2132,
+   "text": "pestaña «Calculadora» y pulsa <b>Guardar en «Mis criaturas»</b>. Lo que teclees en el ",
+   "code": "'pestaña «Calculadora» y pulsa <b>Guardar en «Mis criaturas»</b>. Lo que teclees en el '+"
+  },
+  {
+   "n": 182,
+   "line": 2133,
+   "text": "«Árbol de fusión» sirve para el cálculo, pero <b>no entra en esta lista</b>: aquí solo ",
+   "code": "'«Árbol de fusión» sirve para el cálculo, pero <b>no entra en esta lista</b>: aquí solo '+"
+  },
+  {
+   "n": 183,
+   "line": 2134,
+   "text": "aparece lo que guardas a propósito.</p>",
+   "code": "'aparece lo que guardas a propósito.</p>';"
+  },
+  {
+   "n": 184,
+   "line": 2137,
+   "text": "<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Criatura</th><th>Rareza</th>",
+   "code": "let h = '<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Criatura</th><th>Rareza</th>'+"
+  },
+  {
+   "n": 185,
+   "line": 2138,
+   "text": "<th class=\"num\">Nivel</th><th class=\"num\">Mejoras</th><th class=\"num\">ADN</th>",
+   "code": "'<th class=\"num\">Nivel</th><th class=\"num\">Mejoras</th><th class=\"num\">ADN</th>'+"
+  },
+  {
+   "n": 186,
+   "line": 2139,
+   "text": "<th class=\"num\">Nivel máx. hoy</th>",
+   "code": "'<th class=\"num\">Nivel máx. hoy</th>'+"
+  },
+  {
+   "n": 187,
+   "line": 2140,
+   "text": "<th class=\"num\">Objetivo</th><th class=\"num\">Falta ADN</th><th class=\"num\">Monedas</th><th></th></tr></thead><tbody>",
+   "code": "'<th class=\"num\">Objetivo</th><th class=\"num\">Falta ADN</th><th class=\"num\">Monedas</th><th></th></tr></thead><tbody>';"
+  },
+  {
+   "n": 188,
+   "line": 2156,
+   "text": "Ir a la calculadora de ",
+   "code": "const titulo = 'Ir a la calculadora de '+esc(C[u][0]);"
+  },
+  {
+   "n": 189,
+   "line": 2166,
+   "text": "<span class=\"pill\" style=\"margin:0\">sin crear</span>",
+   "code": "'<td class=\"num\">'+(inv.creado ? desde : '<span class=\"pill\" style=\"margin:0\">sin crear</span>')+'</td>'+"
+  },
+  {
+   "n": 190,
+   "line": 2191,
+   "text": "<div class=\"cifra wa\"><div class=\"k\">ADN pendiente</div><div class=\"v\">",
+   "code": "'<div class=\"cifra wa\"><div class=\"k\">ADN pendiente</div><div class=\"v\">'+nf(tAdn)+'</div><div class=\"n\">en '+us.length+' criaturas</div></div>'+"
+  },
+  {
+   "n": 191,
+   "line": 2191,
+   "text": " criaturas</div></div>",
+   "code": "'<div class=\"cifra wa\"><div class=\"k\">ADN pendiente</div><div class=\"v\">'+nf(tAdn)+'</div><div class=\"n\">en '+us.length+' criaturas</div></div>'+"
+  },
+  {
+   "n": 192,
+   "line": 2192,
+   "text": "<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">'+nf(tMon)+'</div></div>'+"
+  },
+  {
+   "n": 193,
+   "line": 2193,
+   "text": "<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Fusiones</div><div class=\"v\">'+nf(tFus)+'</div></div>';"
+  },
+  {
+   "n": 194,
+   "line": 2221,
+   "text": "<p class=\"vacio-txt\">Mete algo de ADN.</p>",
+   "code": "if (!total){ document.getElementById(\"catSalida\").innerHTML = '<p class=\"vacio-txt\">Mete algo de ADN.</p>'; return; }"
+  },
+  {
+   "n": 195,
+   "line": 2225,
+   "text": "Rara/Épica",
+   "code": "else if (frac.rare + frac.epic > .5){ tier = \"Plata\"; mayoria = \"Rara/Épica\"; }"
+  },
+  {
+   "n": 196,
+   "line": 2226,
+   "text": "Común",
+   "code": "else { tier = \"Bronce\"; mayoria = \"Común\"; }"
+  },
+  {
+   "n": 197,
+   "line": 2229,
+   "text": "<div class=\"cifra\"><div class=\"k\">Puntos del tanque</div><div class=\"v\">",
+   "code": "'<div class=\"cifra\"><div class=\"k\">Puntos del tanque</div><div class=\"v\">'+nf(pts)+'</div><div class=\"n\">objetivo 75.000</div></div>' +"
+  },
+  {
+   "n": 198,
+   "line": 2230,
+   "text": "</div><div class=\"n\">mayoría ",
+   "code": "'<div class=\"cifra al\"><div class=\"k\">Catalizador</div><div class=\"v\">'+tier+'</div><div class=\"n\">mayoría '+mayoria+'</div></div>' +"
+  },
+  {
+   "n": 199,
+   "line": 2231,
+   "text": ">'+(falta>0?",
+   "code": "'<div class=\"cifra '+(falta>0?\"wa\":\"al\")+'\"><div class=\"k\">'+(falta>0?\"Faltan\":\"Sobran\")+'</div><div class=\"v\">'+nf(Math.abs(falta))+'</div><div class=\"n\">puntos</div></div>' +"
+  },
+  {
+   "n": 200,
+   "line": 2233,
+   "text": "<div class=\"nota\">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. ",
+   "code": "h += '<div class=\"nota\">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. '+"
+  },
+  {
+   "n": 201,
+   "line": 2234,
+   "text": "El tanque objetivo son 75.000 puntos.</div>",
+   "code": "'El tanque objetivo son 75.000 puntos.</div>';"
+  },
+  {
+   "n": 202,
+   "line": 2235,
+   "text": "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Receta observada</th><th class=\"num\">Rendimiento</th><th>Valoración</th></tr></thead><tbody>",
+   "code": "h += '<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Receta observada</th><th class=\"num\">Rendimiento</th><th>Valoración</th></tr></thead><tbody>'+"
+  },
+  {
+   "n": 203,
+   "line": 2236,
+   "text": "<tr><td>2.000 Épica + 3.500 Rara + 625 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>",
+   "code": "'<tr><td>2.000 Épica + 3.500 Rara + 625 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>'+"
+  },
+  {
+   "n": 204,
+   "line": 2237,
+   "text": "<tr><td>10.500 Común + 2.000 Épica + 690 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>",
+   "code": "'<tr><td>10.500 Común + 2.000 Épica + 690 Legendaria</td><td class=\"num\">36 Oro</td><td style=\"color:var(--verde)\">buena</td></tr>'+"
+  },
+  {
+   "n": 205,
+   "line": 2238,
+   "text": "<tr><td>1.500 Legendaria (sola)</td><td class=\"num\">40 Oro</td><td style=\"color:var(--rojo)\">mala: quema la más escasa</td></tr>",
+   "code": "'<tr><td>1.500 Legendaria (sola)</td><td class=\"num\">40 Oro</td><td style=\"color:var(--rojo)\">mala: quema la más escasa</td></tr>'+"
+  },
+  {
+   "n": 206,
+   "line": 2239,
+   "text": "<tr><td>20.000 Común + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>",
+   "code": "'<tr><td>20.000 Común + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>'+"
+  },
+  {
+   "n": 207,
+   "line": 2240,
+   "text": "<tr><td>5.000 Rara + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>",
+   "code": "'<tr><td>5.000 Rara + 2.000 Épica + 500 Legendaria</td><td class=\"num\">79 Plata</td><td style=\"color:var(--verde)\">buena</td></tr>'+"
+  },
+  {
+   "n": 208,
+   "line": 2242,
+   "text": "<tr><td>25.500 Común + 1.634 Épica + 500 Legendaria</td><td class=\"num\">159 Bronce</td><td style=\"color:var(--verde)\">buena</td></tr>",
+   "code": "'<tr><td>25.500 Común + 1.634 Épica + 500 Legendaria</td><td class=\"num\">159 Bronce</td><td style=\"color:var(--verde)\">buena</td></tr>'+"
+  },
+  {
+   "n": 209,
+   "line": 2243,
+   "text": "<tr><td>75.000 Común (sola)</td><td class=\"num\">125 Bronce</td><td style=\"color:var(--rojo)\">mala: la peor forma</td></tr>",
+   "code": "'<tr><td>75.000 Común (sola)</td><td class=\"num\">125 Bronce</td><td style=\"color:var(--rojo)\">mala: la peor forma</td></tr>'+"
+  },
+  {
+   "n": 210,
+   "line": 2267,
+   "text": "no es un objeto",
+   "code": "if (!d || typeof d !== \"object\" || Array.isArray(d)) throw new Error(\"no es un objeto\");"
+  },
+  {
+   "n": 211,
+   "line": 2285,
+   "text": " criaturas, ",
+   "code": "alert(\"Importadas \" + n + \" criaturas, \" + s + \" añadidas a «Mis criaturas».\");"
+  },
+  {
+   "n": 212,
+   "line": 2285,
+   "text": " añadidas a «Mis criaturas».",
+   "code": "alert(\"Importadas \" + n + \" criaturas, \" + s + \" añadidas a «Mis criaturas».\");"
+  },
+  {
+   "n": 213,
+   "line": 2286,
+   "text": "Ese fichero no vale: ",
+   "code": "} catch(e){ alert(\"Ese fichero no vale: \" + e.message); }"
+  },
+  {
+   "n": 214,
+   "line": 2293,
+   "text": "¿Borrar todas tus criaturas guardadas? No se puede deshacer.",
+   "code": "if (confirm(\"¿Borrar todas tus criaturas guardadas? No se puede deshacer.\")){"
+  }
+ ],
+ "mapa": {
+  "1": "Common",
+  "2": "Epic",
+  "3": "Unique",
+  "4": "Non-Hybrid",
+  "5": "Hybrid",
+  "6": "Super Hybrid",
+  "7": "Mega Hybrid",
+  "8": "Giga Hybrid",
+  "9": "no source on the map",
+  "10": "No origin data in the source",
+  "11": "In-game sources: ",
+  "12": " to the calculator",
+  "13": "level 0",
+  "14": "level 1",
+  "15": null,
+  "16": null,
+  "17": "are already ready to fuse",
+  "18": "<div class=\"informe\"><h3>Full tree report</h3>",
+  "19": "<div class=\"sub\">All the DNA needed to take <b>",
+  "20": "</b> to level ",
+  "21": ", creature by creature, down to the ones that are collected. «DNA needed» is what that ",
+  "22": "creature consumes across the whole tree: ",
+  "23": "its ladder plus the DNA added on top when it is fused.",
+  "24": "only the DNA added on top when it is fused, because the ingredients are ",
+  "25": "assumed to already be ready to fuse.",
+  "26": " What you already have is subtracted <b>only once</b>, even if the creature appears in several branches.</div>",
+  "27": "<div class=\"aviso info\" style=\"margin-top:12px\">The <b>«Count the DNA to level up the ",
+  "28": "ingredients»</b> checkbox is unchecked, so these figures follow the <b>paleo.gg</b> criterion. ",
+  "29": "Check it on the <b>Fusion Tree</b> tab to see what you actually need to gather.</div>",
+  "30": ">Total DNA missing</div><div class=",
+  "31": " different creatures",
+  "32": "</div><div class=\"n\">of the ones that are not fused</div></div>",
+  "33": "<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">",
+  "34": "</div><div class=\"n\">across the whole cascade</div></div>",
+  "35": "<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">",
+  "36": "<th>Creature</th><th class=\"num\">Level</th>",
+  "37": "<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>",
+  "38": "<th class=\"num\">Missing</th><th class=\"num\">Fusions</th></tr></thead><tbody>",
+  "39": null,
+  "40": " to level ",
+  "41": ", which is the minimum required by the ",
+  "42": "fusion of this tree. It starts at ",
+  "43": " to the calculator",
+  "44": " <span class=\"pill\">root</span>",
+  "45": "<tr class=\"total\"><td>Tree total</td>",
+  "46": "Sets to the level required by the fusion these ",
+  "47": " creatures of the ",
+  "48": "tree that are not yet created or are below that level. ",
+  "49": "The root creature is NOT touched, and those already at that level or ",
+  "50": "One creature appears",
+  "51": " creatures appear",
+  "52": " in <b>several branches</b> of the tree. Its DNA is a single pool: you need the sum of what ",
+  "53": "each branch asks for, and what you have counts once. That is why the rows <b>are not added up by hand</b>: ",
+  "54": "the correct figure is <b>Total DNA missing</b>.</div>",
+  "55": "<div class=\"nota\" style=\"margin-top:12px\">DNA you have to <b>go and collect</b>, by rarity ",
+  "56": "(only creatures that don't get fused):</div><div class=\"rr\">",
+  "57": "<div class=\"nota\" style=\"margin-top:12px\">Nothing left to collect: with what you have ",
+  "58": "you already cover the whole tree.</div>",
+  "59": null,
+  "60": null,
+  "61": null,
+  "62": "<div class=\"vacio\">No results.</div>",
+  "63": "level ",
+  "64": "not created",
+  "65": "Damage",
+  "66": "Crit",
+  "67": "Crit Dmg",
+  "68": "coins",
+  "69": " title=\"Remove one point of ",
+  "70": " title=\"Add one point of ",
+  "71": "Damage",
+  "72": "Select a creature to see its stats.",
+  "73": "level ",
+  "74": " · base at level 26: ",
+  "75": " · at level ",
+  "76": "</b> of <b>",
+  "77": "</b> · cap = level ",
+  "78": " from the track",
+  "79": "<br>The Enhancement track needs level <b>",
+  "80": "</b> or higher.",
+  "81": "<span class=\"st-ct\">Enhancement track</span>",
+  "82": "<span class=\"st-cq\">Complete: the ",
+  "83": " steps are in place.</span>",
+  "84": " to the calculator",
+  "85": "<div>Hatches at <b style=\"color:var(--tx)\">level ",
+  "86": "</b> · creating costs <b style=\"color:var(--tx)\">",
+  "87": " DNA</b> · DNA cap <b style=\"color:var(--tx)\">",
+  "88": "cap ",
+  "89": "0 = not created (hatches at ",
+  "90": null,
+  "91": null,
+  "92": null,
+  "93": null,
+  "94": "<div class=\"t\">Max level with what you have now</div>",
+  "95": "<div class=\"v\" style=\"color:var(--ambar)\">Not even enough to create it</div>",
+  "96": "<div class=\"d\">Creating this creature costs <b>",
+  "97": " DNA</b> and you have <b>",
+  "98": "</b>. You are missing <b>",
+  "99": "</b> for it to exist. Its hatch level is <b>",
+  "100": "<div class=\"v\">Level <b>",
+  "101": "<div class=\"d\">With <b>",
+  "102": " DNA</b>",
+  "103": " from level <b>",
+  "104": " from scratch",
+  "105": " you reach level <b>",
+  "106": "</b> level",
+  "107": ". You would spend <b>",
+  "108": "</b> and would be left with <b>",
+  "109": " <b style=\"color:var(--verde)\">You now have enough for the target ",
+  "110": " You are missing <b style=\"color:var(--ambar)\">",
+  "111": " DNA</b> for level ",
+  "112": "<div class=\"d\">It's at the <b>game cap (level ",
+  "113": "<div class=\"cifra al\"><div class=\"k\">DNA needed</div><div class=\"v\">",
+  "114": "</div><div class=\"n\">from ",
+  "115": "not created",
+  "116": "level ",
+  "117": ">DNA missing</div><div class=",
+  "118": "<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">",
+  "119": "</div><div class=\"n\">only from leveling up</div></div>",
+  "120": "<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>",
+  "121": "</b> is <b>",
+  "122": " → you'll have to gather it in <b>",
+  "123": " batches</b>, converting the surplus into catalysts or spending it.</div>",
+  "124": "<h2 style=\"margin-top:20px\">Fusions needed</h2>",
+  "125": "<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">",
+  "126": " DNA per fusion</div></div>",
+  "127": "<div class=\"cifra\"><div class=\"k\">Fusion coins</div><div class=\"v\">",
+  "128": " per fusion</div></div>",
+  "129": "<div class=\"cifra\"><div class=\"k\">Ingredient level</div><div class=\"v\">",
+  "130": "</div><div class=\"n\">minimum required</div></div>",
+  "131": "<th class=\"num\">DNA per fusion</th><th class=\"num\">Total DNA to gather</th></tr></thead><tbody>",
+  "132": "<div class=\"nota\">Fusions are an <b>estimate</b>: each fusion gives a random amount of DNA and the average is ",
+  "133": ". In practice you may need a few more.</div>",
+  "134": "<div class=\"aviso info\" style=\"margin-top:14px\">This creature is not obtained by fusion: you have to ",
+  "135": "<b>gather the DNA</b> in encounters, incubators or events.</div>",
+  "136": "<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>",
+  "137": "Save to «My creatures»",
+  "138": "<p class=\"vacio-txt\">Choose a creature in the «Calculator» tab.</p>",
+  "139": "<div class=\"cifra al\"><div class=\"k\">DNA to collect</div><div class=\"v\">",
+  "140": "<div class=\"n\">of the ",
+  "141": " creatures that are not fused",
+  "142": " shared, counted once",
+  "143": " shared, counted once",
+  "144": "<div class=\"cifra\"><div class=\"k\">Total fusions</div><div class=\"v\">",
+  "145": "<div class=\"cifra\"><div class=\"k\">Total coins</div><div class=\"v\">",
+  "146": "<div class=\"cifra\"><div class=\"k\">Creatures in the tree</div><div class=\"v\">",
+  "147": "<div class=\"n\">root + cascading ingredients</div></div>",
+  "148": "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edit the <b>level</b> and <b>DNA</b> of ",
+  "149": "any creature in the tree. It saves instantly and recalculates everything that hangs from it. ",
+  "150": "If you uncheck <b>Created</b>, the DNA to create it is added to the calculation.</div>",
+  "151": "<label class=\"chk\" title=\"If it is not created, the DNA to create it is added\">",
+  "152": "\">Level</label>",
+  "153": null,
+  "154": "\">DNA you have</label>",
+  "155": null,
+  "156": "<div><label>Level required for the fusion</label>",
+  "157": null,
+  "158": "<span class=\"pill\">root</span>",
+  "159": "<span class=\"pill\" title=\"This creature appears in ",
+  "160": " branches of the tree. Its DNA is a single pool: what you have is counted once, ",
+  "161": "and the total is in the calculator report.\">appears ×",
+  "162": "<span class=\"pill\">not created</span>",
+  "163": "</b> to level up",
+  "164": "</b> to fuse",
+  "165": "0 (not created)",
+  "166": "already at level <b>",
+  "167": "nothing to gather",
+  "168": "</b> DNA",
+  "169": " · you have <b>",
+  "170": "\">missing ",
+  "171": "</b> fusions (",
+  "172": " coins)",
+  "173": "With its <b>",
+  "174": "</b> DNA it cannot even create it (costs <b>",
+  "175": "With its <b>",
+  "176": "</b> DNA it reaches <b>level ",
+  "177": " <span style=\"color:var(--verde)\">— already meets the target ",
+  "178": "</b> DNA for level ",
+  "179": " to the calculator",
+  "180": "<p class=\"vacio-txt\">You have not saved any creature yet. Pick one in the ",
+  "181": "tab «Calculator» and press <b>Save to «My Creatures»</b>. What you type in the ",
+  "182": "«Fusion Tree» is used for the calculation, but <b>does not go into this list</b>: here only ",
+  "183": "what you save on purpose appears.</p>",
+  "184": "<div style=\"overflow:auto\"><table><thead><tr><th></th><th>Creature</th><th>Rarity</th>",
+  "185": "<th class=\"num\">Level</th><th class=\"num\">Boosts</th><th class=\"num\">DNA</th>",
+  "186": "<th class=\"num\">Max level today</th>",
+  "187": "<th class=\"num\">Target</th><th class=\"num\">Missing DNA</th><th class=\"num\">Coins</th><th></th></tr></thead><tbody>",
+  "188": "Go to the calculator for ",
+  "189": "<span class=\"pill\" style=\"margin:0\">not created</span>",
+  "190": "<div class=\"cifra wa\"><div class=\"k\">Pending DNA</div><div class=\"v\">",
+  "191": " creatures</div></div>",
+  "192": "<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">",
+  "193": "<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">",
+  "194": "<p class=\"vacio-txt\">Enter some DNA.</p>",
+  "195": "Rare/Epic",
+  "196": "Common",
+  "197": "<div class=\"cifra\"><div class=\"k\">Tank points</div><div class=\"v\">",
+  "198": "</div><div class=\"n\">mostly ",
+  "199": null,
+  "200": "<div class=\"nota\">Weights per unit of DNA: Common 1 · Rare 4 · Epic 15 · Legendary 50. ",
+  "201": "The target tank is 75.000 points.</div>",
+  "202": "<div style=\"overflow:auto;margin-top:14px\"><table><thead><tr><th>Observed recipe</th><th class=\"num\">Yield</th><th>Rating</th></tr></thead><tbody>",
+  "203": "<tr><td>2.000 Epic + 3.500 Rare + 625 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>",
+  "204": "<tr><td>10.500 Common + 2.000 Epic + 690 Legendary</td><td class=\"num\">36 Gold</td><td style=\"color:var(--verde)\">good</td></tr>",
+  "205": "<tr><td>1.500 Legendary (alone)</td><td class=\"num\">40 Gold</td><td style=\"color:var(--rojo)\">bad: burns the scarcest</td></tr>",
+  "206": "<tr><td>20.000 Common + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>",
+  "207": "<tr><td>5.000 Rare + 2.000 Epic + 500 Legendary</td><td class=\"num\">79 Silver</td><td style=\"color:var(--verde)\">good</td></tr>",
+  "208": "<tr><td>25.500 Common + 1.634 Epic + 500 Legendary</td><td class=\"num\">159 Bronze</td><td style=\"color:var(--verde)\">good</td></tr>",
+  "209": "<tr><td>75.000 Common (alone)</td><td class=\"num\">125 Bronze</td><td style=\"color:var(--rojo)\">bad: the worst form</td></tr>",
+  "210": "not an object",
+  "211": " creatures, ",
+  "212": " added to «My Creatures».",
+  "213": "That file is not valid: ",
+  "214": "Delete all your saved creatures? This cannot be undone."
+ }
+}

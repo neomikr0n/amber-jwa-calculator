@@ -38,9 +38,11 @@ entregable: dos. No se le añadió al pie para que la frase cuadrara; se corrigi
 
 ## Cómo se usa
 
-`calculadora-jwa-3.22.html` **necesita la carpeta `img/` al lado**. El HTML solo pesa
-**262.117 bytes (256 KB)**; las fotos son 8,7 MB aparte. Si copias el fichero a otro sitio, cópiale también
+`amber-jwa-3.22.html` **necesita la carpeta `img/` al lado**. El HTML solo pesa
+**294099 bytes (287 KB)**; las fotos son 8,7 MB aparte. Si copias el fichero a otro sitio, cópiale también
 `img/`, o verás la herramienta sin fotos (no se rompe: simplemente no las muestra).
+El aumento respecto a la version en espanol es el diccionario de traduccion: las dos
+lenguas viajan en el mismo fichero, que sigue siendo autocontenido.
 
 No necesita internet, ni servidor, ni instalar nada. Se abre en cualquier navegador y
 funciona sin conexión. Tus datos (nivel, ADN y si está creada, de cada criatura) se

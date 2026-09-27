@@ -928,6 +928,15 @@ window.addEventListener("error", function(e){
 """
 
 html = open(HTML, encoding="utf-8").read()
+# Pin the language for this run: the assertions below read the Spanish
+# rendering, and the app now boots in English. It goes in the <head> because
+# that is where the app resolves the language, and the injected value beats
+# whatever a previous run stored.
+PIN = ('<script>window.__lang = "es";'
+       'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
+if "<head>" not in html:
+    raise SystemExit("no encuentro <head> para fijar el idioma")
+html = html.replace("<head>", "<head>\n" + PIN, 1)
 # El visor puede dejar atributos en <body> (data-page-node-id), asi que no
 # vale buscar "<body>" a secas.
 m = re.search(r"<body[^>]*>", html)
@@ -1002,6 +1011,15 @@ def pasada_tira():
         os.symlink(IMG, enlace)
 
     html = open(HTML, encoding="utf-8").read()
+    # Pin the language for this run: the assertions below read the Spanish
+    # rendering, and the app now boots in English. It goes in the <head>
+    # because that is where the app resolves the language, and the injected
+    # value beats anything a previous run stored.
+    PIN = ('<script>window.__lang = "es";'
+           'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
+    if "<head>" not in html:
+        raise SystemExit("no encuentro <head> para fijar el idioma")
+    html = html.replace("<head>", "<head>\n" + PIN, 1)
     LISTA = '["indoraptor","tyrannosaurus_rex","velociraptor"]'
     SEMILLA = (
         "<script>\n"

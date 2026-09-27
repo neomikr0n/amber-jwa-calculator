@@ -45,6 +45,14 @@ PEDIDO = {"common": "blanco", "rare": "azul", "epic": "amarillo", "legendary": "
 srv = arrancar()
 
 html = open(HTML, encoding="utf-8").read()
+# Pin the language for this run: the audit reads the Spanish rendering, and the
+# app now boots in English. It goes in the <head> because that is where the app
+# resolves the language.
+PIN = ('<script>window.__lang = "es";'
+       'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
+if "<head>" not in html:
+    raise SystemExit("no encuentro <head> para fijar el idioma")
+html = html.replace("<head>", "<head>\n" + PIN, 1)
 
 # 1) el bloque :root. Se vuelve a envolver en el selector: el grupo es solo las
 #    declaraciones, y pegarlas sueltas en la hoja las deja sin dueno -> var()
@@ -66,7 +74,11 @@ mm = re.search(r"const RAREZAS\s*=\s*\{(.*?)\}", html, re.S)
 mc = re.search(r"const CLASE\s*=\s*\{(.*?)\}", html, re.S)
 if not (mm and mc):
     raise SystemExit("no encuentro RAREZAS/CLASE en el entregable")
-rareza = dict(re.findall(r'(\w+)\s*:\s*"([^"]+)"', mm.group(1)))
+# The label may be a literal ("Apex") or an i18n() call, now that the interface
+# is bilingual: i18n("Common"). What is being checked is the mapping key -> label
+# and key -> CSS class, so the wrapper is optional here.
+VAL = r'(\w+)\s*:\s*(?:i18n\(\s*)?"([^"]+)"'
+rareza = dict(re.findall(VAL, mm.group(1)))
 clase = dict(re.findall(r'(\w+)\s*:\s*"([^"]+)"', mc.group(1)))
 declarado = dict(re.findall(r"--r-([a-z]+)\s*:\s*(#[0-9a-fA-F]{6})", raiz))
 

@@ -51,7 +51,7 @@ for m in re.finditer(r"i18n\((\'([^\']*)\'|\"((?:[^\"\\]|\\.)*)\")", fuente):
         usadas.add(m.group(2))
     else:
         usadas.add(json.loads('"%s"' % m.group(3)))
-for m in re.finditer(r"data-i18n(?:-html)?=\"([^\"]*)\"", fuente):
+for m in re.finditer(r"data-i18n(?:-html|-placeholder)?=\"([^\"]*)\"", fuente):
     usadas.add(html_mod.unescape(m.group(1)))
 
 i = fuente.index("const I18N_ES = {")
@@ -78,10 +78,13 @@ GUARDA_ES = '<script>try { localStorage.setItem("jwa322.idioma","es"); } catch (
 GUARDA_NADA = '<script>try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n'
 
 CASOS = [
-    # (name, injection into <head>, expected lang, expected label)
-    ("with nothing stored it boots in English", GUARDA_NADA, "en", "Calculator"),
-    ("the injected value beats the stored one", GUARDA_ES + PIN_EN, "en", "Calculator"),
-    ("with Spanish stored and no pin, it renders in Spanish", GUARDA_ES, "es", "Calculadora"),
+    # (name, injection into <head>, expected lang, expected label, expected placeholder)
+    ("with nothing stored it boots in English",
+     GUARDA_NADA, "en", "Calculator", "Type a name… (e.g. Indoraptor)"),
+    ("the injected value beats the stored one",
+     GUARDA_ES + PIN_EN, "en", "Calculator", "Type a name… (e.g. Indoraptor)"),
+    ("with Spanish stored and no pin, it renders in Spanish",
+     GUARDA_ES, "es", "Calculadora", "Escribe un nombre… (ej. Indoraptor)"),
 ]
 
 DIAG = r"""
@@ -95,8 +98,51 @@ window.addEventListener("load", function(){
   var lang = document.documentElement.lang;
   var b = document.querySelector('[data-t="calc"]');
   var etiqueta = b ? b.textContent.trim() : "(sin boton)";
-  ok("__NOMBRE__", lang === __LANG__ && etiqueta === __ETIQ__,
-     "lang=" + lang + " etiqueta=" + etiqueta);
+  /* The search placeholder is an ATTRIBUTE, and the bug this covers was exactly
+     that: every visible string was translated except the placeholder, which
+     stayed Spanish in the English interface. */
+  var q = document.getElementById("q");
+  var ph = q ? q.getAttribute("placeholder") : "(sin campo)";
+  ok("__NOMBRE__", lang === __LANG__ && etiqueta === __ETIQ__ && ph === __PLACE__,
+     "lang=" + lang + " etiqueta=" + etiqueta + " placeholder=" + ph);
+  /* The switch marks the language in use with aria-pressed; it has to be set in
+     BOTH languages. With the old `if (LANG !== "en") aplicarIdioma()` a page
+     booting in English left both buttons with no pressed state. */
+  var pulsado = null;
+  document.querySelectorAll("[data-idioma]").forEach(function(el){
+    if (el.getAttribute("aria-pressed") === "true") pulsado = el.dataset.idioma;
+  });
+  ok("the language switch marks the language in use", pulsado === lang,
+     "pressed=" + pulsado + " lang=" + lang);
+
+  /* The strings that only exist AFTER choosing a creature —the report, the tree,
+     the stats panel, the create buttons— are not in the starting page, so a scan
+     of the startup would miss them. The scenario is built here and the DOM is
+     scanned, titles and placeholders included, which is where the Spanish leaked
+     in the first place. */
+  try {
+    MIS = ["indoraptor", "allosaurus", "ankylos_lux"]; pintarFotos();
+    elegir("indoraptor");
+    function poner(id, v){ var e = document.getElementById(id); e.value = v;
+      e.dispatchEvent(new Event("input", {bubbles:true})); }
+    poner("nivelAct", "21"); poner("adnTengo", "100"); poner("nivelObj", "30");
+    document.querySelector('nav button[data-t="arbol"]').click();
+    pintarArbol(); refrescar();
+  } catch (e) {
+    ok("the scenario used for the language scan could be built", false, e.message);
+  }
+  if (lang === "en"){
+    var texto = document.body.innerText;
+    document.querySelectorAll("[title],[placeholder],[aria-label]").forEach(function(el){
+      ["title","placeholder","aria-label"].forEach(function(a){
+        var v = el.getAttribute(a); if (v) texto += "\n" + v;
+      });
+    });
+    var re = /\b(Escribe|Llevar|Pone|Criar|subir|subes|compartida|compartidas|fusionar|publicar|recién|santuario|combate|tuyo|Elige|Todavía|nace|Resultado|Necesitas)\b/;
+    var m = re.exec(texto);
+    ok("the English interface has no Spanish fragment left", !m,
+       m ? "found «" + m[0] + "»" : "none of the 19 markers");
+  }
   RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
   var p = document.createElement("pre"); p.id = "__diag";
   p.style.cssText = "position:fixed;inset:0;z-index:999999;background:#fff;color:#000;" +
@@ -118,12 +164,13 @@ env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",
             "MOZ_HEADLESS": "1", "MOZ_DISABLE_CONTENT_SANDBOX": "1", "HOME": DIR})
 
 resultados = []
-for k, (nombre, inyeccion, lang_esp, etiq_esp) in enumerate(CASOS):
+for k, (nombre, inyeccion, lang_esp, etiq_esp, place_esp) in enumerate(CASOS):
     if "<head>" not in fuente:
         raise SystemExit("no <head> found in the deliverable")
     pagina = fuente.replace("<head>", "<head>\n" + inyeccion, 1)
     diag = DIAG.replace("__NOMBRE__", nombre).replace("__LANG__", json.dumps(lang_esp)) \
-               .replace("__ETIQ__", json.dumps(etiq_esp))
+               .replace("__ETIQ__", json.dumps(etiq_esp)) \
+               .replace("__PLACE__", json.dumps(place_esp))
     srv = arrancar()
     diag = diag.replace("__ENTREGA__", srv.js("__diag"))
     destino = os.path.join(DIR, "caso%d.html" % k)

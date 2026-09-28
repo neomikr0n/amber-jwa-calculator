@@ -16,9 +16,9 @@ TWO THINGS THAT COST ME A BLANK SCREENSHOT, and that must be respected:
      inside something hidden and cannot be seen. It has to be moved to a clean
      body, with its `<style>`, which is what the script below does.
 
-Usage:  python3 captura_informe.py            # "default" theme, starting state
-      python3 captura_informe.py yellow     # "yellow" theme
-      python3 captura_informe.py default --despues   # after pressing "Criar a todas"
+Usage:  python3 captura_informe.py             # the default theme, starting state
+      python3 captura_informe.py boring      # the «Boring» theme
+      python3 captura_informe.py --despues   # after pressing "Criar a todas"
 
 The starting state carries an Ingredient CREATED BELOW the level the Fusion
 requires (Tyrannosaurus Rex at 11, when the Fusion asks for 15): it is the case
@@ -32,9 +32,9 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
 IMG = os.path.join(RAIZ, "img")
 
-TEMA = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else "default"
+TEMA = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else "yellow"
 DESPUES = "--despues" in sys.argv
-SUFIJO = "" if TEMA == "default" else "-" + TEMA
+SUFIJO = "" if TEMA == "yellow" else "-" + TEMA
 DIR = "/tmp/jwa-informe" + SUFIJO + ("-despues" if DESPUES else "")
 PERFIL = os.path.join(DIR, "perfil")
 SALIDA = os.path.join(DIR, "informe" + SUFIJO + ("-despues" if DESPUES else "") + ".png")
@@ -76,7 +76,11 @@ GUION = r"""
   document.body.innerHTML = "";
   hojas.forEach(function(s){ document.body.appendChild(s); });
   document.body.appendChild(copia);
-  document.body.style.background = "#0d1117";
+  /* The background comes from the theme the page is wearing, not from a
+     hardcoded hex: with the amber default, the old slate grey left a band that
+     belonged to no theme. The variable is the source of truth. */
+  document.body.style.background =
+    getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#000000";
   document.body.style.margin = "0";
   document.body.style.padding = "16px";
   document.body.style.width = "1080px";

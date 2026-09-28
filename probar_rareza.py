@@ -107,6 +107,31 @@ for r in ORDEN:
     if iguales:
         choques[h] = iguales
 
+# The alternative theme, pasted under a class so that both palettes can live on
+# the same page. It matters here for a measured reason: the tag tint is
+# translucent, so its contrast depends on the background, and the two themes no
+# longer share backgrounds (the default is deep black now). Measuring only the
+# default would stop covering the lightest panel, which is «boring»'s.
+m_b = re.search(r':root\[data-tema="boring"\]\s*\{(.*?)\}', html, re.S)
+if not m_b:
+    raise SystemExit("cannot find the [data-tema=boring] block in the deliverable")
+BLOQUE_BORING = m_b.group(1)
+
+def hex_var(bloque, nombre):
+    mm = re.search(r"--%s\s*:\s*(#[0-9a-fA-F]{6})" % nombre, bloque)
+    if not mm:
+        raise SystemExit("cannot find --%s in a theme block" % nombre)
+    return mm.group(1)
+
+def rgb_de(h):
+    h = h.lstrip("#")
+    return "rgb(%d, %d, %d)" % tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+# The default theme is the one in `:root`; «boring» is the other block.
+PANEL_DEF, PANEL_BOR = rgb_de(hex_var(m.group(1), "panel")), rgb_de(hex_var(BLOQUE_BORING, "panel"))
+BG_DEF = rgb_de(hex_var(m.group(1), "bg"))
+BG_DEF_ARR = "[" + BG_DEF.replace("rgb(", "").replace(")", "") + ",1]"
+
 filas = "".join(
     '<tr><td class="nom">%s</td><td><span class="tag rc-%s">%s</span></td>'
     '<td><code>--r-%s: %s</code></td></tr>'
@@ -126,6 +151,7 @@ arnes = """
   function ok(k, c, d){ if (!c) FALLOS++; RES.push((c ? "OK   " : "FALLO") + " " + k + ": " + (d===undefined?"":d)); }
   var ESPERADO = %(esperado)s;
   var NOMBRE = %(nombres)s;
+  var BG_DEF = %(bg_def_arr)s;   // the default theme's --bg, as [r,g,b,a]
   function aHex(rgb){
     var m = /rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/.exec(rgb);
     if (!m) return rgb;
@@ -149,11 +175,15 @@ arnes = """
   });
   ok("the seven tags are present", Object.keys(vistos).length === 7,
      Object.keys(vistos).length + " of 7");
-  // the panel background color must resolve, or the sample would lie
+  // The panel background of EACH theme must resolve, or the sample would lie.
   var caja = document.querySelector(".caja");
-  ok("the color variables resolve (the panel does not come out white)",
-     getComputedStyle(caja).backgroundColor === "rgb(23, 26, 35)",
-     getComputedStyle(caja).backgroundColor);
+  var cajaB = document.querySelector(".tema-boring .caja");
+  ok("the DEFAULT theme's panel resolves (it does not come out white)",
+     !!caja && getComputedStyle(caja).backgroundColor === "%(panel_def)s",
+     caja ? getComputedStyle(caja).backgroundColor : "(no caja)");
+  ok("and the «boring» theme's panel resolves as well",
+     !!cajaB && getComputedStyle(cajaB).backgroundColor === "%(panel_bor)s",
+     cajaB ? getComputedStyle(cajaB).backgroundColor : "(no boring section)");
   RES.push("");
   RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
   var d = document.createElement("pre"); d.id = "__diag";
@@ -163,7 +193,24 @@ arnes = """
 %(entrega)s
 })();
 </script>
-""" % {"esperado": esperado_js, "nombres": nombres_js, "entrega": srv.js("__diag")}
+""" % {"esperado": esperado_js, "nombres": nombres_js,
+       "panel_def": PANEL_DEF, "panel_bor": PANEL_BOR, "bg_def_arr": BG_DEF_ARR,
+       "entrega": srv.js("__diag")}
+
+# The same sample twice, once per theme. The second block hangs from
+# `.tema-boring`, which is the alternative theme's variables under a class.
+def cajas_de(nombre, bloque):
+    p, p2, bg = (hex_var(bloque, n) for n in ("panel", "panel2", "bg"))
+    return (
+        '<div class="caja"><h2>%s panel &mdash; %s</h2><table>%s</table></div>'
+        '<div class="caja p2"><h2>%s figure &mdash; %s</h2><table>%s</table></div>'
+        '<div class="caja bg"><h2>%s body &mdash; %s</h2><table>%s</table></div>'
+        '<div class="caja grande"><h2>%s &middot; at double size, to judge the shade</h2><p>%s</p></div>'
+        % (nombre, p, filas, nombre, p2, filas, nombre, bg, filas, nombre, tira)
+    )
+
+CAJAS = (cajas_de("Default", m.group(1)) + "\n" +
+         '<div class="tema-boring">' + cajas_de("Boring", BLOQUE_BORING) + "</div>")
 
 pagina = """<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
 <title>Rarity tags</title><style>
@@ -181,13 +228,11 @@ code{color:#5f6879;font-size:12px}
 .grande .tag{font-size:16px;padding:4px 12px}
 .grande p{margin:0;line-height:2.8}
 </style></head><body>
-<div class="caja"><h2>Panel background &mdash; #171a23</h2><table>%(filas)s</table></div>
-<div class="caja p2"><h2>Figure background &mdash; #1d212c</h2><table>%(filas)s</table></div>
-<div class="caja bg"><h2>Body background &mdash; #0f1117</h2><table>%(filas)s</table></div>
-<div class="caja grande"><h2>At double size, to judge the shade</h2><p>%(tira)s</p></div>
+%(cajas)s
 %(arnes)s
-</body></html>""" % {"raiz": raiz, "reglas": "\n".join(reglas), "filas": filas,
-                     "tira": tira, "arnes": "" if VISUAL else arnes}
+</body></html>""" % {"raiz": raiz + "\n.tema-boring{" + BLOQUE_BORING + "}",
+                     "reglas": "\n".join(reglas), "cajas": CAJAS,
+                     "arnes": "" if VISUAL else arnes}
 
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
@@ -644,29 +689,54 @@ auditoria_js = """
         if (b && b[3] >= 0.999) return b;
         n = n.parentElement;
       }
-      return [15, 17, 23, 1];
+      return BG_DEF;
     }
-    var sinTinte = 0, peor = 99, peorDato = "", medidas = 0;
-    document.querySelectorAll(".tag").forEach(function(t){
-      var cs = getComputedStyle(t);
-      var fg = parse(cs.color), bg = parse(cs.backgroundColor);
-      if (!fg) return;
-      if (!bg || bg[3] < 0.05){ sinTinte++; return; }
-      var base = fondoOpaco(t.parentElement || t);
-      var comp = [0,1,2].map(function(i){ return bg[i]*bg[3] + base[i]*(1-bg[3]); });
-      var lf = lum(fg), lc = lum(comp);
-      var c = (Math.max(lf,lc) + 0.05) / (Math.min(lf,lc) + 0.05);
-      medidas++;
-      if (c < peor){
-        peor = c;
-        peorDato = t.textContent.trim() + " " + cs.color +
-                   " sobre rgb(" + comp.map(Math.round).join(",") + ")";
-      }
-    });
-    ok("all tags carry the tint background", sinTinte === 0,
-       sinTinte + " tags with no background");
-    ok("and the tint does not lower the contrast below AA (4.5:1)", peor >= 4.5,
-       medidas ? "worst " + peor.toFixed(2) + ":1 in " + peorDato : "none was measured");
+    /* The tint is translucent, so its contrast depends on the panel behind it.
+       The two themes no longer share backgrounds (the default is deep black
+       now), and the lighter panel —the one that lowers the contrast— is
+       «boring»'s. Measuring only the theme that happens to be painted would
+       stop covering it, so BOTH are measured on the real tool: the theme is
+       switched, the same tags are measured again, and the default is restored. */
+    function tinteDe(){
+      var sinTinte = 0, peor = 99, peorDato = "", n = 0;
+      document.querySelectorAll(".tag").forEach(function(t){
+        var cs = getComputedStyle(t);
+        var fg = parse(cs.color), bg = parse(cs.backgroundColor);
+        if (!fg) return;
+        if (!bg || bg[3] < 0.05){ sinTinte++; return; }
+        var base = fondoOpaco(t.parentElement || t);
+        var comp = [0,1,2].map(function(i){ return bg[i]*bg[3] + base[i]*(1-bg[3]); });
+        var lf = lum(fg), lc = lum(comp);
+        var c = (Math.max(lf,lc) + 0.05) / (Math.min(lf,lc) + 0.05);
+        n++;
+        if (c < peor){
+          peor = c;
+          peorDato = t.textContent.trim() + " " + cs.color +
+                     " sobre rgb(" + comp.map(Math.round).join(",") + ")";
+        }
+      });
+      return {sinTinte: sinTinte, peor: peor, peorDato: peorDato, n: n};
+    }
+    ponerTema("yellow");
+    var tinteDef = tinteDe();
+    ponerTema("boring");
+    var tinteBor = tinteDe();
+    /* Back to the default: the screenshot of this run is the theme the user
+       gets out of the box. */
+    ponerTema("yellow");
+    ok("all tags carry the tint background in both themes",
+       tinteDef.sinTinte === 0 && tinteBor.sinTinte === 0,
+       "Default " + tinteDef.sinTinte + ", Boring " + tinteBor.sinTinte + " without background");
+    ok("both themes were measured, not only one",
+       tinteDef.n > 0 && tinteBor.n > 0,
+       "Default " + tinteDef.n + " tags, Boring " + tinteBor.n);
+    ok("and the tint does not lower the contrast below AA (4.5:1) in the DEFAULT theme",
+       tinteDef.peor >= 4.5,
+       tinteDef.n ? "worst " + tinteDef.peor.toFixed(2) + ":1 in " + tinteDef.peorDato
+                  : "none was measured");
+    ok("nor in the «boring» theme", tinteBor.peor >= 4.5,
+       tinteBor.n ? "worst " + tinteBor.peor.toFixed(2) + ":1 in " + tinteBor.peorDato
+                  : "none was measured");
   } catch (e) {
     RES.push("!! EXCEPTION " + e.message + " @@ " + (e.stack||"").split("\\n")[1]);
     FALLOS++;

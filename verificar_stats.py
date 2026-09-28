@@ -50,7 +50,8 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, RAIZ)
 
 from modelo import (BOOST_FRACCION, BOOST_VELOCIDAD, MEJORA_NIVEL_MIN,
-                    MEJORA_ORDEN, MEJORA_PASOS, MULT_NIVEL, TOPE_BOOST_STAT)
+                    MEJORA_ORDEN, MEJORA_PASOS, MULT_NIVEL, PUNTOS_OMEGA_NIVEL,
+                    TOPE_BOOST_STAT)
 
 CACHE = os.path.join(RAIZ, "cache")
 DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
@@ -384,6 +385,64 @@ ok("the two boost settings are those of the source (+2 flat, +2.5%%)",
    BOOST_VELOCIDAD == 2 and BOOST_FRACCION == 0.025,
    "+%d speed and +%.1f%% health and damage per point"
    % (BOOST_VELOCIDAD, BOOST_FRACCION * 100))
+
+# ---------------------------------------------------------------------------
+# 7) The Omega training table, against the cache
+# ---------------------------------------------------------------------------
+# `detail.points` is the only place the training data exists, and only the Omega
+# creatures have it. That is checked in BOTH directions: if the JSON had it for
+# a creature whose card has no table, the interface would paint six controls
+# that change nothing; the other way round, an Omega would silently lose the
+# whole feature.
+print()
+print("=== 7. the Omega training table ===")
+conTabla = {u for u, v in fichas.items() if (v["det"] or {}).get("points")}
+conDato = {u for u in cri if "entrenamiento" in cri[u]}
+omega = {u for u in cri if cri[u]["rareza"] == "omega"}
+ok("the table is in exactly the Omega creatures, and the card and the data agree",
+   conTabla == conDato == omega,
+   "%d with a card table, %d in the data, %d Omega" % (len(conTabla), len(conDato), len(omega)))
+
+malEnt = []
+for u in sorted(conDato):
+    p, e = fichas[u]["det"]["points"], cri[u]["entrenamiento"]
+    for grupo in ("cap", "delta", "pcap"):
+        for fuente, nuestro in CAMPOS:
+            if p[grupo][fuente] != e[grupo][nuestro]:
+                malEnt.append("%s %s.%s: cache=%s dato=%s"
+                              % (u, grupo, nuestro, p[grupo][fuente], e[grupo][nuestro]))
+ok("cap, delta and pcap are the cached ones, stat by stat (33 x 3 x 6 numbers)",
+   not malEnt, " ;; ".join(malEnt[:3]) if malEnt else "%d numbers" % (len(conDato) * 18))
+
+# The cap is `base(26) + delta x pcap`, and `pcap` is the source's own datum, NOT
+# the division: in `stegouros` crit damage the division gives 7.5 and paleo.gg
+# stores 7, so that cap stays one point short of reachable. A shortfall of at
+# most one `delta` is therefore expected, and it is why the bound the app uses
+# is `pcap` and not the cap.
+cortos = []
+for u in sorted(conDato):
+    e, b = cri[u]["entrenamiento"], cri[u]["stats"]
+    for _, nuestro in CAMPOS:
+        dif = e["cap"][nuestro] - (b[nuestro] + e["delta"][nuestro] * e["pcap"][nuestro])
+        if not 0 <= dif <= e["delta"][nuestro]:
+            cortos.append("%s %s: %+d" % (u, nuestro, dif))
+ok("and each cap is base(26) + delta x pcap, short by at most one point",
+   not cortos, " ;; ".join(cortos[:3]) if cortos else "the 198 caps, 0 off by more than a point")
+
+# The pool. It is NOT in the source: it comes from two figures of a secondary
+# guide, so what is pinned here are those two figures, and the manual carries it
+# as a doubt. With 245 points at level 35 and every creature needing more than
+# that to reach all six caps, the pool HAS to bind — that is the whole point of
+# the system, and it is checked so that nobody «fixes» it by raising it.
+sumas = {u: sum(cri[u]["entrenamiento"]["pcap"].values()) for u in conDato}
+ok("the pool is 7 per level: the two figures it was derived from",
+   PUNTOS_OMEGA_NIVEL * 11 == 77 and PUNTOS_OMEGA_NIVEL * 26 == 182,
+   "%d x 11 = %d and %d x 26 = %d"
+   % (PUNTOS_OMEGA_NIVEL, PUNTOS_OMEGA_NIVEL * 11, PUNTOS_OMEGA_NIVEL, PUNTOS_OMEGA_NIVEL * 26))
+ok("and at level 35 it is not enough to reach the six caps of any Omega: the pool binds",
+   min(sumas.values()) > PUNTOS_OMEGA_NIVEL * 35,
+   "cheapest %d points (%s) against a pool of %d"
+   % (min(sumas.values()), min(sumas, key=sumas.get), PUNTOS_OMEGA_NIVEL * 35))
 
 print()
 if fallos:

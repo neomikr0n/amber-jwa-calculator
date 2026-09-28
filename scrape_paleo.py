@@ -65,6 +65,35 @@ def next_data(html):
     return json.loads(m.group(1))
 
 
+# The six stats come in English from paleo.gg and are renamed to the SAME keys
+# `stats` already uses. Keeping two keyings for the same six numbers is how the
+# app ends up with two orders that disagree.
+STAT_KEYS = {"health": "vida", "damage": "dano", "speed": "velocidad",
+             "armor": "armadura", "crit": "critico", "critm": "dano_critico"}
+
+
+def entrenamiento(points):
+    """`detail.points` is the Omega training table, and only the 33 Omega
+    creatures have it (verified against the whole cache: the card appears in
+    exactly those 33 pages).
+
+    Three groups per stat:
+      `cap`   where that stat tops out with training,
+      `delta` what ONE training point adds to it,
+      `pcap`  how many points it takes to reach that cap.
+    `pcap` is a datum from the source, NOT (cap-base)/delta: in `stegouros`
+    crit damage the division gives 7.5 and paleo.gg stores 7, so the cap is one
+    point short of reachable there. The bound that counts is `pcap`.
+
+    It is omitted for the creatures that do not have it, instead of storing a
+    null in 485 of the 518 entries."""
+    if not points:
+        return None
+    return {grupo: {STAT_KEYS[k]: v for k, v in (points.get(grupo) or {}).items()
+                    if k in STAT_KEYS}
+            for grupo in ("cap", "delta", "pcap")}
+
+
 def main():
     refetch = "--refetch" in sys.argv
     os.makedirs(CACHE, exist_ok=True)
@@ -111,6 +140,10 @@ def main():
             "fuentes_adn": det.get("dna_source") or [],
             "mejoras": det.get("enhancements") or [],
         }
+        # Only the Omega creatures carry it (33 of the 518).
+        ent = entrenamiento(det.get("points"))
+        if ent:
+            criaturas[uuid]["entrenamiento"] = ent
         if i % 50 == 0 or i == len(items):
             print(f"      [{i}/{len(items)}]")
 

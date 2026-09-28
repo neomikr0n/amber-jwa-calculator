@@ -30,7 +30,12 @@ HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
 DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
 
 CAMPOS = ("rareza", "desde", "objetivo", "adnSubir", "adnNec", "monNec", "deficit",
-          "fusiones", "monFus", "nivelIng", "esHoja", "creado", "maxNivel")
+          "fusiones", "monFus", "nivelIng", "esHoja", "creado", "maxNivel", "soloVer")
+
+# Totals that the complete tree must NOT move: the informational part is drawn,
+# not charged. `nodos` and `hojas` are left out on purpose — they describe the
+# tree on screen, which is now the whole one.
+CAMPOS_TOT = ("adn", "mon", "fus", "monFus", "recolectar", "repetidas", "adnNec", "tengo")
 
 
 def bloque_llaves(texto, pos):
@@ -148,7 +153,59 @@ def inv_de(cri, inv, u):
     return {"nivel": nivel, "adn": max(0, int(v.get("adn", 0) or 0)), "creado": creado}
 
 
-def plan(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida):
+def plan(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida, solo_ver=False):
+    """Mirror of the CURRENT `plan`: the branch is always drawn.
+
+    `solo_ver` marks the informational subtree — drawn, not charged. A node whose
+    branch is not needed (`deficit == 0`) still descends, and everything below it
+    goes in `solo_ver` mode, where no figure is added. Shown, not paid."""
+    c = cri[uuid]
+    rareza, ings = c["rareza"], c["ingredientes"]
+    invn = inv_de(cri, inv, uuid)
+    m = nivel_creacion(rareza)
+    creado = invn["creado"]
+    desde = max(invn["nivel"], m) if creado else 0
+    sin_crear = not creado
+    adn_subir = coste_adn(rareza, desde, objetivo, sin_crear)
+    cuenta = (not solo_ver) and (raiz or contar_subida)
+    adn_nec = (adn_subir if cuenta else 0) + (0 if solo_ver else (adn_extra or 0))
+    mon_nec = coste_mon(rareza, desde, objetivo) if cuenta else 0
+    deficit = 0 if solo_ver else max(0, adn_nec - invn["adn"])
+    mx = nivel_maximo(rareza, desde, invn["adn"], creado)
+    nodo = {"uuid": uuid, "nombre": c["nombre"], "rareza": rareza, "desde": desde,
+            "objetivo": objetivo, "adnSubir": adn_subir, "cuentaSubir": cuenta,
+            "adnNec": adn_nec, "monNec": mon_nec, "deficit": deficit,
+            "tengo": invn["adn"], "extra": adn_extra or 0, "fusiones": 0, "monFus": 0,
+            "nivelIng": None, "esHoja": False, "creado": creado, "soloVer": bool(solo_ver),
+            "maxNivel": mx[0], "hijos": [], "base": not ings}
+    cobra = (not solo_ver) and deficit > 0
+    if ings and uuid not in visto:
+        f = n_fus(deficit)
+        nodo["fusiones"] = f
+        nodo["monFus"] = f * MONEDAS_FUSION.get(rareza, 0)
+        nodo["nivelIng"] = NIVEL_MIN_INGREDIENTE[rareza]
+        v2 = set(visto) | {uuid}
+        for ing in ings:
+            ri = cri[ing]["rareza"] if ing in cri else "common"
+            adn_ing = f * adn_fus(ri, rareza)
+            inv_ing = inv_de(cri, inv, ing)
+            actual = max(inv_ing["nivel"], nivel_creacion(ri)) if inv_ing["creado"] else 0
+            obj_ing = max(nodo["nivelIng"], actual)
+            nodo["hijos"].append(
+                plan(cri, inv, ing, obj_ing, adn_ing if cobra else 0, v2, False,
+                     contar_subida, not cobra))
+    else:
+        nodo["esHoja"] = True
+    return nodo
+
+
+def plan_podado(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida):
+    """The rule BEFORE 27-sep-2026: a creature that needs nothing became a leaf, so
+    the dinos under it disappeared from the tree.
+
+    It is kept here for one reason: to check the invariant of the new rule against
+    an INDEPENDENT implementation instead of against itself — drawing the whole
+    tree must not move a single unit of DNA or a single coin."""
     c = cri[uuid]
     rareza, ings = c["rareza"], c["ingredientes"]
     invn = inv_de(cri, inv, uuid)
@@ -166,7 +223,7 @@ def plan(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida):
             "objetivo": objetivo, "adnSubir": adn_subir, "cuentaSubir": cuenta,
             "adnNec": adn_nec, "monNec": mon_nec, "deficit": deficit,
             "tengo": invn["adn"], "extra": adn_extra or 0, "fusiones": 0, "monFus": 0,
-            "nivelIng": None, "esHoja": False, "creado": creado,
+            "nivelIng": None, "esHoja": False, "creado": creado, "soloVer": False,
             "maxNivel": mx[0], "hijos": [], "base": not ings}
     if deficit > 0 and ings and uuid not in visto:
         f = n_fus(deficit)
@@ -181,7 +238,7 @@ def plan(cri, inv, uuid, objetivo, adn_extra, visto, raiz, contar_subida):
             actual = max(inv_ing["nivel"], nivel_creacion(ri)) if inv_ing["creado"] else 0
             obj_ing = max(nodo["nivelIng"], actual)
             nodo["hijos"].append(
-                plan(cri, inv, ing, obj_ing, adn_ing, v2, False, contar_subida))
+                plan_podado(cri, inv, ing, obj_ing, adn_ing, v2, False, contar_subida))
     else:
         nodo["esHoja"] = True
     return nodo
@@ -198,27 +255,31 @@ def totales(n):
 
     def rec(x):
         acc["nodos"] += 1
-        acc["fus"] += x["fusiones"]
-        acc["monFus"] += x["monFus"]
-        p = acc["porUuid"].get(x["uuid"])
-        if p is None:
-            p = acc["porUuid"][x["uuid"]] = {
-                "uuid": x["uuid"], "nombre": x["nombre"], "rareza": x["rareza"],
-                "veces": 0, "fus": 0, "extra": 0, "desde": x["desde"],
-                "objetivo": x["objetivo"], "sinCrear": False, "tengo": x["tengo"],
-                "esHoja": False, "base": False, "cuentaSubir": False,
-            }
-        p["veces"] += 1
-        p["fus"] += x["fusiones"]
-        p["extra"] += x["extra"]
-        p["objetivo"] = max(p["objetivo"], x["objetivo"])
-        p["desde"] = min(p["desde"], x["desde"])
-        p["sinCrear"] = p["sinCrear"] or not x["creado"]
-        p["esHoja"] = p["esHoja"] or x["esHoja"]
-        p["base"] = p["base"] or x["base"]
-        p["cuentaSubir"] = p["cuentaSubir"] or x["cuentaSubir"]
         if x["esHoja"]:
             acc["hojas"] += 1
+        acc["fus"] += x["fusiones"]
+        acc["monFus"] += x["monFus"]
+        # A node that is only SHOWN is drawn but not paid: it does not enter the
+        # per-creature table, so the money of the complete tree is the money of
+        # the tree that only had the branches that were needed.
+        if not x["soloVer"]:
+            p = acc["porUuid"].get(x["uuid"])
+            if p is None:
+                p = acc["porUuid"][x["uuid"]] = {
+                    "uuid": x["uuid"], "nombre": x["nombre"], "rareza": x["rareza"],
+                    "veces": 0, "fus": 0, "extra": 0, "desde": x["desde"],
+                    "objetivo": x["objetivo"], "sinCrear": False, "tengo": x["tengo"],
+                    "esHoja": False, "base": False, "cuentaSubir": False,
+                }
+            p["veces"] += 1
+            p["fus"] += x["fusiones"]
+            p["extra"] += x["extra"]
+            p["objetivo"] = max(p["objetivo"], x["objetivo"])
+            p["desde"] = min(p["desde"], x["desde"])
+            p["sinCrear"] = p["sinCrear"] or not x["creado"]
+            p["esHoja"] = p["esHoja"] or x["esHoja"]
+            p["base"] = p["base"] or x["base"]
+            p["cuentaSubir"] = p["cuentaSubir"] or x["cuentaSubir"]
         for h in x["hijos"]:
             rec(h)
 
@@ -269,9 +330,20 @@ CASOS = [
     ("indoraptor", 30, 21, 0, True, True,
      {"velociraptor": {"nivel": 20, "adn": 50000, "creado": True},
       "indominus_rex": {"nivel": 0, "adn": 1200, "creado": False}}),
-    # Ingredient that already meets it with room to spare: must not branch
+    # Ingredient that already meets it with room to spare: the branch is DRAWN,
+    # with its own ingredients marked «not needed» (27-sep-2026: the tree is
+    # always complete). Before, this case became a leaf.
     ("trykosaurus", 30, 26, 0, True, True,
      {"tyrannosaurus_rex": {"nivel": 20, "adn": 999999, "creado": True}}),
+    # The same, two levels down and with an ingredient that is NOT a base: with
+    # alankylosaurus covered, alanqa and ankylosaurus_gen_2 must still be in the
+    # tree, and the money must not move.
+    ("alankydactylus", 30, 0, 0, False, True,
+     {"alankylosaurus": {"nivel": 40, "adn": 999999, "creado": True}}),
+    # Everything covered: the root itself needs nothing and the tree is still whole
+    ("alankydactylus", 30, 35, 9999999, True, True,
+     {"alankylosaurus": {"nivel": 40, "adn": 999999, "creado": True},
+      "dreadactylus": {"nivel": 25, "adn": 999999, "creado": True}}),
     # Omega (different ladder)
     ("93_classic_t_rex", 35, 0, 0, False, True, {}),
     ("93_classic_t_rex", 35, 20, 3000, True, True, {}),
@@ -302,6 +374,7 @@ def main():
             return 1
 
     esperado = {}
+    invariante = []
     for u, obj, niv, adn, creado, cuenta, inv in CASOS:
         invs = {k: dict(v) for k, v in inv.items()}
         raiz = {"nivel": niv, "adn": adn}
@@ -311,6 +384,22 @@ def main():
         t = plan(cri, invs, u, obj, 0, set(), True, cuenta)
         esperado[clave_caso(u, obj, niv, adn, creado, cuenta)] = {
             "nodos": aplanar(t, [u], {}), "tot": totales(t)}
+
+        # ---- the invariant of the complete tree ----
+        # Drawing the informational part must not move a single unit of DNA or a
+        # single coin. It is compared against `plan_podado`, an INDEPENDENT
+        # implementation of the old rule: if the comparison were against the new
+        # rule itself, both sides would share the mistake and pass green.
+        completo = totales(t)
+        podado = totales(plan_podado(cri, invs, u, obj, 0, set(), True, cuenta))
+        for campo in CAMPOS_TOT:
+            if completo[campo] != podado[campo]:
+                invariante.append((clave_caso(u, obj, niv, adn, creado, cuenta), campo,
+                                   completo[campo], podado[campo]))
+        if completo["nodos"] < podado["nodos"] or completo["hojas"] < podado["hojas"]:
+            invariante.append((clave_caso(u, obj, niv, adn, creado, cuenta), "shape",
+                               "nodos=%d hojas=%d" % (completo["nodos"], completo["hojas"]),
+                               "nodos=%d hojas=%d" % (podado["nodos"], podado["hojas"])))
 
     # ---- Node harness ----
     arnes = """
@@ -322,7 +411,7 @@ function aplanar(n, ruta, out){
   out[ruta.join("/")] = {rareza:n.rareza, desde:n.desde, objetivo:n.objetivo,
     adnSubir:n.adnSubir, adnNec:n.adnNec, monNec:n.monNec, deficit:n.deficit,
     fusiones:n.fusiones, monFus:n.monFus, nivelIng:n.nivelIng, esHoja:n.esHoja,
-    creado:n.creado, maxNivel:n.max.nivel};
+    creado:n.creado, maxNivel:n.max.nivel, soloVer:n.soloVer};
   n.hijos.forEach(h => aplanar(h, ruta.concat([h.uuid]), out));
   return out;
 }
@@ -388,6 +477,16 @@ process.stdout.write(JSON.stringify(salida));
 
     print("Trees: %d cases, %d nodes compared (%d fields per node)."
           % (len(CASOS), nodos_total, len(CAMPOS)))
+    print("Complete tree: in %d cases it costs the same as the pruned one, field by "
+          "field (%d money fields), and never draws fewer nodes."
+          % (len(CASOS) - len({c for c, _, _, _ in invariante}), len(CAMPOS_TOT)))
+    if invariante:
+        print()
+        print("THE COMPLETE TREE MOVED A FIGURE: %d" % len(invariante))
+        for clave, campo, a, b in invariante[:20]:
+            print("  %-46s %-11s completo=%r podado=%r" % (clave, campo, a, b))
+        fallos.extend(("invariante " + c, "%s: completo=%r podado=%r" % (k, x, y))
+                      for c, k, x, y in invariante)
     print()
     if fallos:
         print("DISCREPANCIES: %d" % len(fallos))

@@ -58,6 +58,59 @@ counting them as passed.
 
 ## Invariants that are easy to break
 
+- **The Omega training table comes only from `detail.points`, and only Omegas have
+  it.** `criaturas[u].entrenamiento` (scraper) → `C[u][11] = [cap, delta, pcap]` per
+  stat, in the order of `M.statsOrden`. `verificar_stats.py` checks it in both
+  directions against the whole cache: card and data must agree on WHICH creatures
+  have it, and the three groups must match stat by stat. The bound the app uses is
+  **`pcap`**, never `(cap − base) / delta`: in `stegouros` that division gives 7.5 for
+  crit damage and the source stores 7, so its cap stays one point short of reachable.
+- **The training pool (7 per level) is an ASSUMPTION, not a source datum.** Two
+  figures from a secondary guide (level 11 → 77, level 26 → 182) land exactly on 7,
+  and it lives in `PUNTOS_OMEGA_NIVEL` with both beside it. There is no official
+  confirmation and the manual carries it as medium confidence. `modelo.py`,
+  `verificar_stats.py` and three checks in `probar_ui.py` pin it: changing the
+  constant without changing the figures turns red.
+- **Training is not a cost.** It spends points, not DNA or coins, so `plan`,
+  `costeADN`, `totales` and the whole cost engine must not move — `verificar_motor.py`
+  and `verificar_arbol.py` compare field by field and would catch it. And the training
+  controls live inside the stat cards, hidden behind `data-ent="1"` on the panel: a
+  creature without training must render exactly the card it rendered before.
+- **An Omega's stats do NOT scale with the level.** Its base is the level-26 value:
+  levelling gives it training points, not raw stats, so `statsDe` uses `f = 1` for
+  them and paleo.gg's cap is an absolute number that `pcap` points always reach. It
+  was implemented the other way first — scaled like every other rarity — and n30's
+  game screen showed it short. `probar_ui.py` pins the game's three numbers (4522
+  health, 2250 damage, 116 speed) and goes red if the multiplier comes back.
+- **The Fusion Tree is always drawn complete, and drawing costs nothing.** `plan`
+  descends into the ingredients whether or not the creature still needs them; the
+  subtree of a node with nothing missing is built in `soloVer` mode — painted, and
+  charged zero — and those rows say «not needed» instead of inventing a levelling.
+  `totales` keeps `soloVer` nodes out of `porUuid`, which is what feeds the tree
+  report and the «create all» list, so every DNA and coin figure is the one of the
+  tree that only had the branches that were needed. `verificar_arbol.py` holds it
+  down against `plan_podado`, an **independent implementation of the old rule**
+  (prune the branch that needs nothing): 8 money fields must be identical in all
+  cases, and the complete tree must never draw fewer nodes. Putting the
+  `deficit > 0` condition back into `plan` makes the dinos under a covered
+  ingredient vanish again, which is the bug n30 reported on 27-sep-2026.
+- **Motion off means off, pseudo-elements included.** The rule that switches every
+  animation and transition off under `prefers-reduced-motion` has to name
+  `*::before` and `*::after` as well: `*` does not reach a pseudo-element, and the
+  light that runs along Amber-OLED's panel edges lives in a `::before`. An
+  animation added there is invisible to `*` and keeps moving for whoever asked the
+  system for less of it.
+- **A rarity colour is a DATUM, not decoration: no theme may repaint it.** The
+  seven rarity colours (`--r-*`) and the four semantic ones (`--verde` reaches,
+  `--ambar` missing, `--rojo` error, `--azul` information) are identical in
+  every theme, present and future. A theme may change backgrounds, borders,
+  depth and motion, and nothing that means something. If a theme repainted the
+  tags, the same creature would say two different things depending on the theme.
+  `probar_ui.py` holds it down on the rendered page and **in every theme it finds
+  in the dropdown** (the list is read from the `<option>` values, so a new theme
+  is covered without touching the test): it compares the 13 computed variables
+  against the default's, and it also compares the colour of an actual rarity tag
+  painted in the creature card.
 - **The tool name lives in one line.** `NOMBRE` in `modelo.py`. It reaches
   exactly two places, the `<title>` and the `<h1>`. An earlier comment claimed
   three, including the footer, and it was wrong.
@@ -77,6 +130,12 @@ counting them as passed.
 - **`informe_browser.veredicto()` reads the row prefixes `OK ` and `FALLO `.**
   It refuses to report green when a report declares failures but carries no
   failure row, so a renamed prefix shows up as NOT judgeable instead of hiding.
+  **And a `catch` in a diagnostic must write a `FALLO` row, never a note:** an
+  exception that truncates a pass leaves a shorter «all OK» behind, which reads
+  as green. It happened: a helper that did not exist in that block threw, the
+  first pass stopped at check 99 of 152 and the run still exited 0 — the falling
+  check count was the only clue. `probar_ui.py` holds a smoke test for this now;
+  the other two `catch` blocks were already right.
 - **Some tests read the generated source, not the rendered page.**
   `probar_rareza.py` parses the `RAREZAS` and `CLASE` object literals out of the
   HTML with a regular expression. Changing how those literals are written, even
@@ -92,6 +151,7 @@ by a test. The point is not to re-litigate them but to recognise the shape.
 | The tool name appears in three places, the footer among them | Two: the `<title>` and the `<h1>`. The correction reached the manual in September 2026 and the code comment later still |
 | `MULT_NIVEL` differs from `1.05^(L-26)` by at most 5e-5 relative, about 0.3 health points | False. Up to 3.68 % at level 34, which is 314 points on a 6,000-health creature. The closed form holds to level 30 and fails from 31 to 35 |
 | All creatures in the game are female | False, measured. The recollection was wrong, not the data |
+| Every creature's health and damage scale with the level | True for every rarity **except Omega**, measured in the game. An Omega's base is the level-26 value and levelling gives it training points, not stats: Little Eatie at level 21, 73 points to health and 74 to damage, gives 4522 health and 2250 damage with the level multiplier removed, and 4001 / 1508 with it. It had been written the other way as a «reading» of paleo.gg's table, and it was a guess |
 
 ## The size claim in the manual is live
 
@@ -130,6 +190,12 @@ read the old one and write the new one in the same step.
 - **Creature images.** Copyrighted game artwork. Excluded by `.gitignore` and
   downloaded locally with `descargar_imagenes.py`. The app hides each image on
   error, so it works without them.
+- **The small UI icons ARE tracked, and that is on purpose.** `img/stat/`,
+  `img/cat/`, `img/res/` and `img/clase/` are committed. The app asks for them by
+  path and **hides an image it cannot load**, so an icon left out of the repository
+  is a silent hole, not an error. `img/clase/` spent a while in `.gitignore`
+  labelled «downloaded and never used»; it is used now —the class badge before the
+  creature's name— and it is back in the repository.
 - **`cache/`.** Scraped pages, rebuilt by `scrape_paleo.py`.
 - **`.privado/`.** The deep reference, described below. Not published and not
   deployed.

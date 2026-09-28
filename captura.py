@@ -27,7 +27,7 @@ GUION = r"""
      starts with the Stat Boost points the first one left behind and the figures
      in the image are not those of the scenario. It was seen in a screenshot: it
      showed +10 points where the script set 5. */
-  INV = {}; MIS = []; guardar(); ponerTema("default");
+  INV = {}; MIS = []; guardar(); ponerTema("yellow");
   elegir("indoraptor");
   function poner(id, v){ var e = document.getElementById(id); e.focus(); e.value = v;
     e.dispatchEvent(new Event("input", {bubbles:true})); }
@@ -80,8 +80,8 @@ GUION = r"""
     chk.checked = false; chk.dispatchEvent(new Event("change", {bubbles:true}));
     v = "calc";
   }
-  if (v === "yellow"){
-    ponerTema("yellow");
+  if (v === "boring"){
+    ponerTema("boring");
     // The Enhancement track only exists from level 30 on, so this view raises
     // the creature to 30 before touching the steps: otherwise the controls come
     // out disabled and the screenshot does not show what the track does.
@@ -145,7 +145,7 @@ def capturar(vista, salida, alto):
 
 
 preparar()
-for vista, alto in (("calc", 1900), ("calc-paleo", 1500), ("yellow", 1900),
-                    ("arbol", 2100), ("mios", 1000), ("buscar", 900)):
+for vista, alto in (("calc", 2300), ("calc-paleo", 2360), ("boring", 2300),
+                    ("arbol", 1800), ("mios", 900), ("buscar", 900)):
     p = os.path.join(DIR, "cap-%s.png" % vista)
     print(vista, "->", p, os.path.getsize(p) if capturar(vista, p, alto) else "NO")

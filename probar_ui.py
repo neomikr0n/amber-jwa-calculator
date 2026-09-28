@@ -15,7 +15,7 @@ is not a test.
 
 Usage:  python3 probar_ui.py
 """
-import os, re, shutil, subprocess
+import os, re, shutil, subprocess, json
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
@@ -222,6 +222,14 @@ try {
   ev(document.getElementById("q"), "input");
   var it = document.querySelector("#lista .it");
   ok("the search box paints a thumbnail", !!it && !!it.querySelector("img.mini"));
+  /* The double of the photos is for the card, the strip and the tree. The
+     dropdown KEEPS the small one on purpose: a 72px row would halve the results
+     seen in the list (n30, 27-sep-2026). */
+  var miniBus = it ? it.querySelector("img.mini") : null;
+  var cmini = miniBus ? getComputedStyle(miniBus) : null;
+  ok("the search thumbnail stays compact (30x36)",
+     !!cmini && cmini.width === "30px" && cmini.height === "36px",
+     cmini ? cmini.width + "x" + cmini.height : "(no thumbnail)");
   cerrarLista();
 
   // --- Indoraptor 21 -> 30 with 1.000 DNA: there is a deficit, hence there is a tree ---
@@ -232,6 +240,65 @@ try {
   ev(document.getElementById("nivelObj"), "input");
 
   ok("the card has a large image", !!document.querySelector("#elegida img.grande"));
+
+  /* The card redesign (27-sep-2026): portrait at the NATIVE size of the WebP
+     (207x250, measured on the 518 files), the name and the badges on a header
+     across the top, the ingredients at the foot of the photo, the hatch/cost/cap
+     line in the photo's tooltip, and «Your data» (the three fields that used to
+     be section 2) to the right of the photo. Everything is MEASURED. */
+  var g = document.querySelector("#elegida img.grande");
+  var cg = getComputedStyle(g);
+  ok("the card portrait is at the native size of the images (207x250)",
+     cg.width === "207px" && cg.height === "250px", cg.width + "x" + cg.height);
+  var marco = document.querySelector("#elegida .ficha .marco");
+  ok("the hatch/cost/cap line is the photo's tooltip, not painted text",
+     !!marco && /Nace en nivel 21/.test(marco.title) && /crear cuesta 250 ADN/.test(marco.title) &&
+     /tope de ADN/.test(marco.title) &&
+     document.getElementById("elegida").innerText.indexOf("Nace en") === -1,
+     marco ? marco.title : "(no marco)");
+  /* The header: name on the left, badges on the right, both ABOVE the photo. */
+  var cab = document.querySelector("#elegida .ficha .cab");
+  var rcab = cab ? cab.getBoundingClientRect() : null;
+  var rgs = g.getBoundingClientRect();
+  ok("the name and the badges go in a header across the top, above the photo",
+     !!cab && !!cab.querySelector(".nombre") && cab.querySelectorAll(".etiquetas > *").length >= 3 &&
+     rcab.bottom <= rgs.top + 1,
+     cab ? cab.querySelectorAll(".etiquetas > *").length + " badges, header bottom " +
+           rcab.bottom.toFixed(1) + " vs photo top " + rgs.top.toFixed(1) : "(no header)");
+  /* «Your data» inside the card: the three fields keep their ids and move to the
+     right of the photo, in a two-column grid. */
+  var campos = document.querySelector("#elegida .campos");
+  var g3 = campos ? campos.querySelector(".g3") : null;
+  var cols = g3 ? getComputedStyle(g3).gridTemplateColumns.split(" ").length : 0;
+  var dentro = ["nivelAct", "adnTengo", "nivelObj"].every(function(id){
+    var el = document.getElementById(id); return el && campos && campos.contains(el); });
+  ok("the three «Your data» fields live inside the card, with their ids",
+     !!campos && dentro, dentro ? "nivelAct + adnTengo + nivelObj inside #elegida" : "(outside the card)");
+  ok("and they are laid out in a two-column grid",
+     cols === 2, cols + " columnas");
+  var rc = campos.getBoundingClientRect();
+  ok("the fields sit to the RIGHT of the photo", rc.left >= rgs.right - 1,
+     "campos left " + rc.left.toFixed(1) + " vs photo right " + rgs.right.toFixed(1));
+  var rp = document.querySelector("#elegida .ficha .pie").getBoundingClientRect();
+  ok("the ingredients sit at the foot of the photo", rp.top >= rgs.bottom - 1,
+     "pie top " + rp.top.toFixed(1) + " vs photo bottom " + rgs.bottom.toFixed(1));
+
+  /* Switching the language has to re-render the parts painted ONCE: the labels
+     of the stats panel (built by `montarStats`) and the pills of the card (built
+     by `elegir`). Before, with Spanish selected the stats still said «Health».
+     Everything is re-queried after each switch: the repaint replaces the nodes. */
+  var leerStat = function(){
+    var e = document.querySelector("#stRejilla .st-k"); return e ? e.textContent.trim() : "(no stat)"; };
+  var leerTipo = function(){
+    var e = document.querySelector("#elegida .ficha .cab .etiquetas .pill"); return e ? e.textContent.trim() : "(no pill)"; };
+  setIdioma("en");
+  var enStat = leerStat(), enTipo = leerTipo();
+  setIdioma("es");
+  var esStat = leerStat(), esTipo = leerTipo();
+  ok("the stats labels and the card pills follow the language switch",
+     enStat === "Health" && esStat === "Vida" &&
+     enTipo === "Super Hybrid" && esTipo === "superhíbrido",
+     "stat " + enStat + "/" + esStat + " · tipo " + enTipo + "/" + esTipo);
 
   // --- maximum level below the target level ---
   var mn = txt("maxNivel");
@@ -385,6 +452,12 @@ try {
   btn.click();
   var filas3 = document.querySelectorAll("#miosCuerpo tbody tr");
   ok("pressing Guardar again does not duplicate the row", filas3.length === 1, filas3.length + " rows");
+  /* The table keeps the compact thumbnail, like the search dropdown. */
+  var miniTab = document.querySelector("#miosCuerpo img.mini");
+  var ctab = miniTab ? getComputedStyle(miniTab) : null;
+  ok("the table thumbnail stays compact (38x46)",
+     !!ctab && ctab.width === "38px" && ctab.height === "46px",
+     ctab ? ctab.width + "x" + ctab.height : "(no thumbnail)");
 
   // The saved list is persisted separately from the data.
   var guardadoMios = JSON.parse(localStorage.getItem("jwa322.mios") || "null");
@@ -416,9 +489,34 @@ try {
   });
   ok("each photo carries the name of its creature, with the colour of its rarity",
      coloresTiraBien && nombresTira.length === 2, nombresTira.join(" | "));
-  ok("and the photos are sorted by name, like the tab table",
-     nombresTira[0] === "Indoraptor" && nombresTira[1] === "Tyrannosaurus Rex",
-     nombresTira.join(" | "));
+
+  /* Order: by RARITY, rarest first (Apex, then Omega, then down), and the name
+     only breaks ties inside the same rarity. The pair is chosen so that the two
+     criteria DISAGREE: alphabetically «Allosaurus» (common) goes before
+     «Ankylos Lux» (apex), so a sort that fell back to the name would come out
+     backwards and this would fail. */
+  MIS = ["allosaurus", "ankylos_lux"];
+  pintarFotos();
+  var ordenTira = Array.prototype.map.call(
+    tira.querySelectorAll("button[data-ir] .tira-nm"),
+    function(n){ return n.textContent.trim(); });
+  ok("the strip is ordered by rarity, rarest first",
+     ordenTira[0] === "Ankylos Lux" && ordenTira[1] === "Allosaurus", ordenTira.join(" | "));
+
+  /* The photo is centred inside its card. The name below is centred, so an
+     image stuck to the left edge read crooked. Measured on the first card: the
+     gap on the left has to equal the gap on the right. */
+  MIS = ["indoraptor", "tyrannosaurus_rex"];
+  pintarFotos();
+  var cajaTira = tira.querySelector("button[data-ir]");
+  var imgTira  = cajaTira.querySelector("img");
+  var rc = cajaTira.getBoundingClientRect(), ri = imgTira.getBoundingClientRect();
+  ok("the photo is centred inside its card",
+     Math.abs((ri.left - rc.left) - (rc.right - ri.right)) <= 1.5,
+     "left " + (ri.left - rc.left).toFixed(1) + " vs right " + (rc.right - ri.right).toFixed(1));
+  var cminT = getComputedStyle(imgTira);
+  ok("the strip photo is the double of the compact one (60x72)",
+     cminT.width === "60px" && cminT.height === "72px", cminT.width + "x" + cminT.height);
 
   // the cap: with 12 saved only 10 are shown, and it says how many there are
   MIS = Object.keys(C).slice(0, 12);
@@ -591,11 +689,32 @@ try {
        return getComputedStyle(z).color === getComputedStyle(r).color;
        })(), "compared with the «raíz» pill of the root node");
 
+  /* A name in the fusion tree is the same `nombreIr` button as in the report and
+     in the search list, so it hangs off the same `data-ir` contract: the test
+     presses one and requires the calculator to open with THAT creature. The node
+     is picked before pressing, because pressing hides the tree. */
+  var enArbol = document.querySelector("#arbolCuerpo .nodo:not(.raiz) .cab button[data-ir]");
+  if (enArbol){
+    var uArbol = enArbol.dataset.ir;
+    enArbol.dispatchEvent(new MouseEvent("click", {bubbles:true}));
+    ok("a click on a name in the fusion tree opens its calculator",
+       document.getElementById("s-calc").classList.contains("on") && elegido === uArbol,
+       "chosen=" + elegido + " · pressed=" + uArbol + " · calc tab=" +
+       document.getElementById("s-calc").classList.contains("on"));
+  } else {
+    ok("a click on a name in the fusion tree opens its calculator", false,
+       "no clickable name in the tree");
+  }
+
   /* The card of the chosen creature. The zone pill only has to show up if it
      says something: in a hybrid its source is `none` (248 of the 518) and «sin fuente en
      el mapa» is noise — a hybrid is not searched for, it is fused. It is checked with
      the independent criterion: empty ingredients, or a real source in the model. */
   var faltan = [], sobran = [], nBase = 0, nHib = 0;
+  /* And the class badge that goes before the name. Creature by creature, because
+     the label and the file both come from the value in the data: an icon that
+     says «fierce» over a cunning creature would be worse than no icon. */
+  var sinClase = [], claseMal = [], claseSinNombre = [];
   Object.keys(C).forEach(function(u){
     elegir(u);
     var hay = !!document.querySelector("#elegida .pill.zona");
@@ -605,6 +724,17 @@ try {
     var deberia = esBase || tieneFuente;
     if (esBase) nBase++; else nHib++;
     if (deberia && !hay) faltan.push(u);
+    var im = document.querySelector("#elegida .cab .nombre img.clase-i");
+    if (!im){ sinClase.push(u + " (" + C[u][10] + ")"); }
+    else {
+      if (im.getAttribute("src") !== "img/clase/" + C[u][10] + ".png")
+        claseMal.push(u + " -> " + im.getAttribute("src"));
+      /* The word travels in the alt and in the tooltip, and in SPANISH: an icon
+         alone only means something to whoever already knows it, and the raw code
+         («wild_card») is not a name. */
+      if (!im.alt || im.title.indexOf("Clase: ") !== 0)
+        claseSinNombre.push(u + " alt=" + im.alt + " title=" + im.title);
+    }
     if (!deberia && hay) sobran.push(u);
   });
   ok("the zone pill is missing in none that should carry it", faltan.length === 0,
@@ -613,6 +743,15 @@ try {
      sobran.length ? sobran.length + " with a filler pill: " + sobran.slice(0, 6).join(", ") : "none of " + nHib + " hybrids");
   ok("the 518 split between 270 without ingredients and 248 hybrids", nBase === 270 && nHib === 248,
      nBase + " base + " + nHib + " hybrids = " + (nBase + nHib));
+  ok("all 518 show their class badge before the name", sinClase.length === 0,
+     sinClase.length ? sinClase.length + " without badge: " + sinClase.slice(0, 6).join(", ")
+                     : "518 with badge, from the class in the data");
+  ok("and the badge is the file of ITS class, not another one", claseMal.length === 0,
+     claseMal.length ? claseMal.slice(0, 6).join(" ;; ") : "the 7 files of img/clase/");
+  ok("and the class is named in words (Spanish), not left as the raw code",
+     claseSinNombre.length === 0,
+     claseSinNombre.length ? claseSinNombre.slice(0, 6).join(" ;; ")
+                           : "«Clase: Astuta Feroz» and the other six");
   /* The concrete case that motivates the rule: a hybrid without a source must not say
      «sin fuente en el mapa». A real one is chosen, it is not assumed. */
   var hibSinFuente = Object.keys(C).filter(function(u){
@@ -767,6 +906,105 @@ try {
      document.getElementById("stNota").innerText.indexOf("tope = nivel 29") > 0,
      document.getElementById("stNota").innerText.replace(/\s+/g, " "));
 
+  /* ---------- the Omega training points (design «editable grid») ---------- */
+  /* The pool is 7 per level and the increment and the cap of each stat are the
+     source's own per creature. Everything here goes through the panel or through
+     `fijar`, and is read back from what is painted. */
+  function num(id){
+    return Number((document.getElementById(id).textContent || "").replace(/[^\d-]/g, ""));
+  }
+  var OM = "93_classic_t_rex";
+  elegir(OM); fijar(OM, "nivel", 26);
+  ENT_CAMPOS.forEach(function(c){ fijar(OM, c, 0); });
+  pintarStats();
+  ok("an Omega shows the training controls, inside the six cards",
+     document.getElementById("panelStats").getAttribute("data-ent") === "1" &&
+     document.querySelectorAll("#stRejilla .st-ctl").length === 6,
+     document.querySelectorAll("#stRejilla .st-ctl").length + " blocks · data-ent=" +
+     document.getElementById("panelStats").getAttribute("data-ent"));
+  var pozoTxt = document.getElementById("stPozo").innerText.replace(/\s+/g, " ");
+  ok("the pool is 7 per level and the box says so",
+     mejDe(OM).pozo === 182 && /182/.test(pozoTxt) && /7 por nivel/.test(pozoTxt),
+     pozoTxt);
+  /* A stat with `delta` 0 (this creature's armour) has nothing to give: its plus
+     is born off, and that is what tells the user the stat cannot be trained. */
+  ok("a stat with no increment has its plus off from the start",
+     document.querySelector('#panelStats [data-boost="tArm"][data-paso="1"]').disabled === true &&
+     document.querySelector('#panelStats [data-boost="tVida"][data-paso="1"]').disabled === false,
+     "armadura off, vida on");
+  var vida0 = num("stV_vida");
+  document.querySelector('#panelStats [data-boost="tVida"][data-paso="1"]').click();
+  ok("one training point raises health by the source's increment (35)",
+     num("stV_vida") === vida0 + 35 && INV[OM].tVida === 1,
+     vida0 + " -> " + num("stV_vida") + " · " + JSON.stringify(INV[OM]));
+  ok("and the card says what a point is worth and where that stat tops out",
+     /* The thousands separator is the language's: Spanish (es-MX) writes 6,145,
+        not 6.145. The regex takes either so that it cannot pass by not matching. */
+     /entrenamiento: \+35 por punto, tope 6[,.]145 \(137 puntos\)/
+       .test(document.getElementById("stV_vida").closest(".st").title),
+     document.getElementById("stV_vida").closest(".st").title);
+  /* The per-stat cap and the shared pool, the two digits that bound every button. */
+  fijar(OM, "tVida", 137); fijar(OM, "tCri", 45); pintarStats();
+  ok("health reaches its cap (6.145) with exactly the 137 points the source gives",
+     num("stV_vida") === 6145 && INV[OM].tVida === 137,
+     num("stV_vida") + " with " + INV[OM].tVida + " points");
+  ok("with the pool spent (137 + 45 = 182) every plus is off",
+     document.querySelector('#panelStats [data-boost="tCri"][data-paso="1"]').disabled === true &&
+     document.querySelector('#panelStats [data-boost="tVida"][data-paso="1"]').disabled === true &&
+     /quedan 0/.test(document.getElementById("stPozo").innerText.replace(/\s+/g, " ")),
+     document.getElementById("stPozo").innerText.replace(/\s+/g, " "));
+  ok("and the minus still works, so a point can be moved somewhere else",
+     document.querySelector('#panelStats [data-boost="tCri"][data-paso="-1"]').disabled === false, "");
+  /* Going down a level shrinks the pool, and the points are given back in the
+     order the game does it: from the last stat backwards (crit damage, crit...). */
+  fijar(OM, "nivel", 11); pintarStats();
+  ok("going down to level 11 trims the pool (77) taking back crit first",
+     INV[OM].tVida === 77 && INV[OM].tCri === 0 && mejDe(OM).usados === 77,
+     JSON.stringify({vida: INV[OM].tVida, crit: INV[OM].tCri, usados: mejDe(OM).usados}));
+  /* And a creature without training is exactly the card it was. */
+  elegir("indoraptor"); pintarStats();
+  ok("a creature that is not an Omega keeps the panel it had",
+     document.getElementById("panelStats").getAttribute("data-ent") === "0" &&
+     document.querySelectorAll("#stRejilla .st-ctl").length === 6 &&
+     getComputedStyle(document.querySelector("#stRejilla .st-ctl")).display === "none",
+     "data-ent=" + document.getElementById("panelStats").getAttribute("data-ent") +
+     " · controls hidden");
+  ok("and its pool box is empty",
+     document.getElementById("stPozo").innerHTML === "" && mejDe("indoraptor").pozo === undefined,
+     "pozo=" + mejDe("indoraptor").pozo);
+
+  /* ---------- the game's own numbers for an Omega (28-sep-2026) ---------- */
+  /* This is the case n30 measured in the game and that the panel got WRONG: the
+     app multiplied the Omega's health and damage by the level, and the game does
+     not — levelling an Omega gives training POINTS, not stats. Little Eatie at
+     level 21, 7 x 21 = 147 points spent (73 to health, 74 to damage), 5 health
+     boosts and 3 speed ones, as read off the game's screen:
+        health    (1100 + 40 x 73) x 1.125 = 4522
+        damage     400 + 25 x 74           = 2250
+        speed      110 + 2 x 3             =  116
+     With the level multiplier the same allocation gave 4001 and 1508, which is
+     exactly what n30 reported. The three numbers together are what pins the rule:
+     an allocation summing to the pool cannot be off by a constant. */
+  var LE = "little_eatie";
+  elegir(LE); fijar(LE, "nivel", 21);
+  ENT_CAMPOS.forEach(function(c){ fijar(LE, c, 0); });
+  ["bVida","bDano","bVel"].forEach(function(c){ fijar(LE, c, 0); });
+  fijar(LE, "bVida", 5); fijar(LE, "bVel", 3);
+  fijar(LE, "tVida", 73); fijar(LE, "tDano", 74);
+  pintarStats();
+  ok("an Omega does NOT scale with the level: the game's Little Eatie comes out exactly",
+     num("stV_vida") === 4522 && num("stV_dano") === 2250 && num("stV_velocidad") === 116,
+     "vida " + num("stV_vida") + " (juego 4522) · daño " + num("stV_dano") +
+     " (juego 2250) · velocidad " + num("stV_velocidad") + " (juego 116)");
+  ok("and the 147 points of the game's screen are exactly the pool of 7 x 21",
+     mejDe(LE).pozo === 147 && mejDe(LE).usados === 147, JSON.stringify({
+       pozo: mejDe(LE).pozo, usados: mejDe(LE).usados}));
+  ok("and the base does not move with the level, which is the whole point",
+     statsDe(LE, 21, {bVida:0,bDano:0,bVel:0,mejora:0})[0] ===
+     statsDe(LE, 35, {bVida:0,bDano:0,bVel:0,mejora:0})[0],
+     "nivel 21 y 35 sin puntos: " +
+     statsDe(LE, 21, {bVida:0,bDano:0,bVel:0,mejora:0})[0]);
+
   /* A creature without a track must not show the control, nor let it be touched. */
   elegir("tyrannosaurus_rex"); pintarStats();
   ok("a creature without a track does not show the enhancement control",
@@ -781,40 +1019,129 @@ try {
   // ======================================================================
   var selT = document.getElementById("tema");
   var opsT = selT ? Array.prototype.map.call(selT.options, function(o){ return o.value; }) : [];
-  ok("there is a theme dropdown with «default» and «yellow»",
-     opsT.join(",") === "default,yellow", opsT.join(","));
+  ok("there is a theme dropdown with the default, the five Amber-* and «boring»",
+     opsT.join(",") === "yellow,crystal,neon,oled,liquid,cinema,boring", opsT.join(","));
+  /* The VALUES are the historical names (see the comment in plantilla.html): the
+     default theme's value is «yellow» and what the user reads is «Default». The
+     two TRANSLATED labels are checked in Spanish, because this run is pinned to
+     Spanish; the Amber-* names are proper names and are not translated. */
+  var txtT = selT ? Array.prototype.map.call(selT.options, function(o){ return o.textContent.trim(); }) : [];
+  ok("and the labels are Default, the five Amber-* and Boring",
+     txtT.join(",") === "Predeterminado,Amber-Crystal,Amber-Neon,Amber-OLED,Amber-Liquid,Amber-Cinema,Aburrido",
+     txtT.join(","));
+  ok("and the label of the control is translated too",
+     document.querySelector('label[for="tema"]').textContent.trim() === "Tema",
+     document.querySelector('label[for="tema"]').textContent.trim());
+
+  /* The two controls of the header have to be LEVEL at the bottom. The language
+     switch has no label and the theme has one, so aligning the tops (the old
+     flex-start) left the switch floating above the <select>. It is measured, not
+     eyeballed: a pixel of slack for the sub-pixel rounding. */
+  var rIdioma = document.querySelector(".idioma").getBoundingClientRect();
+  var rTema = document.getElementById("tema").getBoundingClientRect();
+  ok("the language switch and the theme select are level at the bottom",
+     Math.abs(rIdioma.bottom - rTema.bottom) <= 1,
+     "idioma bottom " + rIdioma.bottom.toFixed(1) + " vs tema bottom " + rTema.bottom.toFixed(1));
 
   /* The test that really matters: the RARITY colours cannot change
-     between themes. If they did, the new theme would be exactly the confusion that
+     between themes. If they did, a theme would be exactly the confusion that
      n30 asked to avoid. The COMPUTED values are looked at, not the CSS text:
-     reading the file only proves that the line is written. */
+     reading the file only proves that the line is written. And it is checked in
+     ALL SEVEN themes, not only in the two that existed before.
+     The default palette is pinned first: the Firefox profile keeps localStorage
+     between runs, and measuring «whatever was left over» is how a test ends up
+     asserting on the wrong palette while still passing. */
   var raiz = document.documentElement;
+  ponerTema("yellow");
   var claves = ["--r-comun","--r-rara","--r-epica","--r-legendaria","--r-unica",
                 "--r-apex","--r-omega","--verde","--ambar","--rojo","--azul",
                 "--pill","--st-acc"];
   function colores(){ var cs = getComputedStyle(raiz); return claves.map(function(k){
     return cs.getPropertyValue(k).trim(); }); }
-  var colD = colores(), marcaD = getComputedStyle(raiz).getPropertyValue("--marca").trim();
-  var bgD = getComputedStyle(document.body).backgroundColor;
-  ponerTema("yellow");
-  var colY = colores(), marcaY = getComputedStyle(raiz).getPropertyValue("--marca").trim();
-  var bgY = getComputedStyle(document.body).backgroundColor;
-  ok("the theme changes the brand colour and the background",
-     marcaD !== marcaY && bgD !== bgY, marcaD + " -> " + marcaY + " · " + bgD + " -> " + bgY);
-  var distintas = [];
-  claves.forEach(function(k, i){ if (colD[i] !== colY[i]) distintas.push(k); });
-  ok("and it does NOT touch any of the rarity colours or the semantic ones",
-     distintas.length === 0,
-     distintas.length ? "would change: " + distintas.join(", ")
-                      : "the " + claves.length + " intact");
+  function marca(){ return getComputedStyle(raiz).getPropertyValue("--marca").trim().toLowerCase(); }
+  function fondo(){ var cs = getComputedStyle(document.body);
+    return cs.backgroundImage + "|" + cs.backgroundColor; }
+  var colD = colores(), marcaD = marca(), bgD = getComputedStyle(document.body).backgroundColor;
+  var fondoD = fondo();
+  ok("the default theme is the amber one, on a deep-black background",
+     marcaD === "#ff6d1f" && bgD === "rgb(0, 0, 0)", marcaD + " · " + bgD);
+
+  /* The list of themes is READ FROM THE DROPDOWN, not written here: a theme
+     added tomorrow is covered by this test without touching it. */
+  var OTROS = opsT.filter(function(v){ return v !== "yellow"; });
+  var AMBAR = OTROS.filter(function(v){ return v !== "boring"; });
+  elegir("indoraptor");   // the card carries a rarity tag, to measure it painted
+  var etiquetaD = getComputedStyle(document.querySelector("#elegida .tag")).color;
+  var choques = [], mismoFondo = [], etiquetas = [];
+  OTROS.forEach(function(t){
+    ponerTema(t);
+    var c = colores();
+    c.forEach(function(v, i){ if (v !== colD[i]) choques.push(t + ":" + claves[i]); });
+    if (fondo() === fondoD) mismoFondo.push(t);
+    var e = getComputedStyle(document.querySelector("#elegida .tag")).color;
+    if (e !== etiquetaD) etiquetas.push(t + ":" + e);
+  });
+  /* THE RULE OF THE PROJECT: a rarity colour is a DATUM. No theme may repaint
+     it, or the same creature would say two different things depending on the
+     theme. It is checked on the 13 computed variables AND on a real tag. */
+  ok("THE RULE: no theme touches the 13 rarity or semantic colours",
+     choques.length === 0,
+     choques.length ? choques.slice(0, 6).join(", ")
+                    : "the " + claves.length + " intact in the " + (OTROS.length + 1) + " themes");
+  ok("nor repaints a rarity tag",
+     etiquetas.length === 0,
+     etiquetas.length ? etiquetas.slice(0, 4).join(", ") : "the tag stays " + etiquetaD);
+  ok("and every theme changes the background",
+     mismoFondo.length === 0,
+     mismoFondo.length ? "same as the default: " + mismoFondo.join(", ")
+                       : OTROS.length + " of " + OTROS.length + " different");
+
+  /* The five Amber-* keep the AMBER brand — that is what «on the Default base»
+     means — and «boring» is the only one with the green one. */
+  var marcaAmbar = AMBAR.every(function(t){ ponerTema(t); return marca() === "#ff6d1f"; });
+  ponerTema("boring");
+  ok("the five Amber-* keep the amber brand and «boring» keeps the green one",
+     marcaAmbar && marca() === "#4ade80", "ambar=" + marcaAmbar + " verde=" + (marca() === "#4ade80"));
+
+  /* And each one applies its OWN effect, measured on the rendered page. */
+  ponerTema("crystal");
+  var cCristal = getComputedStyle(document.querySelector(".panel"));
+  ok("Amber-Crystal applies the glass (backdrop-filter on the panels)",
+     /blur\(/.test(cCristal.backdropFilter || cCristal.webkitBackdropFilter || ""),
+     cCristal.backdropFilter || cCristal.webkitBackdropFilter || "(none)");
+  ponerTema("neon");
+  var cNeon = getComputedStyle(document.querySelector(".panel")).boxShadow;
+  ok("Amber-Neon applies its amber halo", /255,\s*145,\s*45/.test(cNeon), cNeon.slice(0, 70));
+  /* Amber-OLED: the Crystal depth on deep blacks with the orange accent. The
+     pure-black page and the hairline of light are what tell it from Crystal. */
+  ponerTema("oled");
+  var cOled = getComputedStyle(document.querySelector(".panel"));
+  ok("Amber-OLED is deep-black glass (blur + a #000 page)",
+     /blur\(/.test(cOled.backdropFilter || cOled.webkitBackdropFilter || "") &&
+     getComputedStyle(raiz).getPropertyValue("--bg").trim() === "#000000",
+     "blur=" + (cOled.backdropFilter || "(none)") +
+     " · --bg=" + getComputedStyle(raiz).getPropertyValue("--bg").trim());
+  var hair = getComputedStyle(document.querySelector("header"), "::after").backgroundImage;
+  ok("and it draws the amber hairline of light under the header",
+     /linear-gradient/.test(hair), hair.slice(0, 70));
+  ponerTema("liquid");
+  ok("Amber-Liquid applies the flowing background animation",
+     getComputedStyle(document.body).animationName === "amberLiquido",
+     getComputedStyle(document.body).animationName);
+  ponerTema("cinema");
+  var cCinema = getComputedStyle(document.querySelector(".panel h2")).letterSpacing;
+  ok("Amber-Cinema applies its quiet heading spacing", cCinema === "1.7px", cCinema);
+
+  /* The attribute IS the option value, and the choice is saved. */
+  ponerTema("oled");
   ok("the theme is applied as an attribute on <html>",
-     raiz.getAttribute("data-tema") === "yellow", "" + raiz.getAttribute("data-tema"));
+     raiz.getAttribute("data-tema") === "oled", "" + raiz.getAttribute("data-tema"));
   ok("and it is saved for next time",
-     localStorage.getItem("jwa322.tema") === "yellow", "" + localStorage.getItem("jwa322.tema"));
-  ponerTema("default");
-  ok("going back to «default» removes the attribute, it does not leave it at «default»",
+     localStorage.getItem("jwa322.tema") === "oled", "" + localStorage.getItem("jwa322.tema"));
+  ponerTema("yellow");
+  ok("going back to the default removes the attribute, it does not leave it at «yellow»",
      raiz.getAttribute("data-tema") === null, "" + raiz.getAttribute("data-tema"));
-  ok("and the dropdown follows the theme", selT.value === "default", selT.value);
+  ok("and the dropdown follows the theme", selT.value === "yellow", selT.value);
 
   /* The tab icon: the only thing seen when the focus is on another
      tab. That the <link> exists proves nothing — that the image LOADS, yes. */
@@ -865,7 +1192,15 @@ try {
   ok("the typed value survives the repaint",
      !!INV[FOCO_U] && INV[FOCO_U].adn === 777, JSON.stringify(INV[FOCO_U]));
 } catch (e) {
-  log("!! EXCEPTION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
+  /* An abort in the middle of the pass must NOT come out green. `log()` writes a
+     note and `veredicto()` only reads the `OK ` and `FALLO ` rows, so an
+     exception that cut this pass in half left a shorter «all OK» behind: it
+     happened on 27-sep-2026, a helper that does not exist in this block threw and
+     the run passed with 99 checks where there had been 152, with the last 53
+     checks simply not running. A failure row makes it red, which is what it is. */
+  RES.push("FALLO the pass could not finish: " + e.message +
+           " @@ " + (e.stack || "").split("\n")[1]);
+  FALLOS++;
 }
 
 // --- 3) the report, now with the images resolved ---
@@ -1093,4 +1428,122 @@ __ENTREGA__
     return c2
 
 
-raise SystemExit(codigo or pasada_tira())
+# ---------------------------------------------------------------------------
+# THIRD RUN: the theme at LOAD time.
+#
+# The stored value is read by the inline script in the <head>, before anything
+# else runs, so the only way to test it is to seed localStorage and load the page
+# once per case. A single page that calls `ponerTema()` while it is already open
+# cannot prove the migration: that is a property of the startup, not of the
+# function.
+#
+# It holds down the two things a rename breaks silently:
+#   a) a stored «default» —the value the OLD green theme used— is read as
+#      «boring», so whoever had chosen it keeps the same look;
+#   b) the new default (amber, deep black) is what gets painted with nothing
+#      stored, and it carries NO attribute.
+# ---------------------------------------------------------------------------
+def pasada_tema():
+    DIR3 = "/tmp/jwa-ui-tema"
+    PERFIL3 = os.path.join(DIR3, "perfil")
+    os.makedirs(DIR3, exist_ok=True)
+    os.makedirs(PERFIL3, exist_ok=True)
+    enlace = os.path.join(DIR3, "img")
+    if os.path.islink(enlace):
+        if os.readlink(enlace) != IMG:
+            os.unlink(enlace)
+    if not os.path.exists(enlace):
+        os.symlink(IMG, enlace)
+
+    CASOS = [
+        # (name, what is stored, expected data-tema, expected brand hex)
+        ("nothing stored boots in the default theme",
+         'localStorage.removeItem("jwa322.tema");', None, "#ff6d1f"),
+        ("a stored «yellow» keeps the default theme",
+         'localStorage.setItem("jwa322.tema","yellow");', None, "#ff6d1f"),
+        ("a stored «default» —the value of the old green theme— is read as «boring»",
+         'localStorage.setItem("jwa322.tema","default");', "boring", "#4ade80"),
+        ("a stored «boring» stays «boring»",
+         'localStorage.setItem("jwa322.tema","boring");', "boring", "#4ade80"),
+        # The five Amber-* themes have to SURVIVE A RELOAD: the <head> script is
+        # the only thing that runs before painting, and its list is separate from
+        # the dropdown's. One case per value, because a typo in one of the five
+        # would not show up in the others.
+        ("a stored «crystal» boots in Amber-Crystal",
+         'localStorage.setItem("jwa322.tema","crystal");', "crystal", "#ff6d1f"),
+        ("a stored «neon» boots in Amber-Neon",
+         'localStorage.setItem("jwa322.tema","neon");', "neon", "#ff6d1f"),
+        ("a stored «oled» boots in Amber-OLED",
+         'localStorage.setItem("jwa322.tema","oled");', "oled", "#ff6d1f"),
+        ("a stored «liquid» boots in Amber-Liquid",
+         'localStorage.setItem("jwa322.tema","liquid");', "liquid", "#ff6d1f"),
+        ("a stored «cinema» boots in Amber-Cinema",
+         'localStorage.setItem("jwa322.tema","cinema");', "cinema", "#ff6d1f"),
+    ]
+    fallos = 0
+    for k, (nombre, js, attr, marca) in enumerate(CASOS):
+        html = open(HTML, encoding="utf-8").read()
+        # The injection goes at the very start of <head>, BEFORE the inline script
+        # that applies the theme: the order is the whole point of this pass.
+        SEMILLA = ('<script>try { localStorage.removeItem("jwa322.idioma"); %s }'
+                   ' catch(e){}</script>\n' % js)
+        if "<head>" not in html:
+            raise SystemExit("I cannot find <head> to seed the theme")
+        html = html.replace("<head>", "<head>\n" + SEMILLA, 1)
+
+        srv3 = arrancar()
+        diag = r"""
+<script>
+window.addEventListener("load", function(){
+  var RES = [], FALLOS = 0;
+  function ok(n, c, d){ if (!c) FALLOS++; RES.push((c ? "OK   " : "FALLO") + " " + n + ": " + (d===undefined?"":d)); }
+  try {
+    var raiz = document.documentElement;
+    var attr = raiz.getAttribute("data-tema");
+    var marca = getComputedStyle(raiz).getPropertyValue("--marca").trim().toLowerCase();
+    var bg = getComputedStyle(document.body).backgroundColor;
+    var valor = document.getElementById("tema").value;
+    ok("__NOMBRE__", attr === __ATTR__ && marca === __MARCA__,
+       "data-tema=" + attr + " · marca=" + marca + " · fondo=" + bg);
+    ok("and the dropdown shows the theme that is painted",
+       valor === (attr || "yellow"),
+       "dropdown=" + valor + " · data-tema=" + attr);
+  } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
+  RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
+  var p = document.createElement("pre"); p.id = "__diag";
+  p.style.cssText = "position:fixed;inset:0;z-index:999999;background:#fff;color:#000;" +
+                    "font:13px/1.5 monospace;padding:14px;margin:0;white-space:pre-wrap";
+  p.textContent = RES.join("\n"); document.body.appendChild(p);
+__ENTREGA__
+});
+</script>"""
+        diag = (diag.replace("__NOMBRE__", nombre)
+                    .replace("__ATTR__", json.dumps(attr))
+                    .replace("__MARCA__", json.dumps(marca)))
+        diag = diag.replace("__ENTREGA__", srv3.js("__diag"))
+        _ok3, _msg3 = comprobar_scripts(html + diag, "probar_ui.py (the theme)")
+        if not _ok3:
+            raise SystemExit("!! " + _msg3)
+        destino = os.path.join(DIR3, "tema%d.html" % k)
+        open(destino, "w", encoding="utf-8").write(html + diag)
+        env = dict(os.environ)
+        env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",
+                    "MOZ_HEADLESS": "1", "MOZ_DISABLE_CONTENT_SANDBOX": "1", "HOME": DIR3})
+        subprocess.run(["/usr/lib/firefox/firefox", "--headless", "--profile", PERFIL3,
+                        "--window-size", "1200,900", "--screenshot",
+                        os.path.join(DIR3, "tema%d.png" % k), "file://" + destino],
+                       env=env, capture_output=True, text=True, timeout=180)
+        srv3.parar()
+        print("-" * 72)
+        print("=== the theme at load: %s ===" % nombre)
+        info3 = srv3.texto().strip()
+        print(info3)
+        c3, lineas3 = veredicto(info3)
+        for l in lineas3:
+            print(l)
+        if c3:
+            fallos = 1
+    return fallos
+
+
+raise SystemExit(codigo or pasada_tira() or pasada_tema())

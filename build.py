@@ -17,11 +17,13 @@ from modelo import (ADN_31_35, ADN_POR_FUSION, ADN_POR_FUSION_MEDIA, COINR,
                     LOC_ETIQUETAS, MEJORA_NIVEL_MIN, MEJORA_PASOS,
                     MIN_LV, MONEDAS_FUSION, MULT_NIVEL, NIVEL_MAX,
                     NIVEL_MIN_INGREDIENTE, NOMBRE, OMEGA_31_35, OMEGA_COINR,
-                    OMEGA_L, TIER, TOPE_BOOST_STAT, TOPES_ADN, VERSION)
+                    OMEGA_L, PUNTOS_OMEGA_NIVEL, TIER, TOPE_BOOST_STAT, TOPES_ADN,
+                    VERSION)
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 ORIGEN = os.path.join(RAIZ, "data", "jwa-3.22.json")
 FAVICON = os.path.join(RAIZ, "img", "favicon.svg")
+LOGO = os.path.join(RAIZ, "img", "logo.svg")
 DESTINO = os.path.join(RAIZ, f"amber-jwa-{VERSION}.html")
 # Deploy entry point. Vercel/GitHub Pages serve index.html, so the same
 # self-contained HTML is written twice: the versioned copy is the artefact a
@@ -47,6 +49,12 @@ def cargar_datos():
         # browser, just as with the zones.
         mj = [[m["cost"], m["req"], [m["rwd"]["type"], m["rwd"]["value"]]]
               for m in (x.get("mejoras") or [])]
+        # The Omega training table, flattened to three lists in the SAME order as
+        # the stats of slot 8. `ent` names the same key the scraper writes, which
+        # is already in Spanish, so there is nothing to rename here.
+        ent = x.get("entrenamiento")
+        if ent:
+            ent = [[ent[g][k] for k in STATS_ORDEN] for g in ("cap", "delta", "pcap")]
         compacto[u] = [
             x["nombre"],            # 0
             x["rareza"],            # 1
@@ -64,23 +72,35 @@ def cargar_datos():
             [s[k] for k in STATS_ORDEN],
             # 9: the enhancement track, or None if the creature does not have it.
             mj or None,
+            # 10: the CLASS (fierce, resilient, cunning, wild_card, and the three
+            # combinations). It is the raw code, which is also the name of the icon
+            # in img/clase/: the code is the identity and the label is resolved in
+            # the browser, as with the zones and the resources.
+            x["clase"],
+            # 11: the OMEGA training table, or None. Only the 33 Omega creatures
+            # have it: `cap` where each stat tops out with training, `delta` what
+            # one point adds and `pcap` how many points it takes. The three lists
+            # come in the order of STATS_ORDEN, the same one used by slot 8, so the
+            # browser never has to map a name to a position.
+            ent or None,
         ]
     return d["meta"], compacto
 
 
-def favicon():
-    """The tab icon, as a data URI.
+def svg_en_linea(ruta):
+    """An SVG of `img/`, as a data URI, to embed it in the HTML.
 
-    It goes INLINE and not as <link href="img/favicon.svg"> on purpose: that way
-    the icon does not depend on the `img/` folder being next to the HTML. The SVG
-    is still a real file in `img/favicon.svg`, which is the only source; here it
-    is just copied.
+    Both the tab icon and the header mark go INLINE and not as
+    `<img src="img/...">` on purpose: that way they do not depend on the `img/`
+    folder being next to the HTML when the file is copied on its own. The SVG
+    files are still the only source; here they are just copied.
     """
-    with open(FAVICON, encoding="utf-8") as f:
+    with open(ruta, encoding="utf-8") as f:
         svg = f.read().strip()
     # The characters that would break an HTML attribute or a URL are encoded;
     # the rest is left readable so that the generated HTML can be reviewed by
-    # eye.
+    # eye. The double quotes become single ones, which is what lets the data URI
+    # live inside a double-quoted attribute.
     seguro = (svg.replace("%", "%25").replace("#", "%23")
                  .replace("<", "%3C").replace(">", "%3E")
                  .replace('"', "'").replace("\n", " "))
@@ -126,6 +146,7 @@ def main():
             "topeBoostStat": TOPE_BOOST_STAT,
             "mejoraNivelMin": MEJORA_NIVEL_MIN,
             "mejoraPasos": MEJORA_PASOS,
+            "puntosOmegaNivel": PUNTOS_OMEGA_NIVEL,
             "statsOrden": list(STATS_ORDEN),
         },
     }
@@ -136,7 +157,8 @@ def main():
     carga = json.dumps(datos, ensure_ascii=False, separators=(",", ":"))
     html = html.replace("__DATOS__", carga)
     html = html.replace("__NOMBRE__", NOMBRE)
-    html = html.replace("__FAVICON__", favicon())
+    html = html.replace("__FAVICON__", svg_en_linea(FAVICON))
+    html = html.replace("__LOGO__", svg_en_linea(LOGO))
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         f.write(html)

@@ -14,11 +14,26 @@
 <link rel="icon" href="__FAVICON__">
 <!-- The theme is applied BEFORE painting. Set from the script at the end of
      the <body>, the page would be painted first with the default theme and
-     change afterwards: a flicker on every load. -->
+     change afterwards: a flicker on every load.
+     The DEFAULT theme (amber, deep-black background) carries NO attribute:
+     that way the `:root` block is its palette and the same colours do not have
+     to be written twice. Every other theme sets `data-tema` to its own VALUE,
+     which is also the value of its <option>.
+     The Amber-* list below is the same one `ponerTema` uses; if a value is
+     added to the dropdown it has to be added here too, or it would not survive
+     a reload.
+     «default» is the value the OLD green theme was stored under. It is read as
+     «boring» so that whoever had chosen it keeps the same look: the storage key
+     is a contract with saved data, and migrating the value is the cheap half of
+     keeping it. The new default's value stays «yellow», its historical name. -->
 <script>
 try {
-  if (localStorage.getItem("jwa322.tema") === "yellow")
-    document.documentElement.setAttribute("data-tema", "yellow");
+  const guardado = localStorage.getItem("jwa322.tema");
+  const AMBAR = ["crystal", "neon", "oled", "liquid", "cinema"];
+  if (guardado === "boring" || guardado === "default")
+    document.documentElement.setAttribute("data-tema", "boring");
+  else if (AMBAR.indexOf(guardado) !== -1)
+    document.documentElement.setAttribute("data-tema", guardado);
 } catch (e) {}
 
 /* ---- Language -----------------------------------------------------------
@@ -50,6 +65,11 @@ const I18N_ES = {
   "Super Hybrid": "superhíbrido",
   "Mega Hybrid": "megahíbrido",
   "Giga Hybrid": "gigahíbrido",
+  "Fierce": "Feroz",
+  "Resilient": "Resiliente",
+  "Cunning": "Astuta",
+  "Wild Card": "Comodín",
+  "Class: ": "Clase: ",
   "no source on the map": "sin fuente en el mapa",
   "No origin data in the source": "Sin datos de origen en la fuente",
   "In-game sources: ": "Fuentes en el juego: ",
@@ -115,9 +135,7 @@ const I18N_ES = {
   "<span class=\"st-ct\">Enhancement track</span>": "<span class=\"st-ct\">Pista de mejoras</span>",
   "<span class=\"st-cq\">Complete: the ": "<span class=\"st-cq\">Completa: los ",
   " steps are in place.</span>": " pasos están puestos.</span>",
-  "<div>Hatches at <b style=\"color:var(--tx)\">level ": "<div>Nace en <b style=\"color:var(--tx)\">nivel ",
-  "</b> · creating costs <b style=\"color:var(--tx)\">": "</b> · crear cuesta <b style=\"color:var(--tx)\">",
-  " DNA</b> · DNA cap <b style=\"color:var(--tx)\">": " ADN</b> · tope de ADN <b style=\"color:var(--tx)\">",
+  "Hatches at level {lvl} · creating costs {cost} DNA · DNA cap {cap}": "Nace en nivel {lvl} · crear cuesta {cost} ADN · tope de ADN {cap}",
   "cap ": "tope ",
   "0 = not created (hatches at ": "0 = sin crear (nace en ",
   "<div class=\"t\">Max level with what you have now</div>": "<div class=\"t\">Nivel máximo con lo que tienes ahora</div>",
@@ -132,7 +150,6 @@ const I18N_ES = {
   " from level <b>": " desde el nivel <b>",
   " from scratch": " partiendo de cero",
   " you reach level <b>": " llegas al nivel <b>",
-  "</b> level": "</b> nivel",
   ". You would spend <b>": ". Gastarías <b>",
   "</b> and would be left with <b>": "</b> y te sobrarían <b>",
   " <b style=\"color:var(--verde)\">You now have enough for the target ": " <b style=\"color:var(--verde)\">Ya te alcanza para el objetivo ",
@@ -169,7 +186,8 @@ const I18N_ES = {
   "<div class=\"n\">root + cascading ingredients</div></div>": "<div class=\"n\">raíz + ingredientes en cascada</div></div>",
   "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edit the <b>level</b> and <b>DNA</b> of ": "<div class=\"aviso info\" style=\"margin-bottom:16px\">Edita el <b>nivel</b> y el <b>ADN</b> de ",
   "any creature in the tree. It saves instantly and recalculates everything that hangs from it. ": "cualquier criatura del árbol. Se guarda al momento y recalcula todo lo que cuelga de ella. ",
-  "If you uncheck <b>Created</b>, the DNA to create it is added to the calculation.</div>": "Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla.</div>",
+  "If you uncheck <b>Created</b>, the DNA to create it is added to the calculation. ":
+    "Si destildas <b>Creada</b>, se añade al cálculo el ADN de crearla. ",
   "<label class=\"chk\" title=\"If it is not created, the DNA to create it is added\">": "<label class=\"chk\" title=\"Si no está creada, se suma el ADN de crearla\">",
   "\">Level</label>": "\">Nivel</label>",
   "\">DNA you have</label>": "\">ADN que tienes</label>",
@@ -184,6 +202,12 @@ const I18N_ES = {
   "0 (not created)": "0 (sin crear)",
   "already at level <b>": "ya en nivel <b>",
   "nothing to gather": "nada que reunir",
+  "<b>not needed</b> for this target": "<b>no hace falta</b> para este objetivo",
+  "Shown for reference: this branch adds nothing to the totals.":
+    "Se muestra como referencia: esta rama no suma nada a los totales.",
+  "The tree is always shown complete: the branches you already cover say <b>not needed</b> ":
+    "El árbol se muestra siempre completo: las ramas que ya tienes cubiertas dicen <b>no hace falta</b> ",
+  "and add nothing to the totals.": "y no suman nada a los totales.",
   "</b> DNA": "</b> ADN",
   " · you have <b>": " · tienes <b>",
   "\">missing ": "\">falta ",
@@ -243,6 +267,16 @@ const I18N_ES = {
   "reactive move": "movimiento reactivo",
   "Points <b>": "Puntos <b>",
   " · remaining <b>": " · quedan <b>",
+  "Stat boost: ": "Boost de stats: ",
+  "Training points": "Puntos de entrenamiento",
+  "remaining ": "quedan ",
+  "of ": "de ",
+  " per level": " por nivel",
+  " per point, cap ": " por punto, tope ",
+  " · training: +": " · entrenamiento: +",
+  " points)": " puntos)",
+  " title=\"Add one training point of ": " title=\"Añadir un punto de entrenamiento de ",
+  " title=\"Remove one training point of ": " title=\"Quitar un punto de entrenamiento de ",
   " (this creature has no enhancement track)": " (esta criatura no tiene pista)",
   "Enhancement ": "Mejora ",
   " — it is missing <b>": " — le faltan <b>",
@@ -266,8 +300,8 @@ const I18N_ES = {
   "Catalysts": "Catalizadores",
   "1 · The creature": "1 · La criatura",
   "Pick a creature in the search box above to see its stats.": "Elige una criatura en el buscador de arriba para ver sus stats.",
-  "2 · Your data": "2 · Tus datos",
   "Current level": "Nivel actual",
+  "2 · Result": "2 · Resultado",
   "0 = not created": "0 = sin crear",
   "Drag it or use the arrow keys": "Arrastra o usa las flechas del teclado",
   "Fusion tree — top to bottom": "Árbol de fusión — de arriba abajo",
@@ -290,12 +324,11 @@ const I18N_ES = {
   "Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class=\"mono\">jurassic-journal</span> database.": "Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias), el comunicado oficial de la 3.22 y la base de datos de <span class=\"mono\">jurassic-journal</span>.",
   "The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.": "El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las fusiones calculadas son una estimación, no una promesa.",
   "Unofficial tool, not affiliated with Ludia.": "Herramienta no oficial, sin relación con Ludia.",
+  "UNOFFICIAL JWA DNA CALCULATOR": "CALCULADORA NO OFICIAL DE ADN DE JWA",
+  "</b>. You need ": "</b>. Necesitas ",
   "creatures": "criaturas",
   "data from": "datos de",
   "updated": "actualizados el",
-  "costs verified against": "costes verificados contra",
-  "entries": "fichas",
-  "with no discrepancies": "sin discrepancias",
   "works": "funciona",
   "offline": "sin conexión",
   "Fusion Tree": "Árbol de fusión",
@@ -310,6 +343,31 @@ const I18N_ES = {
   "<b>Press any row</b> — the name, the photo or any gap in the line — and it takes you to that creature's calculator, with its level, its DNA and its target exactly as you left them.": "<b>Pulsa cualquier fila</b> —el nombre, la foto o cualquier hueco de la línea— y te lleva a la calculadora de esa criatura, con su nivel, su ADN y su objetivo tal y como los dejaste.",
   "Data is stored in the browser (<code>localStorage</code>), on this device. Nothing is sent anywhere. Use «Export» to take it with you.": "Los datos se guardan en el navegador (<code>localStorage</code>), en este dispositivo. No se envía nada a ningún sitio. Usa «Exportar» para llevártelos.",
   "<b>UNVERIFIED data.</b> Unlike the rest of the calculator, the recombination rates are <b>not published by the game</b>, and the weights and recipes used here were observed by <b>idgt902</b> (guide of Aug 2025). Catalysts are for <b>enhancements</b>, not for levelling up: it is a separate axis.": "<b>Datos NO verificados.</b> A diferencia del resto de la calculadora, las tasas de recombinación <b>no están publicadas por el juego</b> y aquí se usan los pesos y las recetas observadas por <b>idgt902</b> (guía de ago-2025). Los catalizadores sirven para <b>mejoras (enhancements)</b>, no para subir de nivel: es un eje aparte.",
+  /* Theme and search controls, and the fragments that used to be hardcoded in
+     Spanish inside the JS. The key is ALWAYS the English source and the value
+     restores the Spanish verbatim, so the Spanish interface does not change by
+     a letter. A missing entry does not crash: it prints English inside the
+     Spanish interface, which is exactly the bug this block closes. */
+  "Theme": "Tema",
+  "Default": "Predeterminado",
+  "Boring": "Aburrido",
+  "Type a name… (e.g. Indoraptor)": "Escribe un nombre… (ej. Indoraptor)",
+  " · combat": " · combate",
+  "sanctuary only": "solo en santuario",
+  "Take ": "Llevar ",
+  "create": "criar",
+  "Create all": "Criar a todas",
+  "Sets ": "Pone ",
+  " · with yours: ": " · con lo tuyo: ",
+  "<span class=\"pill\">unpublished</span>": "<span class=\"pill\">sin publicar</span>",
+  " <span style=\"font-size:12px;font-weight:400;color:var(--tx2)\">(just created, hatches at {n})</span>": " <span style=\"font-size:12px;font-weight:400;color:var(--tx2)\">(recién creada, nace en {n})</span>",
+  " (you go up <b>{n}</b> level)": " (subes <b>{n}</b> nivel)",
+  " (you go up <b>{n}</b> levels)": " (subes <b>{n}</b> niveles)",
+  "level up <b>": "subir <b>",
+  "in ": "en ",
+  " to level up + ": " por subir + ",
+  " to fuse": " por fusionar",
+  " of ": " de ",
 };
 
 function idiomaInicial(){
@@ -335,33 +393,49 @@ function i18n(texto, params){
 </script>
 <style>
 :root{
-  --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --borde:#272c3a;
-  --tx:#e6e9ef; --tx2:#8b93a7; --tx3:#5f6879;
+  /* THE DEFAULT THEME: the palette of the image (black + orange + amber).
+     The BACKGROUNDS are deep black on purpose, for OLED panels: a #000 pixel is
+     off and spends nothing, and the near-blacks around it are the smallest step
+     that still separates a panel from the page. Only the backgrounds changed
+     with that: the text colours are the ones this palette already had.
+     `color-scheme:dark` belongs to the same decision: without it the native
+     popups (the theme <select>, the number spinners, the scrollbars) come out
+     white and light up the screen with a flash. */
+  color-scheme:dark;
+  --bg:#000000; --panel:#0a0806; --panel2:#14100a; --borde:#33261a;
+  --tx:#f7ecdc; --tx2:#bda284; --tx3:#8a7154;
   /* --marca is the BRAND colour of the interface: active tab, main buttons,
      focus, headings. It is the only thing that changes between themes besides
-     backgrounds, borders and text. In «default» it is worth the same as
-     --verde, so the look does not change by a single pixel (checked by
-     comparing screenshots).
-     NOTE: --verde is NOT the brand colour even though they share a hex today.
-     --verde means «reaches» and that is why it stays put between themes;
-     --marca is decoration and that is why it changes. */
-  --marca:#4ade80; --acc-tx:#06210f;
-  --hueco:#0d1017; --informe:#12151d; --rama:#333a4b; --punteado:#3a4256;
-  --raiz-bg:#16241c; --raiz-borde:#2f4a3a;
+     backgrounds, borders and text. The brand here is ORANGE (#ff6d1f) and not
+     amber on purpose: #fbbf24 is literally the colour of the Epic rarity, and
+     an amber button next to an Epic tag would not be distinguishable. In the
+     rarity palette there is no orange at all.
+     NOTE: --verde is NOT the brand colour. --verde means «reaches» and that is
+     why it stays put between themes; --marca is decoration and that is why it
+     changes. In the «boring» theme they do share a hex (#4ade80), and that
+     collision is what forced the stats panel to have its own accent, below. */
+  --marca:#ff6d1f; --acc-tx:#1c0d02;
+  /* --hueco is the «well» of the controls and the background of the photos: pure
+     black, so an input reads as a hole in the panel and not as another card.
+     --raiz-bg is a BACKGROUND but a highlighted one (the root of the tree), so
+     it keeps a warm tint; it does not compete with the Epic tag, which goes as
+     text over it. */
+  --hueco:#000000; --informe:#070503; --rama:#3a2a18; --punteado:#4a3623;
+  --raiz-bg:#1c1408; --raiz-borde:#4a3616;
   --verde:#4ade80; --ambar:#fbbf24; --azul:#60a5fa; --rojo:#f87171; --violeta:#a78bfa;
   /* Colour of the status pills. Cyan on purpose: the rarity colours already
      take green, amber, red and blue, so the pills use a tone that is not in
      that palette and stop competing with the tags.
-     It stays cyan ALSO in the yellow theme, and for the same reason: cyan is
-     neither in the rarity palette nor in the theme's, so it cannot be confused
-     with either of the two. */
+     It stays cyan ALSO in the «boring» theme, and for the same reason: cyan is
+     neither in the rarity palette nor in the other theme's, so it cannot be
+     confused with either of the two. */
   --pill:#22d3ee;
   /* Accent of the STATS PANEL: the «+165» the points contribute, the line of
      what the next step gives and the hover of its controls. It is cyan, and not
      --marca, for a measured and not aesthetic reason: `probar_rareza.py` walks
      the DOM and demands that every element whose RENDERED colour is a rarity hex
      be declared as a known collision. With --marca, the panel broke it, because
-     --marca is #4ade80 in «default», which is LITERALLY --r-unica. And it showed:
+     in «boring» --marca is #4ade80, which is LITERALLY --r-unica. And it showed:
      in a screenshot, the name «indoraptor» of the strip was green and the «+165»
      of the panel was the same green, on the same screen.
      Renaming the variable was not enough —the hex was still the same—, so the
@@ -382,27 +456,351 @@ function i18n(texto, params){
   --r-comun:#f1f5f9; --r-rara:#60a5fa; --r-epica:#fbbf24; --r-legendaria:#f87171;
   --r-unica:#4ade80; --r-apex:#c084fc; --r-omega:#f472b6;
 }
-/* «yellow» theme: the palette of the image (black + orange + amber).
+/* «boring»: the palette the tool had before (slate blue-grey + green brand).
    It changes backgrounds, borders, text and brand colour. And NOTHING ELSE:
    the seven rarity colours and the four semantic ones (--verde reaches,
    --ambar missing, --rojo error, --azul information) are identical in the two
    themes, because they mean something. Touching those would be exactly the
    confusion n30 asked to avoid.
-   The brand is ORANGE (#ff6d1f) and not amber on purpose: #fbbf24 is literally
-   the colour of the Epic rarity, and an amber button next to an Epic tag would
-   not be distinguishable. In the rarity palette there is no orange at all.
-   The tint of the root (--raiz-bg) becomes warm brown: it is a BACKGROUND, not
-   text, so it does not compete with the Epic tag, which goes as text over it.
    --pill and --st-acc are not touched either, and for the same reason as the
    semantic ones: cyan is neither in the rarity palette nor in this theme's.
-   Leaving them orange would be putting the brand colour where there used to be
-   a neutral one. */
-:root[data-tema="yellow"]{
-  --bg:#0a0806; --panel:#151009; --panel2:#1e1710; --borde:#33261a;
-  --tx:#f7ecdc; --tx2:#bda284; --tx3:#8a7154;
-  --marca:#ff6d1f; --acc-tx:#1c0d02;
-  --hueco:#0b0805; --informe:#120d07; --rama:#3a2a18; --punteado:#4a3623;
-  --raiz-bg:#241a0d; --raiz-borde:#4a3616;
+   In this theme --marca is worth the same as --verde (#4ade80), so the green
+   brand is also --r-unica: that is the collision the stats panel had to escape
+   from, and the reason --st-acc exists.
+   The deep-black backgrounds belong to the DEFAULT theme, not to this one: the
+   user asked for them on the amber palette, and this one is kept as it was. */
+:root[data-tema="boring"]{
+  --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --borde:#272c3a;
+  --tx:#e6e9ef; --tx2:#8b93a7; --tx3:#5f6879;
+  --marca:#4ade80; --acc-tx:#06210f;
+  --hueco:#0d1017; --informe:#12151d; --rama:#333a4b; --punteado:#3a4256;
+  --raiz-bg:#16241c; --raiz-borde:#2f4a3a;
+}
+
+/* ===========================================================================
+   The five «Amber-*» themes (27-sep-2026).
+
+   THE RULE OF THIS PROJECT, and it holds for EVERY theme, present and future:
+
+     a theme may change backgrounds, borders, depth and motion, and NOTHING
+     THAT MEANS SOMETHING. The seven rarity colours (`--r-comun`, `--r-rara`,
+     `--r-epica`, `--r-legendaria`, `--r-unica`, `--r-apex`, `--r-omega`) and the
+     four semantic ones (`--verde` reaches, `--ambar` missing, `--rojo` error,
+     `--azul` information) are the same in all of them, and so are `--pill` and
+     `--st-acc` (cyan, chosen precisely because it is in neither palette).
+     A rarity colour is a DATUM, not decoration: if a theme repainted the tags,
+     the same creature would say two different things depending on the theme.
+
+   `probar_ui.py` holds this down on the RENDERED page and in EVERY theme it
+   finds in the dropdown (the list is read from the <option> values, so a new
+   theme is covered without touching the test): it compares the 13 computed
+   variables against the default's, and it also compares the colour of an actual
+   rarity tag painted in the card. `AGENTS.md` carries it as an invariant.
+
+   The motion is written once, with the selector
+   `:root[data-tema]:not([data-tema="boring"])`, which matches the five Amber-*
+   themes (any theme attribute except «boring») and leaves «boring» untouched.
+   The look of each one lives in its own block below.
+   =========================================================================== */
+@keyframes amberEntra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+:root[data-tema]:not([data-tema="boring"]) .wrap{animation:amberEntra .45s cubic-bezier(.2,.7,.3,1) both}
+:root[data-tema]:not([data-tema="boring"]) .st,
+:root[data-tema]:not([data-tema="boring"]) .cifra,
+:root[data-tema]:not([data-tema="boring"]) .arbol .nodo,
+:root[data-tema]:not([data-tema="boring"]) .tira button.ir.foto-btn{
+  transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s,border-color .3s,background-color .3s;
+}
+:root[data-tema]:not([data-tema="boring"]) .st:hover,
+:root[data-tema]:not([data-tema="boring"]) .cifra:hover,
+:root[data-tema]:not([data-tema="boring"]) .arbol .nodo:hover{transform:translateY(-2px)}
+:root[data-tema]:not([data-tema="boring"]) .tira button.ir.foto-btn:hover{transform:translateY(-3px)}
+:root[data-tema]:not([data-tema="boring"]) .tira .mini{transition:transform .35s cubic-bezier(.2,.7,.3,1)}
+:root[data-tema]:not([data-tema="boring"]) .tira button.ir.foto-btn:hover .mini{transform:scale(1.05)}
+
+/* 1 · Amber-Crystal — glassmorphism: translucency, a light rim and four fixed
+   light pools (amber, ember, a cool violet and a hint of teal). */
+:root[data-tema="crystal"]{
+  --bg:#07060b; --borde:rgba(255,220,175,.22); --hueco:rgba(0,0,0,.42);
+  --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07); --informe:rgba(255,255,255,.035);
+  --rama:rgba(255,220,175,.20); --punteado:rgba(255,220,175,.28);
+  --raiz-bg:rgba(255,170,64,.10); --raiz-borde:rgba(255,180,90,.38);
+}
+:root[data-tema="crystal"] body{
+  background:
+    radial-gradient(1200px 720px at 14% -12%,rgba(255,170,64,.46),transparent 60%),
+    radial-gradient(950px 620px at 94% 4%,rgba(255,84,28,.32),transparent 62%),
+    radial-gradient(1100px 820px at 82% 118%,rgba(132,84,255,.26),transparent 62%),
+    radial-gradient(700px 520px at 4% 96%,rgba(0,190,190,.13),transparent 62%),
+    #07060b;
+  background-attachment:fixed;
+}
+:root[data-tema="crystal"] .panel,
+:root[data-tema="crystal"] .stats,
+:root[data-tema="crystal"] .maxnivel,
+:root[data-tema="crystal"] .informe,
+:root[data-tema="crystal"] .st,
+:root[data-tema="crystal"] .cifra,
+:root[data-tema="crystal"] .lista{
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+}
+:root[data-tema="crystal"] .panel,
+:root[data-tema="crystal"] .stats,
+:root[data-tema="crystal"] .maxnivel,
+:root[data-tema="crystal"] .informe{
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.022));
+  box-shadow:0 28px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.20),inset 0 0 60px -30px rgba(255,180,90,.5);
+}
+:root[data-tema="crystal"] .st,
+:root[data-tema="crystal"] .cifra{background:rgba(255,255,255,.055);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+:root[data-tema="crystal"] h1 .v{text-shadow:0 0 26px rgba(255,120,30,.6)}
+:root[data-tema="crystal"] button.acc{background:linear-gradient(180deg,#ffb84f,#ff6d1f);box-shadow:0 12px 34px -10px rgba(255,110,30,.8)}
+:root[data-tema="crystal"] header,
+:root[data-tema="crystal"] .barra-sup{border-color:rgba(255,220,175,.18)}
+
+/* 2 · Amber-Neon — pure black, amber haloes, a masked grid and a neon focus. */
+:root[data-tema="neon"]{
+  --bg:#000000; --borde:rgba(255,145,45,.42); --hueco:#000000;
+  --panel:rgba(8,8,12,.72); --panel2:rgba(12,12,17,.72); --informe:rgba(6,6,9,.72);
+  --rama:rgba(255,145,45,.22); --punteado:rgba(255,145,45,.30);
+  --raiz-bg:rgba(255,140,40,.08); --raiz-borde:rgba(255,145,45,.45);
+}
+:root[data-tema="neon"] body{
+  background:radial-gradient(1100px 620px at 50% -18%,rgba(255,140,40,.28),transparent 62%),
+             radial-gradient(700px 500px at 92% 88%,rgba(255,90,20,.16),transparent 62%),#000;
+  background-attachment:fixed;
+}
+:root[data-tema="neon"] body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,145,45,.075) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,145,45,.075) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(1100px 760px at 50% 0%,#000,transparent 80%);
+  mask-image:radial-gradient(1100px 760px at 50% 0%,#000,transparent 80%);
+}
+:root[data-tema="neon"] .wrap{position:relative;z-index:1}
+:root[data-tema="neon"] .panel,
+:root[data-tema="neon"] .stats,
+:root[data-tema="neon"] .maxnivel,
+:root[data-tema="neon"] .informe{
+  box-shadow:0 0 0 1px rgba(255,145,45,.18),0 0 54px -16px rgba(255,120,30,.75),
+             inset 0 0 40px -22px rgba(255,150,50,.7);
+}
+:root[data-tema="neon"] .st,
+:root[data-tema="neon"] .cifra{background:rgba(10,10,14,.85);box-shadow:0 0 26px -14px rgba(255,145,45,.9)}
+:root[data-tema="neon"] h1{text-shadow:0 0 30px rgba(255,145,45,.45)}
+:root[data-tema="neon"] h1 .v{text-shadow:0 0 24px rgba(255,120,30,1)}
+:root[data-tema="neon"] .tag{box-shadow:0 0 18px -6px currentColor}
+:root[data-tema="neon"] button.acc{box-shadow:0 0 30px -4px rgba(255,120,30,.95)}
+:root[data-tema="neon"] input:focus,
+:root[data-tema="neon"] select:focus{box-shadow:0 0 0 3px rgba(255,140,40,.22)}
+
+/* 3 · Amber-OLED — deep blacks lit by amber, and the LIGHT is the show. A warm
+   aurora hangs over the page, slow embers rise through it, the big surfaces are
+   smoked glass that diffuses it and each one carries a sliver of light running
+   along its top edge; the mark breathes and the version shimmers. Black is the
+   canvas, not the subject: no cool hue anywhere, not even in the glow.
+   The embers are ONE composited layer — a tile of dots moved on `transform` by
+   exactly its own height — so the loop is seamless and the cost does not grow
+   with the number of dots. The black share is measured with
+   .privado/medir-negro-oled.py; the figures are in .privado/LEEME.md, because a
+   number in a comment ages and the manual asks for a measurement. */
+:root[data-tema="oled"]{
+  --bg:#000000; --borde:rgba(255,180,90,.20); --hueco:#000000;
+  --panel:rgba(255,150,50,.024); --panel2:rgba(255,150,50,.030); --informe:rgba(255,150,50,.014);
+  --rama:rgba(255,180,90,.16); --punteado:rgba(255,180,90,.22);
+  --raiz-bg:rgba(255,140,40,.048); --raiz-borde:rgba(255,170,70,.34);
+}
+:root[data-tema="oled"] body{
+  background:
+    radial-gradient(1000px 470px at 50% -16%,rgba(255,140,40,.19),transparent 58%),
+    radial-gradient(720px 420px at 5% 0%,rgba(255,92,26,.10),transparent 60%),
+    radial-gradient(780px 440px at 97% 14%,rgba(255,190,90,.07),transparent 62%),
+    #000000;
+  background-attachment:fixed;
+}
+/* The crown of light breathes, and stays BEHIND everything: the wrap carries the
+   z-index, as in Neon and Cinema. Without it a fixed pseudo paints over the
+   text, which is what the first version of this theme was doing. */
+:root[data-tema="oled"] body:before{
+  content:"";position:fixed;left:0;right:0;top:0;height:36vh;z-index:0;pointer-events:none;
+  background:radial-gradient(60% 84% at 50% 0%,rgba(255,150,50,.15),transparent 72%);
+  animation:oledRespira 13s ease-in-out infinite;
+}
+@keyframes oledRespira{
+  0%,100%{opacity:.55;transform:translateY(-2%) scale(1)}
+  50%{opacity:1;transform:translateY(1%) scale(1.05)}
+}
+:root[data-tema="oled"] body:after{
+  content:"";position:fixed;left:0;right:0;top:0;height:calc(100% + 340px);
+  z-index:0;pointer-events:none;opacity:.32;
+  background-image:
+    radial-gradient(1.6px 1.6px at 28px 40px,rgba(255,205,150,.85),transparent),
+    radial-gradient(1.2px 1.2px at 96px 150px,rgba(255,180,110,.70),transparent),
+    radial-gradient(2.2px 2.2px at 172px 74px,rgba(255,150,60,.55),transparent),
+    radial-gradient(1.2px 1.2px at 226px 232px,rgba(255,205,150,.75),transparent),
+    radial-gradient(1.4px 1.4px at 40px 268px,rgba(255,170,90,.65),transparent),
+    radial-gradient(1.1px 1.1px at 140px 316px,rgba(255,215,170,.60),transparent),
+    radial-gradient(1.8px 1.8px at 208px 186px,rgba(255,160,70,.45),transparent),
+    radial-gradient(1.1px 1.1px at 74px 96px,rgba(255,200,140,.55),transparent);
+  background-size:260px 340px;background-repeat:repeat;
+  animation:oledBrasas 34s linear infinite;
+}
+@keyframes oledBrasas{from{transform:translateY(0)}to{transform:translateY(-340px)}}
+:root[data-tema="oled"] .wrap{position:relative;z-index:1}
+/* Smoked glass over the aurora: it is the light behind them that makes the
+   panels read as glass instead of as holes. */
+:root[data-tema="oled"] .panel,
+:root[data-tema="oled"] .stats,
+:root[data-tema="oled"] .maxnivel,
+:root[data-tema="oled"] .informe{
+  position:relative;
+  backdrop-filter:blur(22px) saturate(155%);
+  -webkit-backdrop-filter:blur(22px) saturate(155%);
+  background:linear-gradient(180deg,rgba(255,170,80,.022),rgba(255,140,40,.005));
+  box-shadow:0 34px 90px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,225,180,.20),
+             inset 0 0 90px -50px rgba(255,150,50,.55);
+}
+/* A sliver of light that runs along the top edge, one surface at a time: the
+   delays keep the four from pulsing in unison, which is what makes it look
+   alive rather than looped. It animates `background-position` of a 1px line —
+   no overflow, so nothing escapes the rounded corner. */
+:root[data-tema="oled"] .panel:before,
+:root[data-tema="oled"] .stats:before,
+:root[data-tema="oled"] .maxnivel:before,
+:root[data-tema="oled"] .informe:before{
+  content:"";position:absolute;left:0;right:0;top:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0 34%,rgba(255,205,150,.95) 50%,transparent 66% 100%);
+  background-size:220% 100%;background-repeat:no-repeat;
+  animation:oledFilo 7.5s linear infinite;
+}
+@keyframes oledFilo{from{background-position:100% 0}to{background-position:0% 0}}
+:root[data-tema="oled"] .stats:before{animation-delay:-2.6s}
+:root[data-tema="oled"] .maxnivel:before{animation-delay:-5.1s}
+:root[data-tema="oled"] .informe:before{animation-delay:-1.3s}
+:root[data-tema="oled"] .st,
+:root[data-tema="oled"] .cifra{background:rgba(255,150,50,.010);box-shadow:inset 0 1px 0 rgba(255,215,170,.07)}
+/* The search dropdown floats over content, so it cannot be see-through. */
+:root[data-tema="oled"] .lista{background:#050302;box-shadow:0 30px 70px rgba(0,0,0,.95)}
+/* The flourishes that read in the dark: a hairline of light under the header,
+   a mark that breathes, the version shimmering, the active tab lit and the
+   portrait sitting in its own pool of light. */
+:root[data-tema="oled"] header{position:relative;border-bottom-color:transparent}
+:root[data-tema="oled"] header:after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,150,50,.70),transparent);
+  box-shadow:0 0 18px rgba(255,140,40,.55);
+}
+:root[data-tema="oled"] .marca .logo{animation:oledHalo 6s ease-in-out infinite}
+@keyframes oledHalo{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(255,130,40,.45))}
+  50%{filter:drop-shadow(0 0 22px rgba(255,170,60,.95))}
+}
+:root[data-tema="oled"] h1 .v{
+  background:linear-gradient(100deg,#ffb84f 0%,#ff6d1f 36%,#ffe6c4 50%,#ff6d1f 64%,#ffb84f 100%);
+  background-size:230% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px rgba(255,120,30,.55));
+  animation:oledBrillo 8s ease-in-out infinite;
+}
+@keyframes oledBrillo{from{background-position:230% 0}to{background-position:-30% 0}}
+:root[data-tema="oled"] nav button.on{
+  text-shadow:0 0 16px rgba(255,140,40,.70);
+  box-shadow:0 8px 22px -8px rgba(255,140,40,.95);
+}
+:root[data-tema="oled"] .panel h2{color:#ffc79a}
+:root[data-tema="oled"] .cifra .v{text-shadow:0 0 24px rgba(255,140,40,.38)}
+:root[data-tema="oled"] .tag{box-shadow:0 0 16px -8px currentColor}
+:root[data-tema="oled"] .ficha .grande{
+  box-shadow:0 0 0 1px rgba(255,190,120,.14),0 28px 64px -24px rgba(255,120,30,.95);
+}
+:root[data-tema="oled"] .tira button.ir.foto-btn:hover{
+  border-color:rgba(255,195,130,.80);
+  box-shadow:0 0 0 1px rgba(255,190,120,.45),0 20px 38px -14px rgba(255,120,30,.90);
+}
+:root[data-tema="oled"] button.acc{
+  background:linear-gradient(180deg,#ffc766,#ff6d1f);
+  box-shadow:0 12px 40px -8px rgba(255,120,30,.95),inset 0 1px 0 rgba(255,235,200,.55);
+}
+:root[data-tema="oled"] input:focus,
+:root[data-tema="oled"] select:focus{box-shadow:0 0 0 3px rgba(255,140,40,.28)}
+
+/* 4 · Amber-Liquid — the amber flows behind the glass (32 s), plus film grain
+   and gold headings. */
+:root[data-tema="liquid"]{
+  --bg:#050403; --borde:rgba(255,190,105,.28); --hueco:rgba(0,0,0,.48);
+  --panel:rgba(46,25,9,.5); --panel2:rgba(56,31,12,.45); --informe:rgba(38,21,8,.45);
+  --rama:rgba(255,190,105,.22); --punteado:rgba(255,190,105,.30);
+  --raiz-bg:rgba(255,170,64,.12); --raiz-borde:rgba(255,190,105,.42);
+}
+:root[data-tema="liquid"] body{
+  background:
+    radial-gradient(820px 620px at 18% 16%,rgba(255,160,50,.42),transparent 60%),
+    radial-gradient(760px 560px at 84% 26%,rgba(255,92,26,.36),transparent 60%),
+    radial-gradient(900px 640px at 50% 104%,rgba(255,196,86,.28),transparent 62%),
+    #050403;
+  background-size:200% 200%,190% 190%,210% 210%,auto;
+  animation:amberLiquido 32s ease-in-out infinite alternate;
+}
+@keyframes amberLiquido{
+  0%{background-position:0% 0%,100% 0%,50% 100%}
+  100%{background-position:70% 50%,22% 58%,36% 8%}
+}
+:root[data-tema="liquid"] body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root[data-tema="liquid"] .panel,
+:root[data-tema="liquid"] .stats,
+:root[data-tema="liquid"] .maxnivel,
+:root[data-tema="liquid"] .informe{
+  backdrop-filter:blur(16px) saturate(150%);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+  box-shadow:0 30px 74px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,225,180,.20);
+}
+:root[data-tema="liquid"] .st,
+:root[data-tema="liquid"] .cifra{background:rgba(255,255,255,.05)}
+:root[data-tema="liquid"] h1 .v,
+:root[data-tema="liquid"] .informe h3,
+:root[data-tema="liquid"] .maxnivel .t{
+  background:linear-gradient(90deg,#ffe9b0,#ff9a2e 55%,#ff6d1f);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+
+/* 5 · Amber-Cinema — near-black, hairlines, a vignette and quiet typography. */
+:root[data-tema="cinema"]{
+  --bg:#050506; --panel:#0b0b0f; --panel2:#101016; --borde:rgba(255,255,255,.09); --hueco:#08080b;
+  --informe:#09090d; --tx2:#a49c92; --tx3:#736c63;
+  --rama:rgba(255,255,255,.10); --punteado:rgba(255,255,255,.14);
+  --raiz-bg:#141013; --raiz-borde:rgba(255,170,64,.32);
+}
+:root[data-tema="cinema"] body{
+  background:radial-gradient(130% 90% at 50% -14%,#16161c,#050506 60%);
+  background-attachment:fixed;
+}
+:root[data-tema="cinema"] body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(125% 95% at 50% 42%,transparent 62%,rgba(0,0,0,.45));
+}
+:root[data-tema="cinema"] .wrap{position:relative;z-index:1}
+:root[data-tema="cinema"] .panel,
+:root[data-tema="cinema"] .stats,
+:root[data-tema="cinema"] .maxnivel,
+:root[data-tema="cinema"] .informe{box-shadow:0 44px 90px -54px #000,inset 0 1px 0 rgba(255,255,255,.045)}
+:root[data-tema="cinema"] .panel h2{letter-spacing:1.7px;color:rgba(232,235,241,.52);font-weight:500}
+:root[data-tema="cinema"] h1{font-weight:300;letter-spacing:.3px}
+:root[data-tema="cinema"] h1 .v{font-weight:600;letter-spacing:0}
+:root[data-tema="cinema"] .st,
+:root[data-tema="cinema"] .cifra{background:#0e0e14;border-color:rgba(255,255,255,.07)}
+:root[data-tema="cinema"] button.acc{background:linear-gradient(180deg,#ffa93c,#ff6d1f);box-shadow:0 14px 38px -16px rgba(255,120,30,.9)}
+
+/* Accessibility: the whole point of the motion is the look, and whoever asks
+   the system for less of it gets none of it. */
+@media (prefers-reduced-motion: reduce){
+  :root[data-tema] *,
+  :root[data-tema] *::before,
+  :root[data-tema] *::after,
+  :root[data-tema] body:before,
+  :root[data-tema] body:after{animation:none !important;transition:none !important}
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -417,7 +815,16 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,mono
 /* header */
 header{border-bottom:1px solid var(--borde);padding-bottom:16px;margin-bottom:20px}
 header .cab{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-header .controles{display:flex;gap:16px;align-items:flex-start;flex:0 0 auto}
+/* The mark and the title read as one block, with the controls to the right. The
+   mark is inlined as a data URI by build.py from img/logo.svg (same reason as
+   the tab icon), so it does not depend on a file next to the HTML. */
+header .marca{display:flex;gap:13px;align-items:center;min-width:0}
+header .marca .logo{flex:0 0 auto;display:block;width:46px;height:46px}
+/* flex-end, not flex-start: the language switch has no label and the theme has
+   one, so aligning the TOPS left the switch floating above the <select>. What
+   has to line up is the two controls, and they line up along their bottom edge.
+   `probar_ui.py` measures the two bottom edges. */
+header .controles{display:flex;gap:16px;align-items:flex-end;flex:0 0 auto}
 header .tema{flex:0 0 auto;min-width:128px}
 header .tema label{margin-bottom:5px}
 /* Language switch. Both labels are always visible so the control reads as a
@@ -506,7 +913,7 @@ button.gh:hover{color:var(--tx);border-color:var(--tx3)}
    the only cue is the row. That is why `.sel` raises the background and adds a
    bar on the left.
    The bar goes in `--pill` (cyan) and NOT in `--marca`, for the same reason as
-   the `criar` button: in «default» `--marca` is exactly `--r-unica`, and this
+   the `criar` button: in «boring» `--marca` is exactly `--r-unica`, and this
    list shows creatures of every rarity with their tag on the right, so a green
    bar next to a green tag would seem to talk about rarity. Cyan is not the
    colour of any rarity: it is the STATUS colour of the tool, which is exactly
@@ -521,10 +928,13 @@ button.gh:hover{color:var(--tx);border-color:var(--tx3)}
    (--verde, --ambar, --rojo, --azul), so a green number and a green tag got
    confused. With a background, the tag reads as a badge and not as loose text.
    The 12% is not a random number: the background raises the luminance under the
-   text, and that LOWERS the contrast. Measured on the lightest panel (#1d212c):
-   at 12% the worst case is the red of Legendary with 4.87:1; at 16% it drops to
-   4.56:1 and at 18% it already fails AA (4.44:1). `probar_rareza.py` measures
-   that contrast again in the browser, not here. */
+   text, and that LOWERS the contrast. The worst case is the red of Legendary on
+   the LIGHTEST panel of each theme, and the lightest of all is «boring»'s
+   --panel2 (#1d212c): there the browser measures 4.89:1 with the unrounded
+   channels (rounding them gives the 4.87:1 this comment used to carry); at 16%
+   it would drop to about 4.56:1 and at 18% it would fail AA (about 4.44:1).
+   `probar_rareza.py` measures that contrast again in the browser, on BOTH
+   themes, not here. */
 .tag{
   display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
   padding:2px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap;
@@ -554,7 +964,7 @@ button.gh:hover{color:var(--tx);border-color:var(--tx3)}
 .arbol .nodo.raiz{border-color:var(--raiz-borde);background:var(--raiz-bg)}
 .arbol .nodo.hoja{border-style:dashed}
 .arbol .foto{
-  width:64px;height:78px;flex:0 0 64px;object-fit:contain;border-radius:6px;
+  width:128px;height:156px;flex:0 0 128px;object-fit:contain;border-radius:6px;
   background:var(--hueco);border:1px solid var(--borde);
 }
 .arbol .cuerpo{flex:1;min-width:0}
@@ -611,14 +1021,60 @@ button.ir.rc-omega{color:var(--r-omega)}
   background:var(--panel2);padding:0;
 }
 .tira button.ir.foto-btn:hover{border-color:var(--marca)}
+/* The photo centred inside the card. Without this the image sits at the left
+   edge while the name below is centred, and the card reads crooked. `display`
+   is set so that `margin:auto` can centre it horizontally.
+   60x72 is the double of the shared `.mini` (30x36). The search dropdown and the
+   table KEEP the small one on purpose: a 72px row would halve the results seen
+   in the dropdown, and n30 asked on 27-sep-2026 for the double only here. */
+.tira .mini{display:block;margin:0 auto;width:60px;height:72px;flex:0 0 60px}
 .tira .tira-nm{
   display:block;font-size:10.5px;font-weight:650;line-height:1.35;padding:3px 3px 5px;
-  max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;
+  max-width:124px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;
 }
-.ficha{display:flex;gap:14px;align-items:flex-start}.ficha .grande{
-  width:104px;height:126px;flex:0 0 104px;object-fit:contain;border-radius:8px;
-  background:var(--hueco);border:1px solid var(--borde);
+/* The creature card: the name and the badges on a header across the top, the
+   portrait on the left and, to its right, the fields of «Your data» (what used
+   to be section 2). The ingredients go at the foot of the photo and the
+   hatch/cost/cap line stays in the photo's tooltip. The portrait is 207x250, the
+   NATIVE size of the WebP (measured on the 518 files): the double of the old
+   104x126 would be 208x252, and the native size is the largest that is not
+   upscaled. */
+.ficha{display:flex;flex-direction:column;gap:14px}
+.ficha .cab{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  flex-wrap:wrap;border-bottom:1px solid var(--borde);padding-bottom:10px;
 }
+.ficha .cab .nombre{font-size:24px;font-weight:650;line-height:1.15;letter-spacing:-.3px}
+/* The class badge, before the name. It is 50 px tall in the file, so 25 is the
+   exact half: no resampling, no soft edges. The width is left automatic because
+   the seven files are 47 to 96 px wide (a combined class is two badges joined),
+   and the height is fixed so the line does not jump while they load. */
+.ficha .cab .clase-i{
+  height:25px;width:auto;vertical-align:-3px;margin-right:9px;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));
+}
+.ficha .cab .etiquetas{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px}
+.ficha .cab .etiquetas .pill,.ficha .cab .etiquetas .tag{margin:0}
+.ficha .cuerpo{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.ficha-foto{flex:0 0 207px}
+.ficha .grande{
+  width:207px;height:250px;object-fit:contain;border-radius:10px;
+  background:var(--hueco);border:1px solid var(--borde);display:block;
+}
+/* The tooltip goes on the FRAME, not on the <img>: the image hides itself on
+   error, and a hidden image would take its `title` with it. */
+.ficha .marco{display:block;cursor:help}
+.ficha .pie{width:207px;margin-top:8px;font-size:12px;line-height:1.5;color:var(--tx2)}
+.ficha .pie b{color:var(--tx)}
+/* `flex-wrap` + the min-width: on a narrow screen the fields drop BELOW the photo
+   instead of squeezing next to a 207px portrait. */
+.ficha-datos{flex:1 1 300px;min-width:280px;display:flex;flex-direction:column;gap:10px}
+/* The three fields keep the ids and the listeners they had in section 2; here
+   they are laid out in two columns, with the target slider spanning both. */
+.ficha .campos .g3{grid-template-columns:1fr 1fr;gap:12px}
+.ficha .campos .g3 > div:nth-child(3){grid-column:1 / -1}
+.ficha .campos .nota{margin-top:6px}
+.ficha .lleva{font-size:12.5px;color:var(--tx2);line-height:1.7;margin-top:auto}
 .maxnivel{
   background:var(--raiz-bg);border:1px solid var(--raiz-borde);border-radius:9px;padding:12px 14px;margin-top:11px;
 }
@@ -647,7 +1103,7 @@ button.ir.rc-omega{color:var(--r-omega)}
 .informe .rr b{font-variant-numeric:tabular-nums}
 /* The «criar» button of the report. It is an ACTION, not a tag, and that is
    why it goes in the status cyan (--pill) and NOT in --marca: --marca is
-   #4ade80 in «default», which is LITERALLY --r-unica, and `probar_rareza.py`
+   #4ade80 in «boring», which is LITERALLY --r-unica, and `probar_rareza.py`
    would accuse —rightly— a button of the colour of the Unique rarity stuck to a
    creature name that can be Unique. Cyan is neither in the rarity palette nor
    in the theme's.
@@ -706,6 +1162,24 @@ tbody tr:hover{background:#ffffff06}
 .st .st-v{font-size:13.5px;font-weight:650;font-variant-numeric:tabular-nums}
 .st .st-d{font-size:10.5px;font-weight:700;color:var(--st-acc);font-variant-numeric:tabular-nums}
 .st .st-d:empty{display:none}
+/* ---------- the training controls of an Omega ---------- */
+/* The panel shares a row with the creature card, so «− 60 + de 129» does not fit
+   beside the name: the controls go on a SECOND line inside the card, and the card
+   wraps. The whole block is hidden unless the panel is in training mode, so a
+   creature without training keeps exactly the card it had before. */
+.st-ctl{display:none;flex:1 1 100%;align-items:center;justify-content:flex-end;gap:4px;margin-top:3px}
+.stats[data-ent="1"] .st{flex-wrap:wrap}
+.stats[data-ent="1"] .st-ctl{display:flex}
+.st-cap{font-size:10.5px;color:var(--tx3);margin-left:5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st-pozo{display:none}
+.stats[data-ent="1"] .st-pozo{display:block;background:var(--informe);border:1px solid var(--borde);
+  border-radius:8px;padding:7px 9px;margin-bottom:9px}
+.st-pozo .st-pk{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3)}
+.st-pozo .st-pl{display:flex;align-items:baseline;gap:8px;margin-top:1px}
+.st-pozo .st-pv{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.st-pozo .st-pr{font-size:11px;color:var(--tx2);margin-left:auto;text-align:right}
+.st-pozo .st-barra{height:5px;border-radius:99px;background:var(--hueco);overflow:hidden;margin-top:6px}
+.st-pozo .st-barra i{display:block;height:100%;background:linear-gradient(90deg,#ffb84f,#ff6d1f)}
 .st-mej{margin-top:11px;padding-top:10px;border-top:1px solid var(--borde);display:grid;gap:5px}
 .st-fila{display:flex;align-items:center;gap:7px}
 .st-fila .st-i{flex:0 0 auto;display:block}
@@ -729,7 +1203,7 @@ tbody tr:hover{background:#ffffff06}
 .stats[data-vacio="1"] .st-mej,.stats[data-vacio="1"] .st-coste{display:none}
 /* The stats column is wider than the search box's: six cards and four
    controls do not fit in exactly half. */
-@media(min-width:820px){#filaElegir{grid-template-columns:minmax(240px,.82fr) 1.18fr}}
+@media(min-width:820px){#filaElegir{grid-template-columns:minmax(300px,1fr) 1fr}}
 footer{color:var(--tx3);font-size:11.5px;border-top:1px solid var(--borde);padding-top:14px;margin-top:26px;line-height:1.7}
 footer code{color:var(--tx2)}
 </style>
@@ -739,9 +1213,12 @@ footer code{color:var(--tx2)}
 
 <header>
   <div class="cab">
-    <div>
-      <h1>__NOMBRE__ <span class="v">JWA 3.22</span></h1>
-      <div class="sub" id="hSub"></div>
+    <div class="marca">
+      <img class="logo" src="__LOGO__" alt="" width="46" height="46" aria-hidden="true">
+      <div>
+        <h1>__NOMBRE__ <span class="v">JWA 3.22</span></h1>
+        <div class="sub" id="hSub"></div>
+      </div>
     </div>
     <div class="controles">
       <!-- Language. English is the default; the choice is stored. The injected
@@ -752,10 +1229,17 @@ footer code{color:var(--tx2)}
         <button type="button" data-idioma="es">ESPAÑOL</button>
       </div>
       <div class="tema">
-        <label for="tema">Theme</label>
+        <label for="tema" data-i18n="Theme">Theme</label>
+        <!-- The value «yellow» is the default theme's historical name, kept so
+             that a saved choice survives; what the user reads is «Default». -->
         <select id="tema">
-          <option value="default">Default</option>
-          <option value="yellow">Yellow</option>
+          <option value="yellow" data-i18n="Default">Default</option>
+          <option value="crystal">Amber-Crystal</option>
+          <option value="neon">Amber-Neon</option>
+          <option value="oled">Amber-OLED</option>
+          <option value="liquid">Amber-Liquid</option>
+          <option value="cinema">Amber-Cinema</option>
+          <option value="boring" data-i18n="Boring">Boring</option>
         </select>
       </div>
     </div>
@@ -773,7 +1257,8 @@ footer code{color:var(--tx2)}
 <div class="barra-sup">
   <div class="buscador">
     <label for="q"><span data-i18n="Search among the">Search among the</span> <span id="nTotal">—</span> <span data-i18n="creatures">creatures</span></label>
-    <input type="text" id="q" placeholder="Escribe un nombre… (ej. Indoraptor)" autocomplete="off"
+    <input type="text" id="q" placeholder="Type a name… (e.g. Indoraptor)"
+           data-i18n-placeholder="Type a name… (e.g. Indoraptor)" autocomplete="off"
            role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list">
     <div class="lista" id="lista" role="listbox"></div>
   </div>
@@ -813,6 +1298,7 @@ footer code{color:var(--tx2)}
           <span class="st-t">Stats</span>
           <span class="st-n" id="stNivel">—</span>
         </div>
+        <div class="st-pozo" id="stPozo"></div>
         <div class="st-rejilla" id="stRejilla"></div>
         <div class="st-mej" id="stMej"></div>
         <div class="st-coste" id="stCoste"></div>
@@ -822,7 +1308,6 @@ footer code{color:var(--tx2)}
   </div>
 
   <div class="panel" id="pEntrada" style="display:none">
-    <h2 data-i18n="2 · Your data">2 · Your data</h2>
     <div class="grid g3">
       <div>
         <label for="nivelAct" data-i18n="Current level">Current level</label>
@@ -934,16 +1419,52 @@ footer code{color:var(--tx2)}
 <script>
 "use strict";
 const D = __DATOS__, M = D.modelo, C = D.criaturas;
-const RAREZAS = {common:i18n("Common"),rare:i18n("Rare"),epic:i18n("Epic"),legendary:i18n("Legendary"),unique:i18n("Unique"),apex:"Apex",omega:"Omega"};
+/* These maps hold the ENGLISH source, NOT the translation: `i18n()` resolves
+   with the LANG of the moment, so a map built once at start-up kept the old
+   language after the switch (with Spanish selected the stats still said
+   «Health»). The translation happens at USE time, in `tag`, `i18n(TIPOS[...])`
+   and `i18n(ETIQ_STAT[...])`. */
+const RAREZAS = {common:"Common",rare:"Rare",epic:"Epic",legendary:"Legendary",unique:"Unique",apex:"Apex",omega:"Omega"};
 const CLASE   = {common:"comun",rare:"rara",epic:"epica",legendary:"legendaria",unique:"unica",apex:"apex",omega:"omega"};
-const TIPOS   = {non_hybrid:i18n("Non-Hybrid"),hybrid:i18n("Hybrid"),super_hybrid:i18n("Super Hybrid"),mega_hybrid:i18n("Mega Hybrid"),giga_hybrid:i18n("Giga Hybrid")};
+/* Order of the saved creatures, rarest first: Apex, then Omega, then down.
+   It is NOT the game's strict hierarchy (there Omega is above Apex): n30 asked
+   for «primero los apex y de ahí para abajo» on 27-sep-2026 and the app obeys
+   him. It is a DISPLAY order, so it lives here and not in the data. */
+const ORDEN_RAREZA = ["apex", "omega", "unique", "legendary", "epic", "rare", "common"];
+const rangoRareza = r => { const i = ORDEN_RAREZA.indexOf(r); return i < 0 ? 99 : i; };
+const TIPOS   = {non_hybrid:"Non-Hybrid",hybrid:"Hybrid",super_hybrid:"Super Hybrid",mega_hybrid:"Mega Hybrid",giga_hybrid:"Giga Hybrid"};
+
+/* ---------- the class of a creature (fierce, cunning, resilient…) ---------- */
+/* `clase` is a datum in the 518 creatures and takes seven values: the four single
+   ones and three combinations joined with «_». `wild_card` carries an underscore
+   of its own, so splitting the code by «_» would cut it in half: the label is
+   built token by token from this map, which is also the only place that knows
+   their names. `img/clase/<code>.png` is the badge, a single file per value —
+   the combined ones already carry the two badges joined, which is why there is
+   no `cunning + fierce` composition here. */
+const CLASE_TXT = {fierce:"Fierce", resilient:"Resilient", cunning:"Cunning", wild_card:"Wild Card"};
+function claseTxt(clase){
+  if (!clase) return "";
+  const trozos = clase.split("_");
+  /* `wild_card` is the only two-word class, and it is one value, not two. */
+  if (clase === "wild_card") return i18n(CLASE_TXT[clase]);
+  return trozos.map(t => i18n(CLASE_TXT[t] || t)).join(" ");
+}
+function iconoClase(clase){
+  const txt = claseTxt(clase);
+  if (!txt) return "";
+  /* The badge goes with the name and the word goes in the tooltip and in the alt:
+     a badge on its own only means something to whoever already knows it. */
+  return '<img class="clase-i" src="img/clase/'+esc(clase)+'.png" height="25" alt="'+esc(txt)+
+         '" title="'+esc(i18n("Class: ")+txt)+'" onerror="this.style.visibility=\'hidden\'">';
+}
 
 /* Thousands separator follows the language: Spanish uses 1.000, English 1,000.
    Reading LANG at call time, not at definition time, is what makes the number
    format change with the switch. */
 const nf = n => (n==null?"—":n.toLocaleString(LANG === "es" ? "es-MX" : "en-US"));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const tag = r => '<span class="tag rc-'+CLASE[r]+'">'+RAREZAS[r]+'</span>';
+const tag = r => '<span class="tag rc-'+CLASE[r]+'">'+i18n(RAREZAS[r])+'</span>';
 const minLv = r => M.minLv[r] || 1;
 
 /* Plural agreement, the one place an English-keyed dictionary cannot do the
@@ -955,6 +1476,11 @@ const minLv = r => M.minLv[r] || 1;
 const compartidas = n => LANG === "es"
   ? (n === 1 ? " compartida, contada una vez" : " compartidas, contadas una vez")
   : " shared, counted once";
+/* The same agreement without the explanation, which is how the calculator
+   report uses it («…, 1 compartida» / «…, 1 shared»). It is NOT the same string
+   as `compartidas`, so it is not the same key either. */
+const compartida = n => LANG === "es" ? (n === 1 ? " compartida" : " compartidas")
+                                      : " shared";
 
 /* ---------- where a creature is obtained ---------- */
 /* The raw codes live in C[u][7] and the label is resolved here against
@@ -986,9 +1512,9 @@ function zonaDe(u, corta){
   const dardea = f.filter(x => M.locDardeo.includes(x));
   const pelea  = f.filter(x => M.locCombate.includes(x));
   if (dardea.length) partes.push(dardea.map(et).join(" · "));
-  if (pelea.length)  partes.push(pelea.map(et).join(" · ") + " · combate");
+  if (pelea.length)  partes.push(pelea.map(et).join(" · ") + i18n(" · combat"));
   if (partes.length) return partes.join(" · ");
-  if (f.includes("sanctuary")) return "solo en santuario";
+  if (f.includes("sanctuary")) return i18n("sanctuary only");
   return i18n("no source on the map");
 }
 function zonaTitulo(u){
@@ -1011,12 +1537,19 @@ const zonaUtil = u => {
 /* ---------- a creature name, clickable and with the colour of its rarity -- */
 /* The colour already says the rarity, so the tag beside it is superfluous:
    that is why the tree report loses the «Rarity» column. Press it and it takes
-   you to its calculator. */
-const nombreIr = (u, titulo) => {
+   you to its calculator.
+   `opts.clases` adds classes (the tree needs `nm` for its weight) and
+   `opts.color:false` leaves the name in the text colour: in the fusion tree the
+   rarity already travels in the tag next to it, and painting the name too would
+   say the same thing twice. */
+const nombreIr = (u, titulo, opts) => {
   const c = C[u];
   if (!c) return esc(u);
-  return '<button class="ir rc-'+CLASE[c[1]]+'" data-ir="'+u+'" title="'+
-         esc(titulo || ("Llevar "+c[0]+i18n(" to the calculator")))+'">'+esc(c[0])+'</button>';
+  const o = opts || {};
+  const clases = ["ir"].concat(o.clases || [])
+                        .concat(o.color === false ? [] : ["rc-"+CLASE[c[1]]]).join(" ");
+  return '<button class="'+clases+'" data-ir="'+u+'" title="'+
+         esc(titulo || (i18n("Take ")+c[0]+i18n(" to the calculator")))+'">'+esc(c[0])+'</button>';
 };
 
 /* ---------- all the creatures of the UPPER branches ---------------------- */
@@ -1137,8 +1670,16 @@ const invDe = u => {
    replaces INV[u] WHOLE, so if they were not copied there, typing the level
    would erase the points without warning. It is the same bug the target level
    already had, and that is why the four fields are declared in a single place:
-   MEJ_CAMPOS. */
-const MEJ_CAMPOS = ["bVida", "bDano", "bVel", "mejora"];
+   MEJ_CAMPOS.
+   The SIX training fields of an Omega are in the same list and for the same
+   reason: they travel with the creature, so `fijar` has to carry them over. */
+const ENT_CAMPO = {vida:"tVida", dano:"tDano", velocidad:"tVel",
+                   armadura:"tArm", critico:"tCri", dano_critico:"tCrm"};
+/* In the order of M.statsOrden, which is also the order of C[u][11] (cap, delta
+   and pcap). The field of each stat is looked up BY NAME, so a change in the
+   order of the six can never silently swap health with damage. */
+const ENT_CAMPOS = M.statsOrden.map(k => ENT_CAMPO[k]);
+const MEJ_CAMPOS = ["bVida", "bDano", "bVel", "mejora"].concat(ENT_CAMPOS);
 /* The enhancement track of a creature, or null if it does not have one (371 of
    the 518: only Unique and Apex carry it). */
 const PISTA = u => (C[u] && C[u][9]) || null;
@@ -1185,7 +1726,45 @@ function puntosDe(u){
   }
   return {bVida: bV, bDano: bD, bVel: bS, tope: tope};
 }
-const mejDe = u => Object.assign({mejora: mejoraDe(u)}, puntosDe(u));
+/* ---------- the six training stats of an Omega ----------
+   `C[u][11]` is [cap, delta, pcap] per stat, in the order of M.statsOrden, and
+   only the 33 Omega creatures have it. From paleo.gg's own table:
+     · `cap`   where each stat tops out with training,
+     · `delta` what ONE point adds to it,
+     · `pcap`  how many points it takes to reach that cap.
+   `pcap` is a datum, NOT (cap-base)/delta: in `stegouros` the crit damage
+   division gives 7.5 and the source stores 7, so its cap is one point short of
+   reachable. The bound that counts is `pcap` — the test in verificar_stats.py
+   holds both halves. */
+const ENT = u => (C[u] && C[u][11]) || null;
+
+/* The pool: 7 points per level, a TOTAL earned by levelling and not a per-level
+   allowance (see PUNTOS_OMEGA_NIVEL in modelo.py: two figures from idgt902, and
+   the manual carries it as a doubt, not as an official number). */
+const pozoOmega = u => ENT(u) ? M.puntosOmegaNivel * nivelStats(u) : 0;
+
+/* The points in each stat, already bounded: never more than `pcap` in one stat
+   and never more than the pool in total. When the pool shrinks —the creature
+   went down a level, or was un-created— they are given back in the order the
+   game does it: from the END of the panel backwards, crit damage and crit
+   first. Returns null for everything that is not an Omega. */
+function entrenamientoDe(u){
+  const e = ENT(u); if (!e) return null;
+  const v = INV[u] || {}, pcap = e[2], pozo = pozoOmega(u);
+  const pts = ENT_CAMPOS.map((c, i) => Math.max(0, Math.min(pcap[i], Number(v[c]) || 0)));
+  let usados = pts.reduce((a, b) => a + b, 0);
+  for (let i = pts.length - 1; i >= 0 && usados > pozo; i--){
+    const quitar = Math.min(pts[i], usados - pozo);
+    pts[i] -= quitar; usados -= quitar;
+  }
+  const o = {pozo: pozo, usados: usados, restantes: pozo - usados};
+  ENT_CAMPOS.forEach((c, i) => { o[c] = pts[i]; });
+  return o;
+}
+/* `tope` is the boost pool and `pozo` the training one: two different caps that
+   live together in the same object, so the names are not interchangeable. */
+const mejDe = u => Object.assign({mejora: mejoraDe(u)}, puntosDe(u),
+                                 entrenamientoDe(u) || {});
 /* Leaves WRITTEN what `mejDe` has just bounded. It only touches the fields that
    already existed: materialising the missing ones would make `fijar` believe
    something had changed on the first keypress and repaint too much. */
@@ -1201,14 +1780,36 @@ function acotarMejoras(u){
    first the level, then the points and lastly the track.
      · level: health and damage by MULT_NIVEL (the `stats` of the JSON are those
        of level 26, which is where the multiplier is worth 1). Speed, armour and
-       the two criticals do NOT scale with the level.
+       the two criticals do NOT scale with the level. **An Omega does not scale at
+       all: see the note inside the function.**
+     · training (Omega): `delta` per point on each stat, capped at `cap`, in the
+       level-26 space the source's numbers live in.
      · points: +2 flat speed and +2.5% health and damage each.
      · track: flat speed, health and damage in PERCENTAGE (value 110 = x1.10).
    It is rounded down at the end, like the original. */
 function statsDe(u, niv, mej){
-  const b = C[u][8], f = M.multNivel[Math.max(1, Math.min(35, niv)) - 1] / 1e9;
-  let vida = b[0] * f, dano = b[1] * f;
-  let vel = b[2], arm = b[3], cri = b[4], crm = b[5];
+  const e = ENT(u);
+  /* **AN OMEGA'S STATS DO NOT SCALE WITH THE LEVEL, and it is measured, not
+     assumed.** Its base is the level-26 value, and what levelling gives it is
+     TRAINING POINTS, not raw stats. The game's own numbers for Little Eatie at
+     level 21 —7 x 21 = 147 points, 73 to health and 74 to damage, 5 health boosts
+     and 3 speed ones—: health (1100 + 40 x 73) x 1.125 = 4522, damage
+     400 + 25 x 74 = 2250, speed 110 + 2 x 3 = 116, the three exactly as the game
+     paints them. With the level multiplier the same allocation gave 4001 and 1508,
+     which is the «falls short» n30 reported on 28-sep-2026. It is also why
+     paleo.gg's cap is an absolute number and `pcap` is always what it takes to
+     reach it. */
+  const f = e ? 1 : M.multNivel[Math.max(1, Math.min(35, niv)) - 1] / 1e9;
+  let v26 = C[u][8].slice(0, 6);
+  if (e){
+    const cap = e[0], delta = e[1];
+    ENT_CAMPOS.forEach((c, i) => {
+      const p = Number(mej[c]) || 0;
+      if (p) v26[i] = Math.min(cap[i], v26[i] + delta[i] * p);
+    });
+  }
+  let vida = v26[0] * f, dano = v26[1] * f;
+  let vel = v26[2], arm = v26[3], cri = v26[4], crm = v26[5];
   vel  += M.boostVelocidad * mej.bVel;
   vida *= 1 + M.boostFraccion * mej.bVida;
   dano *= 1 + M.boostFraccion * mej.bDano;
@@ -1318,7 +1919,7 @@ const foto = (u, clase, tam, ansiosa) => {
    does NOT count the DNA of levelling up the ingredients (it assumes that
    i18n("are already ready to fuse")).
    For the root creature it is always counted: it is the goal of the calculation. */
-function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv){
+function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv, soloVer){
   const c = C[uuid], rareza = c[1], ings = c[5];
   const inv = (raiz && raizInv) ? raizInv : invDe(uuid);
   const m = minLv(rareza);
@@ -1327,17 +1928,30 @@ function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv){
   const desde = creado ? Math.max(inv.nivel, m) : 0;
   const sinCrear = !creado;
   const adnSubir = costeADN(rareza, desde, objetivo, sinCrear);
-  const cuentaSubir = raiz || contarSubida;
-  const adnNec = (cuentaSubir ? adnSubir : 0) + (adnExtra||0);
+  /* `soloVer`: the node and everything below it are DRAWN but not charged. It is
+     how the tree stays complete: when a creature already has what it needs, its
+     branch is no longer hidden, it is shown with every figure at zero and marked
+     «not needed». Without the flag the subtree would add DNA that nobody has to
+     gather — and the money is the part that is checked against the model. */
+  const cuentaSubir = !soloVer && (raiz || contarSubida);
+  const adnNec = (cuentaSubir ? adnSubir : 0) + (soloVer ? 0 : (adnExtra||0));
   const monNec = cuentaSubir ? costeMon(rareza, desde, objetivo) : 0;
-  const deficit = Math.max(0, adnNec - inv.adn);
+  const deficit = soloVer ? 0 : Math.max(0, adnNec - inv.adn);
   const max = nivelMaximo(rareza, desde, inv.adn, creado);
   const nodo = {uuid, nombre:c[0], rareza, tipo:c[2], desde, objetivo, adnSubir, cuentaSubir,
                 adnNec, monNec, tengo:inv.adn, deficit, extra:adnExtra||0, hijos:[],
-                creado, max, fusiones:0, monFus:0, nivelIng:null, esHoja:false,
+                creado, max, fusiones:0, monFus:0, nivelIng:null, esHoja:false, soloVer:!!soloVer,
                 base:ings.length === 0};
 
-  if (deficit > 0 && ings.length && !visto.has(uuid)){
+  /* The branch is ALWAYS drawn, whether or not it is needed: that is what makes
+     the tree complete and independent of the target level. What is NEEDED is
+     decided per node (`deficit > 0`); the subtree of a node that needs nothing is
+     painted in `soloVer`. Asked for by n30 on 27-sep-2026: «que fusion tree
+     siempre muestre el árbol completo, independientemente del nivel objetivo».
+     Before, the condition was `deficit > 0 && ...` and a covered ingredient became
+     a leaf, so the dinos under it disappeared from the tree. */
+  const cobra = !soloVer && deficit > 0;
+  if (ings.length && !visto.has(uuid)){
     const f = nFus(deficit);
     nodo.fusiones = f;
     nodo.monFus = f * (M.monedasFusion[rareza] || 0);
@@ -1350,7 +1964,8 @@ function plan(uuid, objetivo, adnExtra, visto, raiz, contarSubida, raizInv){
       // the ingredient's target never goes below where it already is
       const nivelActualIng = invIng.creado ? Math.max(invIng.nivel, minLv(ri)) : 0;
       const objetivoIng = Math.max(nodo.nivelIng, nivelActualIng);
-      nodo.hijos.push(plan(ing, objetivoIng, adnIng, v2, false, contarSubida));
+      nodo.hijos.push(plan(ing, objetivoIng, cobra ? adnIng : 0, v2, false, contarSubida,
+                           undefined, !cobra));
     }
   } else {
     nodo.esHoja = true;
@@ -1371,25 +1986,32 @@ function totales(n){
 
   (function rec(x){
     acc.nodos++;
+    if (x.esHoja) acc.hojas++;
     acc.fus += x.fusiones;
     acc.monFus += x.monFus;
-    const p = acc.porUuid[x.uuid] || (acc.porUuid[x.uuid] = {
-      uuid:x.uuid, nombre:x.nombre, rareza:x.rareza, veces:0, fus:0, extra:0,
-      desde:x.desde, objetivo:x.objetivo, sinCrear:false, tengo:x.tengo,
-      esHoja:false, base:false, cuentaSubir:false
-    });
-    p.veces++;
-    p.fus += x.fusiones;
-    p.extra += x.extra;                       // the DNA poured into it when fusing
-    p.objetivo = Math.max(p.objetivo, x.objetivo);
-    p.desde = Math.min(p.desde, x.desde);
-    p.sinCrear = p.sinCrear || !x.creado;
-    p.esHoja = p.esHoja || x.esHoja;
-    p.base = p.base || x.base;
-    /* If ANY appearance counts its ladder, it counts. With the switch off only the
-       root counts it, and this is where that is decided. */
-    p.cuentaSubir = p.cuentaSubir || x.cuentaSubir;
-    if (x.esHoja) acc.hojas++;
+    /* A node that is only SHOWN (`soloVer`) is drawn but not paid: it neither adds
+       DNA nor enters the per-creature table, so the money of the complete tree is
+       exactly the money of the tree that only had the branches that were needed.
+       `nodos` and `hojas` do count it: they describe the tree on screen, which is
+       now the whole one. */
+    if (!x.soloVer){
+      const p = acc.porUuid[x.uuid] || (acc.porUuid[x.uuid] = {
+        uuid:x.uuid, nombre:x.nombre, rareza:x.rareza, veces:0, fus:0, extra:0,
+        desde:x.desde, objetivo:x.objetivo, sinCrear:false, tengo:x.tengo,
+        esHoja:false, base:false, cuentaSubir:false
+      });
+      p.veces++;
+      p.fus += x.fusiones;
+      p.extra += x.extra;                       // the DNA poured into it when fusing
+      p.objetivo = Math.max(p.objetivo, x.objetivo);
+      p.desde = Math.min(p.desde, x.desde);
+      p.sinCrear = p.sinCrear || !x.creado;
+      p.esHoja = p.esHoja || x.esHoja;
+      p.base = p.base || x.base;
+      /* If ANY appearance counts its ladder, it counts. With the switch off only the
+         root counts it, and this is where that is decided. */
+      p.cuentaSubir = p.cuentaSubir || x.cuentaSubir;
+    }
     x.hijos.forEach(rec);
   })(n);
 
@@ -1455,20 +2077,20 @@ function informeHTML(t, tt){
   }
 
   h += '<div class="cifras">' +
-    /* «in total» is not ornament: below, block 3 · Result has ANOTHER figure
+    /* «in total» is not ornament: below, block 2 · Result has ANOTHER figure
        with the label «DNA missing», which is only this creature's. Without the
        tag, two different numbers with the same name and one on top of the
        other. */
     '<div class="cifra '+(tt.adn>0?"wa":"al")+'"><div class="k">'+i18n("Total DNA missing")+'</div><div class="v">'+
-      nf(tt.adn)+'</div><div class="n">en '+cri.length+i18n(" different creatures")+
-      (tt.repetidas ? ', '+tt.repetidas+(tt.repetidas===1?' compartida':' compartidas') : '')+
+      nf(tt.adn)+'</div><div class="n">'+i18n("in ")+cri.length+i18n(" different creatures")+
+      (tt.repetidas ? ', '+tt.repetidas+compartida(tt.repetidas) : '')+
       '</div></div>' +
     '<div class="cifra al"><div class="k">'+i18n("To gather")+'</div><div class="v">'+nf(tt.recolectar)+
       i18n("</div><div class=\"n\">of the ones that are not fused</div></div>") +
     i18n("<div class=\"cifra\"><div class=\"k\">Fusions</div><div class=\"v\">")+nf(tt.fus)+
       i18n("</div><div class=\"n\">across the whole cascade</div></div>") +
     i18n("<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">")+nf(tt.mon + tt.monFus)+
-      '</div><div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
+      '</div><div class="n">'+nf(tt.mon)+i18n(" to level up + ")+nf(tt.monFus)+i18n(" to fuse")+'</div></div>' +
     '</div>';
 
   h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
@@ -1492,9 +2114,9 @@ function informeHTML(t, tt){
      that list with the value «*» and it would try to create a creature called
      «*». It was seen when running it: the test died with «C[u] is undefined». */
   const btnCriar = (u, nivel, titulo) =>
-    '<button class="criar" data-criar="'+u+'" data-nivel="'+nivel+'" title="'+esc(titulo)+'">criar</button>';
+    '<button class="criar" data-criar="'+u+'" data-nivel="'+nivel+'" title="'+esc(titulo)+'">'+i18n("create")+'</button>';
   const btnCriarTodas = titulo =>
-    '<button class="criar" data-criar-todas="1" title="'+esc(titulo)+'">Criar a todas</button>';
+    '<button class="criar" data-criar-todas="1" title="'+esc(titulo)+'">'+i18n("Create all")+'</button>';
 
   /* The level that makes a creature USABLE in this tree: the one the fusion
      requires, that is, the same number the report arrow already shows. The hatch
@@ -1516,14 +2138,14 @@ function informeHTML(t, tt){
        the fusion requires it all the same, whether the report pays for it or not. */
     const nivel = p.sinCrear
       ? btnCriar(p.uuid, nivelFusion(p),
-          'Pone '+p.nombre+i18n(" to level ")+nivelFusion(p)+i18n(", which is the minimum required by the ")+
+          i18n("Sets ")+p.nombre+i18n(" to level ")+nivelFusion(p)+i18n(", which is the minimum required by the ")+
           i18n("fusion of this tree. It starts at ")+minLv(p.rareza)+'.') +
         ' → ' + nivelFusion(p)
       : (!p.cuentaSubir ? String(p.objetivo)
          : p.objetivo <= p.desde ? String(p.objetivo)
          : p.desde + ' → ' + p.objetivo);
     h += '<tr'+(p.uuid === t.uuid ? ' class="raiz-fila"' : '')+'>' +
-      '<td>'+nombreIr(p.uuid, "Llevar "+p.nombre+i18n(" to the calculator")) +
+      '<td>'+nombreIr(p.uuid, i18n("Take ")+p.nombre+i18n(" to the calculator")) +
         (p.uuid === t.uuid ? i18n(" <span class=\"pill\">root</span>") : '') +
         (p.base ? ' <span class="pill zona" title="'+esc(zonaTitulo(p.uuid))+'">'+
                   esc(zonaDe(p.uuid, true))+'</span>' : '') +
@@ -1647,14 +2269,18 @@ let elegido = null;
 let contarSubida = true;
 
 /* The header line interleaves text and values, and the word order changes with
-   the language, so it is built here rather than in static markup. */
+   the language, so it is built here rather than in static markup.
+   The «costs verified against 221 entries, with no discrepancies» fragment that
+   used to go here was removed on 27-sep-2026 at n30's request: it is not
+   relevant at the top of the tool. What it claimed is still said, with more
+   detail, in the footer. */
 function pintarCabecera(){
   document.getElementById("hSub").innerHTML =
+    i18n("UNOFFICIAL JWA DNA CALCULATOR") + " · " +
     "<b>" + nf(D.meta.total) + "</b> " + i18n("creatures") + " · " +
     i18n("data from") + " <b>paleo.gg</b> " + i18n("updated") + " <b>" +
     esc(D.meta.fuenteActualizada) + "</b> · " +
-    i18n("costs verified against") + " <b>221 " + i18n("entries") + "</b> " +
-    i18n("with no discrepancies") + " · " + i18n("works") + " <b>" + i18n("offline") + "</b>";
+    i18n("works") + " <b>" + i18n("offline") + "</b>";
   document.getElementById("nTotal").textContent = nf(D.meta.total);
   document.getElementById("fFuente").textContent = D.meta.fuente;
   document.getElementById("fGen").textContent = D.meta.descargado.slice(0,10);
@@ -1817,8 +2443,8 @@ lista.addEventListener("mousemove", e => {
 document.addEventListener("click", e => { if (!e.target.closest(".buscador")) cerrarLista(); });
 
 /* ---------- dino stats, where «Filter by rarity» used to be ---------- */
-const ETIQ_STAT = {vida:i18n("Health"), dano:i18n("Damage"), velocidad:i18n("Speed"),
-                   armadura:i18n("Armor"), critico:i18n("Crit"), dano_critico:i18n("Crit Dmg")};
+const ETIQ_STAT = {vida:"Health", dano:"Damage", velocidad:"Speed",
+                   armadura:"Armor", critico:"Crit", dano_critico:"Crit Dmg"};
 const ICONO_STAT = {vida:"health", dano:"damage", velocidad:"speed",
                     armadura:"armor", critico:"crit", dano_critico:"critm"};
 /* Armour and the two criticals are shown as a PERCENTAGE (paleo.gg puts «40%»,
@@ -1826,13 +2452,10 @@ const ICONO_STAT = {vida:"health", dano:"damage", velocidad:"speed",
 const PCT_STAT = {armadura:1, critico:1, dano_critico:1};
 /* The resources of the enhancement track. The codes are the game's and are not
    invented: they are resolved here, just like the zone labels.
-   The SHORT labels are our translation, not strings of the game; the LONG ones
-   are the source's own and go in the `title`, so that it can be cross-checked
-   without leaving the page. */
+   The LONG labels are the source's own and go in the `title`, so that it can be
+   cross-checked without leaving the page; they are NOT translated on purpose. */
 const RES_ICONO = {coins:"img/res/coin.png", catalyst_minor:"img/cat/catalyst_minor.png",
                    catalyst:"img/cat/catalyst.png", catalyst_major:"img/cat/catalyst_major.png"};
-const RES_CORTO = {coins:i18n("coins"), catalyst_minor:i18n("cat. bronze"),
-                   catalyst:i18n("cat. silver"), catalyst_major:i18n("cat. gold")};
 const RES_LARGO = {coins:"Coins", catalyst_minor:"Bronze Catalyst",
                    catalyst:"Silver Catalyst", catalyst_major:"Gold Catalyst"};
 
@@ -1841,11 +2464,26 @@ const RES_LARGO = {coins:"Coins", catalyst_minor:"Bronze Catalyst",
    rebuilding it would destroy the controls on every repaint and would leave any
    saved reference dead —the save button bug, which did not even give an error—. */
 function montarStats(){
-  document.getElementById("stRejilla").innerHTML = M.statsOrden.map(k =>
-    '<div class="st"><img class="st-i" src="img/stat/' + ICONO_STAT[k] + '.png" alt=""' +
-      ' width="20" height="20"><span class="st-tx"><span class="st-k">' + ETIQ_STAT[k] + '</span>' +
+  /* The six cards. For an Omega each card ALSO carries its training controls, on
+     a second line inside the card: the panel is half a screen wide (it shares a
+     row with the creature card), and «− 60 + de 129» does not fit beside the
+     name. They are hidden by CSS unless the panel is in training mode, so a card
+     of a creature without training is exactly the card it was before. */
+  document.getElementById("stRejilla").innerHTML = M.statsOrden.map(k => {
+    const c = ENT_CAMPO[k], txt = i18n(ETIQ_STAT[k]);
+    return '<div class="st"><img class="st-i" src="img/stat/' + ICONO_STAT[k] + '.png" alt=""' +
+      ' width="20" height="20"><span class="st-tx"><span class="st-k">' + txt + '</span>' +
       '<span class="st-n"><span class="st-v" id="stV_' + k + '">—</span>' +
-      '<span class="st-d" id="stD_' + k + '"></span></span></span></div>').join("");
+      '<span class="st-d" id="stD_' + k + '"></span></span></span>' +
+      '<span class="st-ctl">' +
+        '<button class="st-b" data-boost="' + c + '" data-paso="-1"' +
+          i18n(" title=\"Remove one training point of ") + txt + '">−</button>' +
+        '<span class="st-p" id="stP_' + c + '">0</span>' +
+        '<button class="st-b" data-boost="' + c + '" data-paso="1"' +
+          i18n(" title=\"Add one training point of ") + txt + '">+</button>' +
+        '<span class="st-cap" id="stC_' + c + '"></span>' +
+      '</span></div>';
+  }).join("");
   const fila = (campo, icono, txt, id) =>
     '<div class="st-fila"' + (id ? ' id="' + id + '"' : '') + '>' +
       '<img class="st-i" src="img/stat/' + icono + '.png" alt="" width="18" height="18">' +
@@ -1881,6 +2519,8 @@ function pintarStats(){
   const nota = document.getElementById("stNota"), coste = document.getElementById("stCoste");
   if (!elegido){
     p.setAttribute("data-vacio", "1");
+    p.setAttribute("data-ent", "0");
+    document.getElementById("stPozo").innerHTML = "";
     document.getElementById("stNivel").textContent = "—";
     M.statsOrden.forEach(k => {
       document.getElementById("stV_" + k).textContent = "—";
@@ -1900,6 +2540,10 @@ function pintarStats(){
      `title`. */
   const sinNada = {bVida:0, bDano:0, bVel:0, mejora:0};
   const base = statsDe(u, niv, sinNada), b26 = statsDe(u, 26, sinNada);
+  const ent = ENT(u);
+  /* `data-ent` is what shows the pool box and the controls inside the cards. Only
+     an Omega has them; for everyone else the block stays hidden. */
+  p.setAttribute("data-ent", ent ? "1" : "0");
   document.getElementById("stNivel").textContent = i18n("level ") + niv;
   M.statsOrden.forEach((k, i) => {
     const v = document.getElementById("stV_" + k), d = document.getElementById("stD_" + k);
@@ -1907,13 +2551,23 @@ function pintarStats(){
     const dif = ahora[i] - base[i];
     d.textContent = dif > 0 ? "+" + nf(dif) : "";
     /* The `title` goes on the CARD, and is located with closest: the structure
-       inside can change without this ceasing to point at the right place. */
-    v.closest(".st").title = ETIQ_STAT[k] + i18n(" · base at level 26: ") + nf(b26[i]) +
-      i18n(" · at level ") + niv + ": " + nf(base[i]) + " · con lo tuyo: " + nf(ahora[i]);
+       inside can change without this ceasing to point at the right place. For an
+       Omega it also carries what a training point is worth there and where that
+       stat tops out. */
+    v.closest(".st").title = i18n(ETIQ_STAT[k]) + i18n(" · base at level 26: ") + nf(b26[i]) +
+      i18n(" · at level ") + niv + ": " + nf(base[i]) + i18n(" · with yours: ") + nf(ahora[i]) +
+      (ent ? i18n(" · training: +") + nf(ent[1][i]) + i18n(" per point, cap ") + nf(ent[0][i]) +
+             " (" + ent[2][i] + i18n(" points)") : "");
   });
 
   const pts = m.bVida + m.bDano + m.bVel;
-  MEJ_CAMPOS.forEach(c => { document.getElementById("stP_" + c).textContent = m[c]; });
+  /* Tolerant on purpose: the panel of a creature without training has no
+     `stP_tVida` and the six fields are still in MEJ_CAMPOS. Asking for the
+     element and checking it is cheaper than keeping two lists in step. */
+  MEJ_CAMPOS.forEach(c => {
+    const el = document.getElementById("stP_" + c);
+    if (el) el.textContent = m[c];
+  });
   /* The controls TURN OFF when the action does not fit; they do not hide. A
      control that disappears stops saying where the cap is. */
   const pon = (campo, paso, puede) => {
@@ -1924,6 +2578,26 @@ function pintarStats(){
     pon(c, 1, m[c] < M.topeBoostStat && pts < m.tope);
     pon(c, -1, m[c] > 0);
   });
+  /* The six training stats of an Omega. Two caps decide every button —the one of
+     the stat itself (`pcap`, from the source) and the shared pool— and both have
+     to hold. A stat with `delta` 0 has no points to give: its `+` is born off. */
+  if (ent){
+    M.statsOrden.forEach((k, i) => {
+      const c = ENT_CAMPO[k], txt = document.getElementById("stC_" + c);
+      if (txt) txt.textContent = i18n("of ") + ent[2][i];
+      pon(c, 1, ent[1][i] > 0 && m[c] < ent[2][i] && m.restantes > 0);
+      pon(c, -1, m[c] > 0);
+    });
+    const pc = m.pozo ? Math.round(100 * m.usados / m.pozo) : 0;
+    document.getElementById("stPozo").innerHTML =
+      '<span class="st-pk">' + i18n("Training points") + '</span>' +
+      '<div class="st-pl"><span class="st-pv">' + m.usados + ' / ' + m.pozo + '</span>' +
+      '<span class="st-pr">' + i18n("remaining ") + m.restantes + ' · ' + m.pozo + ' = ' +
+        M.puntosOmegaNivel + i18n(" per level") + '</span></div>' +
+      '<div class="st-barra"><i style="width:' + pc + '%"></i></div>';
+  } else {
+    document.getElementById("stPozo").innerHTML = "";
+  }
   const pista = PISTA(u);
   document.getElementById("stFilaMej").style.display = pista ? "" : "none";
   if (pista){
@@ -1932,7 +2606,10 @@ function pintarStats(){
   }
 
   const bono = bonoMejora(u, m.mejora);
-  let nh = i18n("Points <b>") + pts + i18n("</b> of <b>") + m.tope + i18n("</b> · cap = level ") + niv +
+  /* An Omega has TWO pools on screen —the training one, above, and this boost one—
+     so the line says which of the two it is talking about. */
+  let nh = (ent ? i18n("Stat boost: ") : "") +
+           i18n("Points <b>") + pts + i18n("</b> of <b>") + m.tope + i18n("</b> · cap = level ") + niv +
            (pista ? (bono ? ' + ' + bono + i18n(" from the track") : '') : i18n(" (this creature has no enhancement track)"));
   if (pts < m.tope) nh += i18n(" · remaining <b>") + (m.tope - pts) + '</b>';
   if (pista && niv < M.mejoraNivelMin)
@@ -1967,6 +2644,15 @@ function cambiarMejora(u, campo, paso){
     if (val < 0 || val > mejoraMax(u)) return false;
     return fijar(u, "mejora", val);
   }
+  /* The six training stats of an Omega. Two caps, and both have to hold: the
+     one of the stat itself (`pcap`) and the shared pool. */
+  const iEnt = ENT_CAMPOS.indexOf(campo);
+  if (iEnt !== -1){
+    const e = ENT(u); if (!e) return false;
+    if (val < 0 || val > e[2][iEnt]) return false;
+    if (paso > 0 && m.usados + 1 > m.pozo) return false;
+    return fijar(u, campo, val);
+  }
   if (val < 0 || val > M.topeBoostStat) return false;
   /* The cap belongs to the SET of the three stats, not to each one: to put a
      point here you would have to take it from another, and the interface does
@@ -1998,27 +2684,43 @@ function elegir(u){
      rarity, so a tag beside it would be superfluous. */
   const asc = ascendientes(u);
   const llevaTxt = asc.length
-    ? asc.map(niv => niv.map(h => nombreIr(h, "Llevar "+C[h][0]+i18n(" to the calculator"))).join(", "))
+    ? asc.map(niv => niv.map(h => nombreIr(h, i18n("Take ")+C[h][0]+i18n(" to the calculator"))).join(", "))
          .join('<span style="color:var(--tx3)"> · </span>')
     : "—";
   const ingsTxt = c[5].length ? c[5].map(h => esc(C[h] ? C[h][0] : h)).join(" + ") : "—";
+  /* The hatch/cost/cap line is no longer painted: it is the photo's `title`, so
+     it comes up on hover and the card keeps only what is looked at. A `title`
+     does not render HTML, so this is a PLAIN string with placeholders. */
+  const hatchTxt = i18n("Hatches at level {lvl} · creating costs {cost} DNA · DNA cap {cap}",
+                        {lvl: m, cost: nf(costeCreacion(r)), cap: nf(M.topes[r])});
+  /* The fields of «Your data» live in the STATIC markup, because their
+     listeners are hooked at start-up; here they are MOVED into the card, not
+     rebuilt. They are taken BEFORE the innerHTML: from the second creature on
+     they are already inside `#elegida`, and writing the innerHTML would detach
+     the node (the variable keeps it alive, and it is re-attached below). */
+  const campos = document.querySelector("#s-calc .grid.g3");
   document.getElementById("elegida").innerHTML =
-    '<div class="ficha">'+foto(u,"grande",104)+
-      '<div style="flex:1;min-width:0">'+
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">' +
-          '<span style="font-size:17px;font-weight:650">'+esc(c[0])+'</span>'+tag(r)+
-          '<span class="pill">'+TIPOS[c[2]]+'</span><span class="pill">'+c[3]+'</span>'+
-          (c[4] ? "" : '<span class="pill">sin publicar</span>')+
+    '<div class="ficha">'+
+      '<div class="cab">'+
+        '<div class="nombre">'+iconoClase(c[10])+esc(c[0])+'</div>'+
+        '<div class="etiquetas">'+tag(r)+
+          '<span class="pill">'+i18n(TIPOS[c[2]])+'</span><span class="pill">'+c[3]+'</span>'+
+          (c[4] ? "" : i18n('<span class="pill">unpublished</span>'))+
           (zonaUtil(u) ? '<span class="pill zona" title="'+esc(zonaTitulo(u))+'">'+esc(zonaDe(u, true))+'</span>' : '')+
-        '</div>' +
-        '<div style="font-size:12.5px;color:var(--tx2);line-height:1.7">' +
-          i18n("<div>Hatches at <b style=\"color:var(--tx)\">level ")+m+i18n("</b> · creating costs <b style=\"color:var(--tx)\">")+
-            nf(costeCreacion(r))+i18n(" DNA</b> · DNA cap <b style=\"color:var(--tx)\">")+nf(M.topes[r])+'</b></div>' +
-          i18n('<div>Ingredients: <b style="color:var(--tx)">')+ingsTxt+'</b></div>' +
-          i18n('<div class="lleva">Leads to: ')+llevaTxt+'</div>' +
-        '</div>' +
-      '</div>' +
+        '</div>'+
+      '</div>'+
+      '<div class="cuerpo">'+
+        '<div class="ficha-foto">'+
+          '<div class="marco" title="'+esc(hatchTxt)+'">'+foto(u,"grande",207)+'</div>'+
+          '<div class="pie">'+i18n('<div>Ingredients: <b style="color:var(--tx)">')+ingsTxt+'</b></div></div>'+
+        '</div>'+
+        '<div class="ficha-datos">'+
+          '<div class="campos"></div>'+
+          i18n('<div class="lleva">Leads to: ')+llevaTxt+'</div>'+
+        '</div>'+
+      '</div>'+
     '</div>';
+  document.querySelector("#elegida .campos").appendChild(campos);
 
   const na = document.getElementById("nivelAct"), at = document.getElementById("adnTengo");
   na.min = 0; na.max = 35;
@@ -2152,12 +2854,13 @@ function calcular(){
   } else {
     const subio = mx.nivel - (inv.creado ? desde : 0);
     mh += i18n("<div class=\"v\">Level <b>")+mx.nivel+'</b>' +
-          (inv.creado ? '' : ' <span style="font-size:12px;font-weight:400;color:var(--tx2)">(recién creada, nace en '+m+')</span>') +
+          (inv.creado ? '' : i18n(' <span style="font-size:12px;font-weight:400;color:var(--tx2)">(just created, hatches at {n})</span>', {n: m})) +
           '</div>';
     mh += i18n("<div class=\"d\">With <b>")+nf(tengo)+i18n(" DNA</b>") +
           (inv.creado ? i18n(" from level <b>")+desde+'</b>' : i18n(" from scratch")) +
           i18n(" you reach level <b>")+mx.nivel+'</b>' +
-          (subio > 0 ? ' (subes <b>'+subio+i18n("</b> level")+(subio===1?'':'es')+')' : '') +
+          (subio > 0 ? (subio === 1 ? i18n(" (you go up <b>{n}</b> level)", {n: subio})
+                                   : i18n(" (you go up <b>{n}</b> levels)", {n: subio})) : '') +
           i18n(". You would spend <b>")+nf(mx.gastado)+i18n("</b> and would be left with <b>")+nf(mx.sobra)+'</b>.';
     if (mx.nivel >= hasta){
       mh += i18n(" <b style=\"color:var(--verde)\">You now have enough for the target ")+hasta+'.</b>';
@@ -2175,15 +2878,15 @@ function calcular(){
   document.getElementById("informeArbol").innerHTML = informeHTML(t, totales(t));
 
   document.getElementById("maxNivel").innerHTML = mh;
-  let h = '<div class="panel"><h2>3 · Resultado</h2><div class="cifras">';
+  let h = '<div class="panel"><h2>'+i18n("2 · Result")+'</h2><div class="cifras">';
   h += i18n("<div class=\"cifra al\"><div class=\"k\">DNA needed</div><div class=\"v\">")+nf(adnNec)+i18n("</div><div class=\"n\">from ")+(sinCrear?i18n("not created"):i18n("level ")+desde)+' a '+hasta+'</div></div>';
   h += '<div class="cifra '+(deficit>0?"wa":"al")+'"><div class="k">'+i18n("DNA missing")+'</div><div class="v">'+nf(deficit)+'</div><div class="n">'+i18n("you have ")+nf(tengo)+'</div></div>';
   h += i18n("<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">")+nf(monNec)+i18n("</div><div class=\"n\">only from leveling up</div></div>");
   h += '</div>';
 
   if (deficit > tope){
-    h += i18n("<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>")+RAREZAS[r].toLowerCase()+
-         i18n("</b> is <b>")+nf(tope)+'</b>. Necesitas '+nf(deficit)+i18n(" → you'll have to gather it in <b>")+vueltas+
+    h += i18n("<div class=\"aviso\" style=\"margin-top:14px\">The DNA cap for a <b>")+i18n(RAREZAS[r]).toLowerCase()+
+         i18n("</b> is <b>")+nf(tope)+i18n("</b>. You need ")+nf(deficit)+i18n(" → you'll have to gather it in <b>")+vueltas+
          i18n(" batches</b>, converting the surplus into catalysts or spending it.</div>");
   }
 
@@ -2288,14 +2991,17 @@ function pintarArbol(){
       '</div></div>' +
     i18n("<div class=\"cifra\"><div class=\"k\">Total fusions</div><div class=\"v\">")+nf(tt.fus)+'</div></div>' +
     i18n("<div class=\"cifra\"><div class=\"k\">Total coins</div><div class=\"v\">")+nf(tt.mon + tt.monFus)+'</div>'+
-      '<div class="n">'+nf(tt.mon)+' por subir + '+nf(tt.monFus)+' por fusionar</div></div>' +
+      '<div class="n">'+nf(tt.mon)+i18n(" to level up + ")+nf(tt.monFus)+i18n(" to fuse")+'</div></div>' +
     i18n("<div class=\"cifra\"><div class=\"k\">Creatures in the tree</div><div class=\"v\">")+tt.nodos+'</div>'+
       i18n("<div class=\"n\">root + cascading ingredients</div></div>") +
     '</div>';
 
   h += i18n("<div class=\"aviso info\" style=\"margin-bottom:16px\">Edit the <b>level</b> and <b>DNA</b> of ")+
        i18n("any creature in the tree. It saves instantly and recalculates everything that hangs from it. ")+
-       i18n("If you uncheck <b>Created</b>, the DNA to create it is added to the calculation.</div>");
+       i18n("If you uncheck <b>Created</b>, the DNA to create it is added to the calculation. ")+
+       i18n("The tree is always shown complete: the branches you already cover say <b>not needed</b> ")+
+       i18n("and add nothing to the totals.")+
+       '</div>';
 
   function campos(n){
     const m = minLv(n.rareza);
@@ -2325,9 +3031,9 @@ function pintarArbol(){
     const m = minLv(n.rareza);
     let s = '<div class="bloque">';
     s += '<div class="nodo '+(prof?'':'raiz')+' '+(n.esHoja?'hoja':'')+'">';
-    s += foto(n.uuid, "foto", 64);
+    s += foto(n.uuid, "foto", 128);
     s += '<div class="cuerpo">';
-    s += '<div class="cab"><span class="nm">'+esc(n.nombre)+'</span>'+tag(n.rareza)+
+    s += '<div class="cab">'+nombreIr(n.uuid, undefined, {clases:["nm"], color:false})+tag(n.rareza)+
       (prof ? (n.esHoja ? '<span class="pill zona" title="'+esc(zonaTitulo(n.uuid))+'">'+
                             esc(zonaDe(n.uuid, true))+'</span>' : '')
             : i18n("<span class=\"pill\">root</span>"))+
@@ -2341,8 +3047,12 @@ function pintarArbol(){
     if (n.cuentaSubir && n.adnSubir) tz.push('<b>'+nf(n.adnSubir)+i18n("</b> to level up"));
     if (n.extra) tz.push('<b>'+nf(n.extra)+i18n("</b> to fuse"));
     s += '<div class="det">' +
-      (n.objetivo > n.desde ? 'subir <b>'+(n.creado?n.desde:i18n("0 (not created)"))+' → '+n.objetivo+'</b>'
-                            : i18n("already at level <b>")+n.desde+'</b>') +
+      /* A node of the informational part says so instead of inventing a levelling
+         it does not need: «level up 0 → 15» followed by «nothing to gather» read
+         as a contradiction. */
+      (n.soloVer ? i18n("<b>not needed</b> for this target")
+                 : (n.objetivo > n.desde ? i18n("level up <b>")+(n.creado?n.desde:i18n("0 (not created)"))+' → '+n.objetivo+'</b>'
+                                         : i18n("already at level <b>")+n.desde+'</b>')) +
       ' · ' + (tz.length ? tz.join(' + ') : i18n("nothing to gather")) +
       ' = <b>'+nf(n.adnNec)+i18n("</b> DNA") +
       (n.tengo ? i18n(" · you have <b>")+nf(n.tengo)+'</b>' : '') +
@@ -2355,7 +3065,11 @@ function pintarArbol(){
     const topeUtil = n.nivelIng === null ? M.nivelMax : Math.max(n.nivelIng, n.objetivo);
     const mx = nivelMaximo(n.rareza, n.desde, n.tengo, n.creado, topeUtil);
     let mn;
-    if (!n.creado && n.tengo < costeCreacion(n.rareza)){
+    if (n.soloVer){
+      /* Nothing to reach and nothing to pay: the branch is in the tree for the
+         structure, not for the bill. */
+      mn = i18n("Shown for reference: this branch adds nothing to the totals.");
+    } else if (!n.creado && n.tengo < costeCreacion(n.rareza)){
       mn = i18n("With its <b>")+nf(n.tengo)+i18n("</b> DNA it cannot even create it (costs <b>")+
            nf(costeCreacion(n.rareza))+'</b>).';
     } else {
@@ -2462,17 +3176,18 @@ function pintarFotos(){
   const panel = document.getElementById("panelMisFotos");
   const cont  = document.getElementById("misFotos");
   const todas = MIS.filter(u => !!C[u])
-                   .sort((a,b) => C[a][0].localeCompare(C[b][0], "es"));
+                   .sort((a,b) => rangoRareza(C[a][1]) - rangoRareza(C[b][1])
+                               || C[a][0].localeCompare(C[b][0], "es"));
   const us = todas.slice(0, TOPE_FOTOS);
   panel.style.display = us.length ? "" : "none";
   if (!us.length){ cont.innerHTML = ""; return; }
   document.getElementById("nMisFotos").textContent =
-    todas.length > TOPE_FOTOS ? "· " + TOPE_FOTOS + " de " + todas.length
+    todas.length > TOPE_FOTOS ? "· " + TOPE_FOTOS + i18n(" of ") + todas.length
                               : "· " + todas.length;
   cont.innerHTML = us.map(u =>
     '<button class="ir foto-btn" data-ir="'+u+'" title="'+
-      esc("Llevar "+C[u][0]+i18n(" to the calculator"))+'">'+
-      foto(u, "mini", 56, true) +
+      esc(i18n("Take ")+C[u][0]+i18n(" to the calculator"))+'">'+
+      foto(u, "mini", 60, true) +
       '<span class="tira-nm rc-'+CLASE[C[u][1]]+'">'+esc(C[u][0])+'</span>'+
     '</button>').join("");
 }
@@ -2667,22 +3382,33 @@ document.getElementById("btnBorrar").onclick = () => {
 
 /* ---------- theme ---------- */
 /* It is saved in localStorage and applied as an attribute on <html>. The
-   «default» theme does NOT carry an attribute: that way the `:root` block is the
-   default theme's and the same palette does not have to be written twice. */
+   DEFAULT theme does NOT carry an attribute: that way the `:root` block is the
+   default theme's and the same palette does not have to be written twice.
+   The default theme's internal value is «yellow», its historical name, and the
+   option is LABELLED «Default». Keeping the old value is what lets a saved
+   choice survive: «default» was the value the green theme used to be stored
+   under, so it is read as «boring» (the <head> script does that mapping).
+   Rewriting it here would make the two indistinguishable. */
 const CLAVE_TEMA = "jwa322.tema";
 const selTema = document.getElementById("tema");
+/* The values with an attribute. «yellow» (the Default option) is the one that
+   carries NO attribute, so it is the fallback. The list has to match the
+   <option> values and the Amber-* list of the <head> script. */
+const TEMAS = ["crystal", "neon", "oled", "liquid", "cinema", "boring"];
 function ponerTema(t){
-  if (t === "yellow") document.documentElement.setAttribute("data-tema", "yellow");
-  else document.documentElement.removeAttribute("data-tema");
-  selTema.value = (t === "yellow") ? "yellow" : "default";
-  try { localStorage.setItem(CLAVE_TEMA, selTema.value); } catch(e){}
+  if (TEMAS.indexOf(t) === -1) t = "yellow";
+  if (t === "yellow") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  selTema.value = t;
+  try { localStorage.setItem(CLAVE_TEMA, t); } catch(e){}
 }
 selTema.addEventListener("change", () => ponerTema(selTema.value));
 /* At start-up the theme is NOT applied again: the <head> script already set it,
    before painting. Here only the dropdown is put where it belongs, so that it
-   does not show «Default» with the yellow theme set. */
-selTema.value = (document.documentElement.getAttribute("data-tema") === "yellow")
-                ? "yellow" : "default";
+   does not show «Default» with another theme set. The attribute IS the option
+   value, so it is read back directly (with the guard for an unknown value). */
+const temaPuesto = document.documentElement.getAttribute("data-tema");
+selTema.value = TEMAS.indexOf(temaPuesto) !== -1 ? temaPuesto : "yellow";
 
 /* Start-up: the list and the photo strip. `pintarFotos` lives inside
    `refrescar()` so that it does not go stale when saving, but when the page
@@ -2712,6 +3438,13 @@ function aplicarIdioma(){
   document.querySelectorAll("[data-i18n-html]").forEach(el => {
     el.innerHTML = i18n(el.getAttribute("data-i18n-html"));
   });
+  /* Placeholders are attributes, not text, so they need their own pass. The
+     attribute is the English source, like data-i18n, and the visible
+     `placeholder` is what gets translated. Without this the search box read
+     «Escribe un nombre…» while the rest of the page was in English. */
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.setAttribute("placeholder", i18n(el.getAttribute("data-i18n-placeholder")));
+  });
   document.querySelectorAll("[data-idioma]").forEach(b => {
     b.setAttribute("aria-pressed", b.dataset.idioma === LANG ? "true" : "false");
   });
@@ -2724,19 +3457,29 @@ function setIdioma(nuevo){
   aplicarIdioma();
   /* Re-render the generated parts. `refrescar()` reads the chosen creature, so
      it only runs when there is one; the others are safe at any time, which is
-     exactly why start-up calls these. */
+     exactly why start-up calls these.
+     `montarStats` is here as well: the six labels of the stats panel and the four
+     of the enhancement controls are painted ONCE, at start-up, and without this
+     they kept the language the page booted in. And `elegir` is needed for the
+     card, which `refrescar` does not rebuild (the type pill and the rarity tag
+     live inside it). */
+  montarStats();
   pintarCabecera();
   pintarMios();
   pintarFotos();
   pintarStats();
-  if (elegido) refrescar();
+  if (elegido){ elegir(elegido); refrescar(); }
 }
 
 document.querySelectorAll("[data-idioma]").forEach(b => {
   b.addEventListener("click", () => setIdioma(b.dataset.idioma));
 });
-/* Static markup is authored in English, so English needs no pass. Spanish does. */
-if (LANG !== "en") aplicarIdioma();
+/* The static markup is authored in English, so English needs no translation;
+   but `aplicarIdioma` also marks the language switch with `aria-pressed`, and
+   that state has to be set in BOTH languages. With the old `if (LANG !== "en")`
+   a page booting in English left the two buttons with no pressed state, so
+   neither came out in orange. */
+aplicarIdioma();
 </script>
 </body>
 </html>

@@ -130,6 +130,25 @@ OMEGA_COINR = [0, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 7000,
                8000, 10000, 12000, 15000, 20000, 25000, 30000, 35000, 45000, 50000,
                65000, 80000, 95000, 120000, 150000, 180000, 210000, 250000, 300000, 350000]
 
+# Omega TRAINING POINTS: the pool an Omega can spend on its six stats is
+# `PUNTOS_OMEGA_NIVEL x level`, so the pool is a total earned by levelling, not
+# a per-level allowance.
+#
+# Confidence: MEDIUM. Two figures from idgt902's guide «Training Smarter: How to
+# Optimize Omega Creatures» (27-Apr-2025, the same author the catalysts came
+# from): a level 26 Omega is given 182 points, and one at level 11 has earned 77.
+# Both land exactly on 7 per level (7x1 = 7, so a level 1 Omega starts with 7),
+# and it is the only rule that fits the two. There is NO official confirmation:
+# jurassicworldalive.com serves the announcement through JavaScript and the wiki
+# refuses automated requests, so this is a secondary source with two consistent
+# points, not an official number. It is stated as a doubt in the manual, and
+# `verificar_stats.py` pins the two figures so that changing this constant
+# without changing them turns red.
+#
+# What each point BUYS is not here: it is per creature and comes in the data, in
+# `criaturas[u].entrenamiento` (cap, delta and pcap per stat).
+PUNTOS_OMEGA_NIVEL = 7
+
 # --------------------------------------------------------------------------
 # 5. DNA inventory caps
 # --------------------------------------------------------------------------
@@ -423,6 +442,13 @@ def _comprobar():
     eq("unique 1->30", coste_adn("unique", 21, 30, True), 3250)
     eq("apex 1->30", coste_adn("apex", 26, 30, True), 1000)
     eq("omega 1->30", coste_adn("omega", 1, 30, True), 41700)
+
+    # --- the Omega training pool ---
+    # The two figures the rule was derived from, so that touching the constant
+    # without touching them turns red. See PUNTOS_OMEGA_NIVEL.
+    eq("omega pool at level 11", PUNTOS_OMEGA_NIVEL * 11, 77)
+    eq("omega pool at level 26", PUNTOS_OMEGA_NIVEL * 26, 182)
+    eq("omega pool at level 35", PUNTOS_OMEGA_NIVEL * 35, 245)
 
     # --- 31-35 range ---
     for r in ("common", "rare", "epic", "legendary", "unique", "apex"):

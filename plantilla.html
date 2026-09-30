@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__NOMBRE__ — Jurassic World Alive 3.22 DNA calculator</title>
+<title>__NOMBRE__ — Jurassic World Alive 3.23 DNA calculator</title>
 <!-- The tab icon: it is the only thing seen when the focus is on another
      tab, so it goes INLINE (data URI) and not as a file next to it. A
      <link href="img/favicon.svg"> would break as soon as the HTML were copied
@@ -321,7 +321,7 @@ const I18N_ES = {
   "Target level:": "Nivel objetivo:",
   "Creature data:": "Datos de criaturas:",
   "Generated on": "Generado el",
-  "Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class=\"mono\">jurassic-journal</span> database.": "Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias), el comunicado oficial de la 3.22 y la base de datos de <span class=\"mono\">jurassic-journal</span>.",
+  "Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.23 release notes and the <span class=\"mono\">jurassic-journal</span> database.": "Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias), el comunicado oficial de la 3.23 y la base de datos de <span class=\"mono\">jurassic-journal</span>.",
   "The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.": "El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las fusiones calculadas son una estimación, no una promesa.",
   "Unofficial tool, not affiliated with Ludia.": "Herramienta no oficial, sin relación con Ludia.",
   "UNOFFICIAL JWA DNA CALCULATOR": "CALCULADORA NO OFICIAL DE ADN DE JWA",
@@ -1036,7 +1036,7 @@ button.ir.rc-omega{color:var(--r-omega)}
    portrait on the left and, to its right, the fields of «Your data» (what used
    to be section 2). The ingredients go at the foot of the photo and the
    hatch/cost/cap line stays in the photo's tooltip. The portrait is 207x250, the
-   NATIVE size of the WebP (measured on the 518 files): the double of the old
+   NATIVE size of the WebP (measured on the 519 files): the double of the old
    104x126 would be 208x252, and the native size is the largest that is not
    upscaled. */
 .ficha{display:flex;flex-direction:column;gap:14px}
@@ -1216,7 +1216,7 @@ footer code{color:var(--tx2)}
     <div class="marca">
       <img class="logo" src="__LOGO__" alt="" width="46" height="46" aria-hidden="true">
       <div>
-        <h1>__NOMBRE__ <span class="v">JWA 3.22</span></h1>
+        <h1>__NOMBRE__ <span class="v">JWA 3.23</span></h1>
         <div class="sub" id="hSub"></div>
       </div>
     </div>
@@ -1410,7 +1410,7 @@ footer code{color:var(--tx2)}
 
 <footer>
   <span data-i18n="Creature data:">Creature data:</span> <span class="mono" id="fFuente">—</span>.<br>
-  <span data-i18n-html="Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class=&quot;mono&quot;>jurassic-journal</span> database.">Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.22 release notes and the <span class="mono">jurassic-journal</span> database.</span><br>
+  <span data-i18n-html="Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.23 release notes and the <span class=&quot;mono&quot;>jurassic-journal</span> database.">Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.23 release notes and the <span class="mono">jurassic-journal</span> database.</span><br>
   <span data-i18n-html="The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.">The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.</span><br>
   <span data-i18n="Generated on">Generated on</span> <span class="mono" id="fGen">—</span>. <span data-i18n="Unofficial tool, not affiliated with Ludia.">Unofficial tool, not affiliated with Ludia.</span>
 </footer>
@@ -1419,6 +1419,14 @@ footer code{color:var(--tx2)}
 <script>
 "use strict";
 const D = __DATOS__, M = D.modelo, C = D.criaturas;
+/* ---------- images, which may come INLINED ----------
+   `build.py` writes an empty map here and every image is the relative path of
+   always. `build_demo.py` fills it with data URIs so that the demo is ONE file
+   with no `img/` folder next to it — the same reason the mark and the tab icon
+   travel inlined. The map is keyed by the relative path, so a missing key simply
+   falls back to the file: nothing here can break the normal artefact. */
+const IMG_EN_LINEA = __IMAGENES__;
+const imgEnLinea = p => IMG_EN_LINEA[p] || p;
 /* These maps hold the ENGLISH source, NOT the translation: `i18n()` resolves
    with the LANG of the moment, so a map built once at start-up kept the old
    language after the switch (with Spanish selected the stats still said
@@ -1435,7 +1443,7 @@ const rangoRareza = r => { const i = ORDEN_RAREZA.indexOf(r); return i < 0 ? 99 
 const TIPOS   = {non_hybrid:"Non-Hybrid",hybrid:"Hybrid",super_hybrid:"Super Hybrid",mega_hybrid:"Mega Hybrid",giga_hybrid:"Giga Hybrid"};
 
 /* ---------- the class of a creature (fierce, cunning, resilient…) ---------- */
-/* `clase` is a datum in the 518 creatures and takes seven values: the four single
+/* `clase` is a datum in the 519 creatures and takes seven values: the four single
    ones and three combinations joined with «_». `wild_card` carries an underscore
    of its own, so splitting the code by «_» would cut it in half: the label is
    built token by token from this map, which is also the only place that knows
@@ -1455,7 +1463,7 @@ function iconoClase(clase){
   if (!txt) return "";
   /* The badge goes with the name and the word goes in the tooltip and in the alt:
      a badge on its own only means something to whoever already knows it. */
-  return '<img class="clase-i" src="img/clase/'+esc(clase)+'.png" height="25" alt="'+esc(txt)+
+  return '<img class="clase-i" src="'+imgEnLinea("img/clase/"+esc(clase)+".png")+'" height="25" alt="'+esc(txt)+
          '" title="'+esc(i18n("Class: ")+txt)+'" onerror="this.style.visibility=\'hidden\'">';
 }
 
@@ -1495,7 +1503,7 @@ const compartida = n => LANG === "es" ? (n === 1 ? " compartida" : " compartidas
        presented as a darting zone. Only 2 creatures have both things.
      - NO SOURCE: omega and event creatures, which do not appear on the map.
    The sanctuary is omitted on purpose: it is passive placement, not a zone. It
-   can be omitted without losing anything because NONE of the 518 has it as the
+   can be omitted without losing anything because NONE of the 519 has it as the
    only source, and `verificar_fuentes.py` checks that on every pass.          */
 const etiqLoc = c => M.locEtiquetas[c] || c;
 /* The paleo.gg label carries the time slot stuck to it («Local Area 3 | All
@@ -1522,7 +1530,7 @@ function zonaTitulo(u){
   if (!f.length) return i18n("No origin data in the source");
   return i18n("In-game sources: ") + f.map(etiqLoc).join(" · ");
 }
-/* Does the zone add anything here? Of the 518, 248 are hybrids and their
+/* Does the zone add anything here? Of the 519, 248 are hybrids and their
    source is `none`: those are not looked for on the map, they are fused, so
    telling them «no source on the map» is noise. The pill is shown only when it
    says something: always on the ones that have no ingredients (it is exactly
@@ -1681,7 +1689,7 @@ const ENT_CAMPO = {vida:"tVida", dano:"tDano", velocidad:"tVel",
 const ENT_CAMPOS = M.statsOrden.map(k => ENT_CAMPO[k]);
 const MEJ_CAMPOS = ["bVida", "bDano", "bVel", "mejora"].concat(ENT_CAMPOS);
 /* The enhancement track of a creature, or null if it does not have one (371 of
-   the 518: only Unique and Apex carry it). */
+   the 519: only Unique and Apex carry it). */
 const PISTA = u => (C[u] && C[u][9]) || null;
 
 /* The cap bonus that the ALREADY applied enhancements give: the sum of the
@@ -1898,14 +1906,14 @@ function costePaso(r, n){
   if (m === undefined || n < m) return 0;
   return n <= 30 ? M.L[n-m] : (n <= M.nivelMax ? M.adn3135[r] : 0);
 }
-const imgDe = u => "img/" + u + ".webp";
+const imgDe = u => imgEnLinea("img/" + u + ".webp");
 /* `ansiosa` (optional): removes `loading="lazy"`. It is needed in the photo
    strip, which is at the very TOP and is the first thing looked at: measured,
    its `<img lazy>` never loaded —not even while on screen— and the alt text
    appeared in their place, while eager clones of the SAME addresses loaded
    without a problem (that is, the files were fine and the bug was the `lazy`).
    For the tree and the tables it is still `lazy`, which is what avoids
-   requesting 518 files at once. */
+   requesting 519 files at once. */
 const foto = (u, clase, tam, ansiosa) => {
   const c = C[u];
   return '<img class="'+clase+'" src="'+imgDe(u)+'" alt="'+esc(c?c[0]:u)+'"'+
@@ -2471,7 +2479,7 @@ function montarStats(){
      of a creature without training is exactly the card it was before. */
   document.getElementById("stRejilla").innerHTML = M.statsOrden.map(k => {
     const c = ENT_CAMPO[k], txt = i18n(ETIQ_STAT[k]);
-    return '<div class="st"><img class="st-i" src="img/stat/' + ICONO_STAT[k] + '.png" alt=""' +
+    return '<div class="st"><img class="st-i" src="' + imgEnLinea("img/stat/" + ICONO_STAT[k] + ".png") + '" alt=""' +
       ' width="20" height="20"><span class="st-tx"><span class="st-k">' + txt + '</span>' +
       '<span class="st-n"><span class="st-v" id="stV_' + k + '">—</span>' +
       '<span class="st-d" id="stD_' + k + '"></span></span></span>' +
@@ -2486,7 +2494,7 @@ function montarStats(){
   }).join("");
   const fila = (campo, icono, txt, id) =>
     '<div class="st-fila"' + (id ? ' id="' + id + '"' : '') + '>' +
-      '<img class="st-i" src="img/stat/' + icono + '.png" alt="" width="18" height="18">' +
+      '<img class="st-i" src="' + imgEnLinea("img/stat/" + icono + ".png") + '" alt="" width="18" height="18">' +
       '<span class="st-k">' + txt + '</span>' +
       '<button class="st-b" data-boost="' + campo + '" data-paso="-1"' +
         i18n(" title=\"Remove one point of ") + txt + '">−</button>' +
@@ -2625,7 +2633,7 @@ function pintarStats(){
       i18n("<span class=\"st-cq\">Complete: the ") + pista.length + i18n(" steps are in place.</span>");
   } else {
     const paso = m.mejora + 1, adn = pista[m.mejora][0], req = pista[m.mejora][1];
-    const ic = (src, txt, tit) => '<span title="' + esc(tit) + '"><img src="' + src +
+    const ic = (src, txt, tit) => '<span title="' + esc(tit) + '"><img src="' + imgEnLinea(src) +
       '" alt="" width="18" height="18">' + esc(txt) + '</span>';
     let cr = ic("img/res/dna.png", nf(adn), "DNA");
     req.forEach(r => { cr += ic(RES_ICONO[r[0]], nf(r[1]), RES_LARGO[r[0]]); });
@@ -3425,9 +3433,9 @@ pintarStats();
 /* Static markup carries data-i18n (plain text) or data-i18n-html (markup with
    nested tags). In both cases the attribute value is the English source, which
    is also the dictionary key, so the Spanish original is restored verbatim. */
-const TITULO = {en: "Jurassic World Alive 3.22 DNA calculator",
-                es: "calculadora de ADN de Jurassic World Alive 3.22"};
-const NOMBRE_APP = document.querySelector("h1").textContent.replace(/\s*JWA 3\.22\s*$/, "").trim();
+const TITULO = {en: "Jurassic World Alive 3.23 DNA calculator",
+                es: "calculadora de ADN de Jurassic World Alive 3.23"};
+const NOMBRE_APP = document.querySelector("h1").textContent.replace(/\s*JWA 3\.23\s*$/, "").trim();
 
 function aplicarIdioma(){
   document.documentElement.lang = LANG;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Builds amber-jwa-3.22.html from data/jwa-3.22.json + modelo.py.
+Builds amber-jwa-3.23.html from data/jwa-3.23.json + modelo.py.
 
 The result is a SINGLE self-contained HTML file: no CDN, no network, no
 dependencies. It opens with a double click and works offline.
@@ -21,7 +21,7 @@ from modelo import (ADN_31_35, ADN_POR_FUSION, ADN_POR_FUSION_MEDIA, COINR,
                     VERSION)
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-ORIGEN = os.path.join(RAIZ, "data", "jwa-3.22.json")
+ORIGEN = os.path.join(RAIZ, "data", "jwa-3.23.json")
 FAVICON = os.path.join(RAIZ, "img", "favicon.svg")
 LOGO = os.path.join(RAIZ, "img", "logo.svg")
 DESTINO = os.path.join(RAIZ, f"amber-jwa-{VERSION}.html")
@@ -44,7 +44,7 @@ def cargar_datos():
     for u, x in cri.items():
         s = x.get("stats") or {}
         # The enhancements are stored as [dna_cost, req, [type, value]] and only
-        # Unique and Apex have them (147 of 518). The raw codes of the resources
+        # Unique and Apex have them (147 of 519). The raw codes of the resources
         # and the `type` of the effect are kept: the label is resolved in the
         # browser, just as with the zones.
         mj = [[m["cost"], m["req"], [m["rwd"]["type"], m["rwd"]["value"]]]
@@ -159,6 +159,9 @@ def main():
     html = html.replace("__NOMBRE__", NOMBRE)
     html = html.replace("__FAVICON__", svg_en_linea(FAVICON))
     html = html.replace("__LOGO__", svg_en_linea(LOGO))
+    # No inlined images in the delivered file: every path is the relative one.
+    # `build_demo.py` fills this same map to pack the whole thing into one file.
+    html = html.replace("__IMAGENES__", "{}")
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         f.write(html)

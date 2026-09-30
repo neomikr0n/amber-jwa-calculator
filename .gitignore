@@ -8,12 +8,30 @@ img/*.webp
 # Private material: never committed, never deployed
 .privado/
 
+# The one-file demo, built by build_demo.py. It carries the creature photos
+# inlined, so it inherits the rule above: the artwork is not distributed. The
+# script that builds it IS published, and the demo needs .privado/ to exist.
+amber-demo.html
+
 __pycache__/
 *.pyc
 .venv/
 
-# Byte-identical duplicate of data/jwa-3.22.json; nothing reads it.
-jwa-3.22.json
+# Superseded artefacts of the previous game version. They are kept on disk on
+# purpose: the browser ties saved data to the file PATH, so amber-jwa-3.22.html
+# is the origin the 3.22 creatures were saved under and deleting the file would
+# strand them. Untracked so the repository carries only the current version;
+# both are in the history, and nothing reads them any more.
+amber-jwa-3.22.html
+data/jwa-3.22.json
+
+# Byte-identical duplicate of data/jwa-3.22.json; nothing reads it. Anchored:
+# unanchored, this pattern also swallowed data/jwa-3.22.json, which is a
+# different file with its own rule above.
+/jwa-3.22.json
 
 # Personal working notes for this author; never published.
 AGENTS.local.md
+
+# Agent workspace: project memory and daily logs for this author; never published.
+.workbuddy-ai/

@@ -39,7 +39,7 @@ sys.path.insert(0, RAIZ)
 from modelo import LOC_COMBATE, LOC_DARDEO, LOC_ETIQUETAS
 
 CACHE = os.path.join(RAIZ, "cache")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
+DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 
 fallos = []
 n_ok = 0
@@ -161,7 +161,7 @@ ok("and none of them is a hybrid: they are the ones you must go and find",
 # anything unclassified into «sanctuary only». The numbers came out, but by
 # accident. Here the category is computed once and asserted whole.
 print()
-print("=== 4. where each creature comes from (518) ===")
+print("=== 4. where each creature comes from (519) ===")
 D, Cm = set(LOC_DARDEO), set(LOC_COMBATE)
 
 
@@ -188,17 +188,17 @@ print("      %-12s %6s %8s %8s" % ("category", "all", "no ing", "hybrids"))
 for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente"):
     print("      %-12s %6d %8d %8d" % (k, reparto[k], repartoBase[k], repartoHib[k]))
 
-ESPERADO = {"dardeo": 146, "combate": 107, "ambos": 2, "santuario": 4, "sin fuente": 259}
-ok("the 518 split into the five categories",
-   sum(reparto.values()) == len(cri) == 518,
+ESPERADO = {"dardeo": 147, "combate": 108, "ambos": 1, "santuario": 4, "sin fuente": 259}
+ok("the 519 split into the five categories",
+   sum(reparto.values()) == len(cri) == 519,
    "%d = %d creatures" % (sum(reparto.values()), len(cri)))
 ok("and each count is the measured one", all(reparto[k] == v for k, v in ESPERADO.items()),
    " | ".join("%s %d (expected %d)" % (k, reparto[k], v)
               for k, v in ESPERADO.items() if reparto[k] != v) or
    "darting %d · combat %d · both %d · sanctuary %d · no source %d"
    % tuple(reparto[k] for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente")))
-ok("the 270 with no ingredients and the 248 hybrids add up to the 518",
-   len(base) == 270 and len(hib) == 248 and len(base) + len(hib) == len(cri),
+ok("the 271 with no ingredients and the 248 hybrids add up to the 519",
+   len(base) == 271 and len(hib) == 248 and len(base) + len(hib) == len(cri),
    "%d + %d = %d" % (len(base), len(hib), len(base) + len(hib)))
 ok("of the hybrids, 247 do not appear on the map and 1 does (Purrolyth)",
    repartoHib["sin fuente"] == 247 and repartoHib["combate"] == 1,

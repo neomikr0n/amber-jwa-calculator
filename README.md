@@ -1,6 +1,6 @@
 # 🦖 Amber
 
-**A DNA and cost calculator for Jurassic World Alive 3.22.**
+**A DNA and cost calculator for Jurassic World Alive 3.23.**
 
 Amber answers one question: how much DNA, how many coins and how many fusions
 does it take to bring any creature in the game up to the level you want — and
@@ -15,7 +15,7 @@ it. Open it and it works offline, with your data stored in your own browser.
 
 ## 🧮 What it does
 
-- **🧮 Calculator.** Pick any of the 518 creatures, set the level you have and the
+- **🧮 Calculator.** Pick any of the 519 creatures, set the level you have and the
   level you want, and it returns the DNA, the coins and the number of fusions
   required, plus what you are missing given the DNA you already hold.
 - **🌳 Fusion tree.** The full ingredient cascade for any hybrid, creature by
@@ -56,7 +56,7 @@ Only Python 3 is needed. There are no third-party dependencies.
 python3 build.py
 ```
 
-That writes two identical files: `amber-jwa-3.22.html`, the versioned artefact
+That writes two identical files: `amber-jwa-3.23.html`, the versioned artefact
 you open by double-clicking, and `index.html`, which is what the site serves.
 Neither is edited by hand.
 
@@ -65,7 +65,7 @@ Neither is edited by hand.
 The creature data is committed, so this is only needed when the game updates.
 
 ```bash
-python3 scrape_paleo.py          # rebuilds cache/ and data/jwa-3.22.json
+python3 scrape_paleo.py          # rebuilds cache/ and data/jwa-3.23.json
 python3 descargar_imagenes.py    # optional: fetches the creature photos
 ```
 
@@ -73,10 +73,30 @@ python3 descargar_imagenes.py    # optional: fetches the creature photos
 92 MB and is not in the repository: it is a regenerable cache, and it is listed
 in `.gitignore`.
 
-`descargar_imagenes.py` fetches the 518 creature images into `img/`. They are
+`descargar_imagenes.py` fetches the 519 creature images into `img/`. They are
 **not** in the repository and are not published on the site, because they are
 copyrighted game artwork. See `NOTICE`. Without them the calculator still works:
 each image hides itself on error and the layout falls back to names and figures.
+
+## 🎁 The one-file demo
+
+```bash
+python3 build.py              # the artefact first: the demo packs THAT file
+python3 build_demo.py         # -> amber-demo.html (~1 MB)
+```
+
+`build_demo.py` packs the delivered artefact, the creature photos of a saved
+file, the interface icons and a seed script into **one HTML**: it opens with a
+double click, needs no `img/` folder next to it and no network, and starts with
+those creatures already loaded, in Spanish and in Amber-OLED. It is a
+**packaging of the artefact**, never a second build of the template, and it
+stamps the sha256 of the artefact it packed: `probar_demo.py` recomputes it, so
+a demo left behind by an older artefact is caught instead of being shown.
+
+It is **not** in the repository. It carries the creature photos inlined, and
+those are copyrighted game artwork that this project does not distribute; the
+saved file it seeds lives in `.privado/`, which is not published either. A clone
+can build it as soon as it has both.
 
 ## ✅ Tests
 
@@ -94,17 +114,24 @@ python3 probar_ui.py          # interface behaviour in a real browser
 python3 probar_estres.py      # cost and tree edge cases
 python3 probar_rareza.py      # rarity colours and contrast
 python3 verificar_idioma.py   # dictionary parity, English default, pin precedence
+python3 probar_demo.py        # the one-file demo: nothing external, nothing stale
 ```
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox` and pin the
 interface language to Spanish, which is the language their assertions are
 written in.
 
+**Three of the eleven need material that is not in the repository**, so on a
+fresh clone they do not return a verdict: `verificar_fuentes.py` and
+`verificar_stats.py` read `cache/` (92 MB, rebuilt with `scrape_paleo.py`), and
+`probar_demo.py` reads `amber-demo.html` (built from `.privado/`). Leave those
+out **and say so** rather than counting them as passed.
+
 ## 📚 Where the data comes from
 
 Creature data is extracted from **[paleo.gg](https://paleo.gg)**, which the
 application credits on screen. Costs and fusion rules were cross-checked against
-the site's own calculator, against the official 3.22 release notes, and against
+the site's own calculator, against the official 3.23 release notes, and against
 the `jurassic-journal` database.
 
 The DNA per fusion is an **average of 22**: each fusion returns a random amount,

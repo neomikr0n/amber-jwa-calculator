@@ -1,7 +1,7 @@
 # Amber — working notes for an agent
 
-Amber is a DNA and cost calculator for **Jurassic World Alive 3.22**. It is one
-self-contained HTML file, built from `plantilla.html` + `data/jwa-3.22.json` +
+Amber is a DNA and cost calculator for **Jurassic World Alive 3.23**. It is one
+self-contained HTML file, built from `plantilla.html` + `data/jwa-3.23.json` +
 `modelo.py`. Read `README.md` first; this file is what you need in order to
 change the code without breaking it.
 
@@ -25,7 +25,7 @@ quietly deleted. Three habits follow:
 
     python3 build.py
 
-Writes `amber-jwa-3.22.html` (the artefact a human opens) and `index.html` (what
+Writes `amber-jwa-3.23.html` (the artefact a human opens) and `index.html` (what
 the site serves). Both are generated: never edit them by hand.
 
 Python 3 only, no third-party dependencies.
@@ -42,19 +42,24 @@ Python 3 only, no third-party dependencies.
     python3 probar_estres.py      # cost and tree edge cases
     python3 probar_rareza.py      # rarity colours and contrast
     python3 verificar_idioma.py   # dictionary parity, English default, pin precedence
+    python3 probar_demo.py        # the one-file demo: nothing external, nothing stale
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Two of the ten need `cache/`, which is not in the repository.** It is 92 MB of
-scraped pages, excluded by `.gitignore`:
+**Three of the eleven need material that is not in the repository.** `cache/` is
+92 MB of scraped pages, excluded by `.gitignore`:
 
     python3 verificar_fuentes.py  # reads cache/
     python3 verificar_stats.py    # reads cache/
 
 On a fresh clone they do not return a verdict, they crash: `os.listdir` on a
 directory that is not there. Regenerate it once with `python3 scrape_paleo.py`,
-which downloads the dinodex, or leave those two out **and say so** rather than
+which downloads the dinodex, or leave them out **and say so** rather than
 counting them as passed.
+
+`probar_demo.py` is the third: it reads `amber-demo.html`, which is built from
+`.privado/` and carries copyrighted artwork, so it is not published either. On a
+fresh clone it exits 2 with a message saying exactly that.
 
 ## Invariants that are easy to break
 
@@ -94,6 +99,15 @@ counting them as passed.
   cases, and the complete tree must never draw fewer nodes. Putting the
   `deficit > 0` condition back into `plan` makes the dinos under a covered
   ingredient vanish again, which is the bug n30 reported on 27-sep-2026.
+- **The one-file demo is a PACKAGING, never a second build.** `build_demo.py`
+  reads the delivered `amber-jwa-3.23.html` and only puts things INSIDE it: the
+  image map (`__IMAGENES__`, empty in the normal artefact, keyed by the relative
+  path so a missing key is the file of always), a script that seeds the saved
+  creatures into `localStorage` before the app reads them, and the opening view.
+  It stamps the sha256 of the artefact it packed, and `probar_demo.py` recomputes
+  it: rebuilding the artefact and forgetting the demo turns red instead of showing
+  yesterday's numbers. The demo carries inlined copyrighted artwork, so it is
+  gitignored; the script and the test are published.
 - **Motion off means off, pseudo-elements included.** The rule that switches every
   animation and transition off under `prefers-reduced-motion` has to name
   `*::before` and `*::after` as well: `*` does not reach a pseudo-element, and the

@@ -12,7 +12,7 @@ Usage:
 Output:
     cache/dinodex.html          index
     cache/<uuid>.html           raw card of each creature
-    data/jwa-3.22.json          normalized dataset
+    data/jwa-3.23.json          normalized dataset
 """
 
 import json
@@ -86,7 +86,7 @@ def entrenamiento(points):
     point short of reachable there. The bound that counts is `pcap`.
 
     It is omitted for the creatures that do not have it, instead of storing a
-    null in 485 of the 518 entries."""
+    null in 486 of the 519 entries."""
     if not points:
         return None
     return {grupo: {STAT_KEYS[k]: v for k, v in (points.get(grupo) or {}).items()
@@ -140,7 +140,7 @@ def main():
             "fuentes_adn": det.get("dna_source") or [],
             "mejoras": det.get("enhancements") or [],
         }
-        # Only the Omega creatures carry it (33 of the 518).
+        # Only the Omega creatures carry it (33 of the 519).
         ent = entrenamiento(det.get("points"))
         if ent:
             criaturas[uuid]["entrenamiento"] = ent
@@ -184,7 +184,7 @@ def main():
     salida = {
         "meta": {
             "juego": "Jurassic World Alive",
-            "version_juego": "3.22",
+            "version_juego": "3.23",
             "fuente": "paleo.gg/games/jurassic-world-alive/dinodex",
             "fuente_actualizada": meta["lastModifiedDate"],
             "descargado": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -193,7 +193,7 @@ def main():
         },
         "criaturas": criaturas,
     }
-    destino = os.path.join(DATA, "jwa-3.22.json")
+    destino = os.path.join(DATA, "jwa-3.23.json")
     with open(destino, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
     kb = os.path.getsize(destino) / 1024

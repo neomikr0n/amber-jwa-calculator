@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cost model for Jurassic World Alive 3.22 — verified.
+Cost model for Jurassic World Alive 3.23 — verified.
 
 Everything in here has been checked against independent sources.
 The `confianza` field of each block says where it comes from and how safe it is.
@@ -14,7 +14,7 @@ shows in its own calculator (hybrid DNA, level-up coins, fusion coins) on the
 
 from math import ceil
 
-VERSION = "3.22"
+VERSION = "3.23"
 
 # Tool name. It lives here, and not hard-written in the template, because it
 # appears in TWO places that have to say the same thing: the <title> of the tab
@@ -163,7 +163,7 @@ TOPES_ADN = {"common": 850000, "rare": 250000, "epic": 85000,
 # --------------------------------------------------------------------------
 # The `stats` carried by each creature in the data are LEVEL 26 values, and this
 # is not our inference: the source states it in the "Compare Creatures" link,
-# which carries `compare?ck=0__<uuid>__26` on all 518 entries. Two more facts
+# which carries `compare?ck=0__<uuid>__26` on all 519 entries. Two more facts
 # agree: the level-26 multiplier is exactly 1.000000 (see MULT_NIVEL) and the
 # rendered text of the entry shows those same numbers (alacranix: 4250 / 1650 /
 # 115 / 40% / 15% / 125%, identical to the JSON). `verificar_stats.py` checks
@@ -238,7 +238,7 @@ MEJORA_PASOS = 5
 #   - COMBAT: its DNA comes from fighting (Arena, Strike Towers, Raid,
 #     Alliance Missions). It is not a darting zone and it cannot be presented
 #     as if it were one.
-#   - SANCTUARY: passive placement, neither darting nor combat. NONE of the 518
+#   - SANCTUARY: passive placement, neither darting nor combat. NONE of the 519
 #     has it as its only source (measured), so it is omitted without losing
 #     anything.
 #   - `none`: it does not appear on the map. They are omega and event creatures.

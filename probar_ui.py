@@ -19,7 +19,7 @@ import os, re, shutil, subprocess, json
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
+HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-ui"
 PERFIL = os.path.join(DIR, "perfil")
@@ -242,7 +242,7 @@ try {
   ok("the card has a large image", !!document.querySelector("#elegida img.grande"));
 
   /* The card redesign (27-sep-2026): portrait at the NATIVE size of the WebP
-     (207x250, measured on the 518 files), the name and the badges on a header
+     (207x250, measured on the 519 files), the name and the badges on a header
      across the top, the ingredients at the foot of the photo, the hatch/cost/cap
      line in the photo's tooltip, and «Your data» (the three fields that used to
      be section 2) to the right of the photo. Everything is MEASURED. */
@@ -707,7 +707,7 @@ try {
   }
 
   /* The card of the chosen creature. The zone pill only has to show up if it
-     says something: in a hybrid its source is `none` (248 of the 518) and «sin fuente en
+     says something: in a hybrid its source is `none` (248 of the 519) and «sin fuente en
      el mapa» is noise — a hybrid is not searched for, it is fused. It is checked with
      the independent criterion: empty ingredients, or a real source in the model. */
   var faltan = [], sobran = [], nBase = 0, nHib = 0;
@@ -741,11 +741,11 @@ try {
      faltan.length ? faltan.length + " without pill: " + faltan.slice(0, 6).join(", ") : "none of " + nBase + " base");
   ok("and it is not superfluous in any hybrid without a source", sobran.length === 0,
      sobran.length ? sobran.length + " with a filler pill: " + sobran.slice(0, 6).join(", ") : "none of " + nHib + " hybrids");
-  ok("the 518 split between 270 without ingredients and 248 hybrids", nBase === 270 && nHib === 248,
+  ok("the 519 split between 271 without ingredients and 248 hybrids", nBase === 271 && nHib === 248,
      nBase + " base + " + nHib + " hybrids = " + (nBase + nHib));
-  ok("all 518 show their class badge before the name", sinClase.length === 0,
+  ok("all 519 show their class badge before the name", sinClase.length === 0,
      sinClase.length ? sinClase.length + " without badge: " + sinClase.slice(0, 6).join(", ")
-                     : "518 with badge, from the class in the data");
+                     : "519 with badge, from the class in the data");
   ok("and the badge is the file of ITS class, not another one", claseMal.length === 0,
      claseMal.length ? claseMal.slice(0, 6).join(" ;; ") : "the 7 files of img/clase/");
   ok("and the class is named in words (Spanish), not left as the raw code",
@@ -1388,7 +1388,7 @@ window.addEventListener("load", function(){
     var ocultas = 0;
     imgs.forEach(function(im){ if (getComputedStyle(im).visibility !== "visible") ocultas++; });
     ok("and none is hidden because of a load failure", ocultas === 0, ocultas + " hidden");
-    // the tree can still be lazy: 518 files at once, no
+    // the tree can still be lazy: 519 files at once, no
     var vagas = document.querySelectorAll('#arbolCuerpo img[loading="lazy"]').length;
     RES.push("   (informational) lazy images in the tree: " + vagas);
   } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }

@@ -30,7 +30,7 @@ from informe_browser import arrancar, comprobar_scripts, veredicto
 VISUAL = "--visual" in sys.argv
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
+HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
 DIR = "/tmp/jwa-rareza"
 PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "rareza.html")
@@ -294,7 +294,7 @@ except ImportError:
     raise SystemExit(1)
 
 FOTO = os.path.join(RAIZ, "img")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
+DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 ES = {"common": "common", "rare": "rare", "epic": "epic", "legendary": "legendary",
       "unique": "unique", "apex": "apex", "omega": "omega"}
 

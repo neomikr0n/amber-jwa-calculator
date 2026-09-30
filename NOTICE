@@ -1,4 +1,4 @@
-Amber — Jurassic World Alive 3.22 DNA calculator
+Amber — Jurassic World Alive 3.23 DNA calculator
 Copyright 2026 neomikr0n
 
 This repository contains source code that is entirely original, plus game data
@@ -8,7 +8,7 @@ derived from a third-party source. It does not contain third-party artwork.
 1. GAME DATA
 --------------------------------------------------------------------------
 
-data/jwa-3.22.json holds the creature data the calculator works from: stats,
+data/jwa-3.23.json holds the creature data the calculator works from: stats,
 fusion ingredients, DNA and coin costs, and darting zones. That data describes
 the mechanics of Jurassic World Alive and was extracted from the community site
 paleo.gg, which the application itself credits on screen.

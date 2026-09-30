@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Downloads the images of the 518 creatures from the paleo.gg CDN and converts
+Downloads the images of the 519 creatures from the paleo.gg CDN and converts
 them to high quality WebP.
 
 Why WebP: the original PNG is 207x250 RGBA and weighs ~48 KB, badly compressed
 (optipng gets nothing out of it, pngquant leaves it at 24 KB). In WebP q90 it
-drops to ~16 KB with no visible difference at this size. 518 x 16 KB = ~8 MB,
+drops to ~16 KB with no visible difference at this size. 519 x 16 KB = ~8 MB,
 which is manageable.
 
 There is NO higher resolution available: @2x, /large/ and .webp were tried on
@@ -17,7 +17,7 @@ import json, os, sys, time, urllib.request
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 DEST = os.path.join(RAIZ, "img")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.22.json")
+DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 CDN = "https://cdn.paleo.gg/games/jwa/images/creature/%s.png"
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "

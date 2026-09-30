@@ -3,7 +3,7 @@
 import os, re, subprocess, sys, shutil, glob
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "amber-jwa-3.22.html")
+HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
 DIR = "/tmp/jwa-test"
 PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "diag.html")

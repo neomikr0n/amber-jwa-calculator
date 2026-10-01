@@ -1,4 +1,4 @@
-# 🦖 Amber
+<h1><picture><source media="(prefers-color-scheme: dark)" srcset="img/logo.svg"><img src="img/readme/logo-claro.svg" width="42" alt=""></picture> <picture><source media="(prefers-color-scheme: dark)" srcset="img/readme/titulo-oscuro.svg"><img src="img/readme/titulo-claro.svg" height="38" alt="Amber"></picture></h1>
 
 ![The calculator in its Amber-OLED theme, with a creature and its fusion tree loaded](img/readme/amber-oled.png)
 

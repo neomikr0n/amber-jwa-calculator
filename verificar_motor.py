@@ -19,6 +19,10 @@ from modelo import (ADN_31_35, ADN_POR_FUSION_MEDIA, COINR, COIN_31_35,
                     OMEGA_L, TOPES_ADN, nivel_maximo)
 
 HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
+# The deployment entry point. `build.py` writes the SAME string to both files,
+# so this is not a second build: it has to be the same bytes, and until now
+# nothing looked at it, which left the file the site actually serves unchecked.
+INDICE = os.path.join(RAIZ, "index.html")
 DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 IMG = os.path.join(RAIZ, "img")
 
@@ -385,12 +389,19 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
     with tempfile.TemporaryDirectory() as td:
         ruta_esperada = os.path.join(td, "esperado.html")
         destino_original = _build.DESTINO
+        indice_original = _build.INDICE
         _build.DESTINO = ruta_esperada
+        # BOTH outputs have to land in the temporary directory. Redirecting only
+        # DESTINO left `main()` overwriting the real index.html, so the check
+        # below compared a file this test had just repaired: it could not fail,
+        # and it silently hid a stale or contaminated index.html on every run.
+        _build.INDICE = os.path.join(td, "esperado-index.html")
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 _build.main()
         finally:
             _build.DESTINO = destino_original
+            _build.INDICE = indice_original
         with open(ruta_esperada, encoding="utf-8") as f:
             esperado_html = f.read()
     with open(HTML, encoding="utf-8") as f:
@@ -402,6 +413,20 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
                            "it is not what build.py produces: %d bytes on disk against %d freshly "
                            "built%s" % (len(real_contenido.encode()),
                                         len(esperado_html.encode()), pista)))
+    if not os.path.exists(INDICE):
+        fallos_doc.append(("index.html",
+                           "there is no index.html: the site has nothing to serve"))
+    else:
+        with open(INDICE, encoding="utf-8") as f:
+            indice_contenido = f.read()
+        if indice_contenido != esperado_html:
+            sello = indice_contenido.count("data-page-node-id")
+            pista = (", with %d «data-page-node-id» from an editor" % sello) if sello else ""
+            fallos_doc.append(("index.html",
+                               "the deployment entry point is not what build.py produces: %d "
+                               "bytes on disk against %d freshly built%s"
+                               % (len(indice_contenido.encode()),
+                                  len(esperado_html.encode()), pista)))
 
     print("Cases: %d creatures x %d ranges = %d calculations, %d fields compared."
           % (len(casos), len(rangos), len(esperado), total))
@@ -426,9 +451,9 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
         return 1
     print("RESULT: %d/%d cost fields and %d/%d level-cap fields identical "
           "between the HTML engine and modelo.py." % (total, total, total_nm, total_nm))
-    print("The deliverable is exactly what build.py produces, and the sizes the "
-          "LEEME claims match the files (%d bytes of HTML, %.1f MB of photos)."
-          % (real_html, mb_fotos))
+    print("The deliverable and index.html are exactly what build.py produces, and "
+          "the sizes the LEEME claims match the files (%d bytes of HTML, %.1f MB "
+          "of photos)." % (real_html, mb_fotos))
     return 0
 
 

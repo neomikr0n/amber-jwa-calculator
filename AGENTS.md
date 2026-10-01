@@ -108,6 +108,17 @@ fresh clone it exits 2 with a message saying exactly that.
   it: rebuilding the artefact and forgetting the demo turns red instead of showing
   yesterday's numbers. The demo carries inlined copyrighted artwork, so it is
   gitignored; the script and the test are published.
+- **The delivered HTML and `index.html` are both held against a fresh build, and the
+  check must not repair what it measures.** `verificar_motor.py` rebuilds into a
+  temporary directory and demands that the file on disk be exactly that, naming the
+  `data-page-node-id` attributes when an editor has rewritten it (it happened on
+  25-sep with 133, and again on 30-sep with 122). Redirecting only `build.DESTINO`
+  left `main()` overwriting the real `index.html`, so the comparison read a file the
+  test had just repaired: it could not fail, and it hid a stale `index.html` on every
+  run. Both destinations are redirected. When it goes red the routine is
+  `python3 build.py` and run it again — and if the working tree goes dirty after you
+  open the artefact in a preview or a page editor, that is the same failure: rebuild
+  before committing.
 - **Motion off means off, pseudo-elements included.** The rule that switches every
   animation and transition off under `prefers-reduced-motion` has to name
   `*::before` and `*::after` as well: `*` does not reach a pseudo-element, and the

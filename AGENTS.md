@@ -72,10 +72,11 @@ update makes either of those look like tidying, read this section again first.
     python3 verificar_idioma.py   # dictionary parity, English default, pin precedence
     python3 probar_demo.py        # the one-file demo: nothing external, nothing stale
     python3 verificar_version.py  # one version, and every place that shows it agrees
+    python3 probar_version.py     # the one above fails when it should, and the update holds
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Three of the twelve need material that is not in the repository.** `cache/` is
+**Three of the thirteen need material that is not in the repository.** `cache/` is
 92 MB of scraped pages, excluded by `.gitignore`:
 
     python3 verificar_fuentes.py  # reads cache/

@@ -29,7 +29,7 @@ import informe_browser
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
+HTML = os.path.join(RAIZ, "index.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-estres"
 PERFIL = os.path.join(DIR, "perfil")

@@ -25,8 +25,8 @@ quietly deleted. Three habits follow:
 
     python3 build.py
 
-Writes `amber-jwa-3.23.html` (the artefact a human opens) and `index.html` (what
-the site serves). Both are generated: never edit them by hand.
+Writes `index.html`, and that is the only output. It is generated: never edit it
+by hand.
 
 Python 3 only, no third-party dependencies.
 
@@ -99,8 +99,20 @@ fresh clone it exits 2 with a message saying exactly that.
   cases, and the complete tree must never draw fewer nodes. Putting the
   `deficit > 0` condition back into `plan` makes the dinos under a covered
   ingredient vanish again, which is the bug n30 reported on 27-sep-2026.
+- **The output filename carries no version, and that is not cosmetic.** The
+  browser keys a `file://` document's `localStorage` to the FULL PATH, and the
+  app has no account and no server: that store is the only copy of n30's saved
+  creatures. Renaming the artefact therefore creates an empty store and strands
+  the old one, and the screen that shows is indistinguishable from data loss.
+  It already happened twice: on 30-sep-2026 opening `amber-jwa-3.23.html` for
+  the first time showed an empty calculator while 25 creatures sat in the store
+  of `amber-jwa-3.22.html`, and the "restore" that followed copied one store
+  over the other. `build.py` now writes a single `index.html`. **Do not put a
+  version in that name, and do not add a second output** — if a second output
+  ever comes back, `verificar_motor.py` has to be told to redirect it, or its
+  check repairs the file it is measuring and goes blind.
 - **The one-file demo is a PACKAGING, never a second build.** `build_demo.py`
-  reads the delivered `amber-jwa-3.23.html` and only puts things INSIDE it: the
+  reads the delivered `index.html` and only puts things INSIDE it: the
   image map (`__IMAGENES__`, empty in the normal artefact, keyed by the relative
   path so a missing key is the file of always), a script that seeds the saved
   creatures into `localStorage` before the app reads them, and the opening view.

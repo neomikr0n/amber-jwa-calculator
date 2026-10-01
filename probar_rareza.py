@@ -30,7 +30,7 @@ from informe_browser import arrancar, comprobar_scripts, veredicto
 VISUAL = "--visual" in sys.argv
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "amber-jwa-3.23.html")
+HTML = os.path.join(RAIZ, "index.html")
 DIR = "/tmp/jwa-rareza"
 PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "rareza.html")

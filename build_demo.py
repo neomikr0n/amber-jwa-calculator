@@ -34,7 +34,7 @@ import sys
 from datetime import date
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-ARTEFACTO = os.path.join(RAIZ, "amber-jwa-3.23.html")
+ARTEFACTO = os.path.join(RAIZ, "index.html")
 DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 IMG = os.path.join(RAIZ, "img")
 GUARDADO = os.path.join(RAIZ, ".privado", "jwa322-mis-criaturas(2026-09-27).json")

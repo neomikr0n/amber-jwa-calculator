@@ -17,12 +17,18 @@ __pycache__/
 *.pyc
 .venv/
 
-# Superseded artefacts of the previous game version. They are kept on disk on
-# purpose: the browser ties saved data to the file PATH, so amber-jwa-3.22.html
-# is the origin the 3.22 creatures were saved under and deleting the file would
+# Superseded artefacts of earlier game versions. They are kept on disk on
+# purpose: the browser ties saved data to the file PATH, so each of these files
+# is the origin its creatures were saved under, and deleting the file would
 # strand them. Untracked so the repository carries only the current version;
-# both are in the history, and nothing reads them any more.
+# all of them are in the history, and nothing reads them any more.
+#
+# amber-jwa-3.23.html is in this list from 1-oct-2026: `build.py` stopped
+# writing it and writes only index.html, because a versioned name creates a new
+# empty store on every game update. The file stays here because n30's saved
+# creatures still live under its path until he migrates them.
 amber-jwa-3.22.html
+amber-jwa-3.23.html
 data/jwa-3.22.json
 
 # Byte-identical duplicate of data/jwa-3.22.json; nothing reads it. Anchored:

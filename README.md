@@ -56,9 +56,15 @@ Only Python 3 is needed. There are no third-party dependencies.
 python3 build.py
 ```
 
-That writes two identical files: `amber-jwa-3.23.html`, the versioned artefact
-you open by double-clicking, and `index.html`, which is what the site serves.
-Neither is edited by hand.
+That writes `index.html`: one self-contained file you open by double-clicking and
+the same file the site serves. It is not edited by hand.
+
+**Its name carries no version on purpose.** A `file://` document gets its
+`localStorage` keyed to the full path, so renaming the file does not rename a
+file — it creates an empty store and leaves the old one unreachable. The app has
+no account and no server: that store *is* your saved creatures. Keeping one
+stable name is what keeps them reachable, and it is why `index.html` is not
+called `amber-jwa-3.23.html`.
 
 ## 📥 Regenerate the data
 

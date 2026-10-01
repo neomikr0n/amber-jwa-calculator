@@ -40,7 +40,7 @@ sys.path.insert(0, RAIZ)
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
 DEMO = os.path.join(RAIZ, "amber-demo.html")
-ARTEFACTO = os.path.join(RAIZ, "amber-jwa-3.23.html")
+ARTEFACTO = os.path.join(RAIZ, "index.html")
 DIR = "/tmp/jwa-demo"
 PERFIL = os.path.join(DIR, "perfil")
 

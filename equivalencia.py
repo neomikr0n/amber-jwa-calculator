@@ -134,7 +134,7 @@ DIAG = DIAG.replace("__US__", json.dumps(PRUEBA)).replace("__ENTREGA__", srv.js(
 # The page is loaded from a copy, so the language pin goes here. It has to be
 # inside the <head>: that is where the app resolves the language, and the
 # injected value beats whatever a previous run stored.
-html = open(os.path.join(RAIZ, "amber-jwa-3.23.html"), encoding="utf-8").read()
+html = open(os.path.join(RAIZ, "index.html"), encoding="utf-8").read()
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
 if "<head>" not in html:

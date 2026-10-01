@@ -1,11 +1,30 @@
 #!/usr/bin/env python3
 """
-Builds amber-jwa-3.23.html from data/jwa-3.23.json + modelo.py.
+Builds index.html from data/jwa-3.23.json + modelo.py.
 
 The result is a SINGLE self-contained HTML file: no CDN, no network, no
 dependencies. It opens with a double click and works offline.
 
     python3 build.py
+
+WHY THERE IS EXACTLY ONE OUTPUT, AND WHY ITS NAME CARRIES NO VERSION
+
+Until 1-oct-2026 this wrote two copies, one of them named
+`amber-jwa-<version>.html`. The name looked harmless —a versioned file is the
+obvious thing to hand someone— and it cost n30 his saved creatures twice.
+
+A `file://` document gets its storage keyed to the FULL PATH. Renaming the
+artifact therefore does not rename a file: it creates a new, empty store and
+leaves the old one unreachable. Opening `amber-jwa-3.23.html` for the first
+time showed an empty calculator while 25 creatures sat in the store of
+`amber-jwa-3.22.html`, and the obvious reading of that screen is «my data is
+gone». It was not gone; it was one path away, and no amount of looking at the
+file would say so.
+
+So the name is not decoration: in a one-file app whose state lives in the
+browser, THE PATH IS PART OF THE DATA'S IDENTITY. A stable name is a
+correctness requirement, and `index.html` is the stable name because the site
+already serves it.
 """
 
 import json
@@ -24,11 +43,7 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 ORIGEN = os.path.join(RAIZ, "data", "jwa-3.23.json")
 FAVICON = os.path.join(RAIZ, "img", "favicon.svg")
 LOGO = os.path.join(RAIZ, "img", "logo.svg")
-DESTINO = os.path.join(RAIZ, f"amber-jwa-{VERSION}.html")
-# Deploy entry point. Vercel/GitHub Pages serve index.html, so the same
-# self-contained HTML is written twice: the versioned copy is the artefact a
-# human double-clicks, and index.html is what the site serves.
-INDICE = os.path.join(RAIZ, "index.html")
+DESTINO = os.path.join(RAIZ, "index.html")
 
 # Order of the six stats in slot 8. It is the same one the game uses and the
 # same one in which paleo.gg shows them in its «Basic Stats» block.
@@ -165,12 +180,9 @@ def main():
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         f.write(html)
-    with open(INDICE, "w", encoding="utf-8") as f:
-        f.write(html)
 
     kb = os.path.getsize(DESTINO) / 1024
     print(f"wrote {DESTINO}  ({kb:.0f} KB)")
-    print(f"wrote {INDICE}  (identical, for deployment)")
     print(f"creatures: {len(criaturas)}")
 
 

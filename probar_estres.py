@@ -343,6 +343,41 @@ try {
   var cat2 = txt("catSalida");
   ok("with 1.000 commons and the rest the same it says 19.000 are missing (75.000-56.000)",
      /Faltan/i.test(cat2) && /19,000/.test(cat2), cat2.slice(0, 130));
+
+  /* The tier has to AGREE with the eight observed recipes this same screen
+     prints below. It did not: the rule read the DNA UNITS and contradicted three
+     of them — it called «2.000 Epic + 3.500 Rare + 625 Legendary» Silver while
+     the table says 36 Gold. A rule and a table that disagree inside one screen
+     are worse than either alone, because both look authoritative. The rule now
+     follows the category that puts the most POINTS in the tank and reproduces
+     all eight; this pins them so it cannot drift back.
+     The expected label is built with `i18n` and not written out: the tier is
+     translated, and this test runs in Spanish. */
+  var T = {Gold: i18n("Gold"), Silver: i18n("Silver"), Bronze: i18n("Bronze")};
+  var RECETAS = [
+    [0,     3500, 2000, 625,  "Gold"],
+    [10500, 0,    2000, 690,  "Gold"],
+    [0,     0,    0,    1500, "Gold"],
+    [20000, 0,    2000, 500,  "Silver"],
+    [0,     5000, 2000, 500,  "Silver"],
+    [0,     18750, 0,   0,    "Silver"],
+    [25500, 0,    1634, 500,  "Bronze"],
+    [75000, 0,    0,    0,    "Bronze"]
+  ];
+  var malas = [];
+  RECETAS.forEach(function(r){
+    document.getElementById("cComun").value = r[0];
+    document.getElementById("cRara").value = r[1];
+    document.getElementById("cEpica").value = r[2];
+    document.getElementById("cLegend").value = r[3];
+    document.getElementById("btnCat").click();
+    var v = document.querySelectorAll("#catSalida .cifra")[1]
+              .querySelector(".v").textContent.trim();
+    if (v !== T[r[4]])
+      malas.push(r[0]+"C "+r[1]+"R "+r[2]+"E "+r[3]+"L -> "+v+" (la tabla dice "+T[r[4]]+")");
+  });
+  ok("the tier agrees with the eight observed recipes the same screen prints",
+     malas.length === 0, malas.length ? malas.join(" · ") : "8 de 8");
 } catch (e) {
   log("!! EXCEPTION", e.message + " @@ " + (e.stack || "").split("\n")[1]);
 }

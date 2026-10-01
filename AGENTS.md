@@ -154,7 +154,8 @@ fresh clone it exits 2 with a message saying exactly that.
   check must not repair what it measures.** `verificar_motor.py` rebuilds into a
   temporary directory and demands that the file on disk be exactly that, naming the
   `data-page-node-id` attributes when an editor has rewritten it (it happened on
-  25-sep with 133, and again on 30-sep with 122). Redirecting only `build.DESTINO`
+  25-sep with 133, and again on 30-sep with 155, spread over 122 lines). Redirecting
+  only `build.DESTINO`
   left `main()` overwriting the real `index.html`, so the comparison read a file the
   test had just repaired: it could not fail, and it hid a stale `index.html` on every
   run. Both destinations are redirected. When it goes red the routine is

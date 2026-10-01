@@ -255,7 +255,6 @@ const I18N_ES = {
   "<div class=\"cifra wa\"><div class=\"k\">Pending DNA</div><div class=\"v\">": "<div class=\"cifra wa\"><div class=\"k\">ADN pendiente</div><div class=\"v\">",
   " creatures</div></div>": " criaturas</div></div>",
   "<p class=\"vacio-txt\">Enter some DNA.</p>": "<p class=\"vacio-txt\">Mete algo de ADN.</p>",
-  "Rare/Epic": "Rara/Épica",
   "<div class=\"cifra\"><div class=\"k\">Tank points</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Puntos del tanque</div><div class=\"v\">",
   "</div><div class=\"n\">mostly ": "</div><div class=\"n\">mayoría ",
   "<div class=\"nota\">Weights per unit of DNA: Common 1 · Rare 4 · Epic 15 · Legendary 50. ": "<div class=\"nota\">Pesos por unidad de ADN: Común 1 · Rara 4 · Épica 15 · Legendaria 50. ",
@@ -3327,10 +3326,29 @@ document.getElementById("btnCat").onclick = () => {
   const pts = c*1 + r*4 + e*15 + l*50;
   const total = c+r+e+l;
   if (!total){ document.getElementById("catSalida").innerHTML = i18n("<p class=\"vacio-txt\">Enter some DNA.</p>"); return; }
-  const frac = {common:c/total, rare:r/total, epic:e/total, legendary:l/total};
+  /* The tier follows the category that puts the MOST POINTS in the tank, not the
+     one with the most DNA units. Measured against the eight observed recipes the
+     table below prints: the units rule contradicted THREE of the eight — it
+     called «2.000 Epic + 3.500 Rare + 625 Legendary» Silver, and the observed
+     yield is 36 Gold — while this one reproduces all eight.
+
+     It is still a reading inferred from eight observations of a SINGLE source,
+     with thin margins: in the Bronze recipe common is 34,00 % of the points
+     against 33,33 % legendary, and in the first Gold recipe legendary is 41,53 %
+     against 39,87 % epic. A better-supported reading, not a verified rule; the
+     banner above already says the recombination data is unverified.
+
+     On a tie the higher tier wins. That is a choice, not a measurement: nothing
+     observed pins down a tie. */
+  const pun = {common:c*PESO.common, rare:r*PESO.rare,
+               epic:e*PESO.epic, legendary:l*PESO.legendary};
   let tier, mayoria;
-  if (frac.legendary > .5){ tier = i18n("Gold"); mayoria = i18n("Legendary"); }
-  else if (frac.rare + frac.epic > .5){ tier = i18n("Silver"); mayoria = i18n("Rare/Epic"); }
+  if (pun.legendary >= pun.epic && pun.legendary >= pun.rare && pun.legendary >= pun.common){
+    tier = i18n("Gold"); mayoria = i18n("Legendary"); }
+  else if (pun.epic >= pun.rare && pun.epic >= pun.common){
+    tier = i18n("Silver"); mayoria = i18n("Epic"); }
+  else if (pun.rare >= pun.common){
+    tier = i18n("Silver"); mayoria = i18n("Rare"); }
   else { tier = i18n("Bronze"); mayoria = i18n("Common"); }
   const falta = 75000 - pts;
   let h = '<div class="cifras">' +

@@ -1,5 +1,7 @@
 # 🦖 Amber
 
+![The calculator in its Amber-OLED theme, with a creature and its fusion tree loaded](img/readme/amber-oled.png)
+
 **A DNA and cost calculator for Jurassic World Alive 3.23.**
 
 Amber answers one question: how much DNA, how many coins and how many fusions
@@ -8,6 +10,12 @@ which ingredients, in cascade, you need in order to fuse the hybrids on the way.
 
 It is a single self-contained HTML file. No server, no CDN, no build step to run
 it. Open it and it works offline, with your data stored in your own browser.
+
+Part of what it offers is the way it looks and the language it speaks: it
+**works in English and Spanish** — the switch is in the header, English is the
+default, and the choice is remembered — and it ships with **seven themes**: five
+on the amber base, plus the deep-black default and the original slate-and-green
+look it started as. The screenshot above is one of them, *Amber-OLED*.
 
 **Live site:** _not published yet_
 
@@ -126,17 +134,22 @@ python3 probar_estres.py      # cost and tree edge cases
 python3 probar_rareza.py      # rarity colours and contrast
 python3 verificar_idioma.py   # dictionary parity, English default, pin precedence
 python3 probar_demo.py        # the one-file demo: nothing external, nothing stale
+python3 verificar_version.py  # one version, and every place that shows it agrees
+python3 probar_version.py     # the one above fails when it should, and the update holds
 ```
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox` and pin the
 interface language to Spanish, which is the language their assertions are
 written in.
 
-**Three of the eleven need material that is not in the repository**, so on a
-fresh clone they do not return a verdict: `verificar_fuentes.py` and
-`verificar_stats.py` read `cache/` (92 MB, rebuilt with `scrape_paleo.py`), and
-`probar_demo.py` reads `amber-demo.html` (built from `.privado/`). Leave those
-out **and say so** rather than counting them as passed.
+**Five of the thirteen need material that is not in the repository**, so on a
+fresh clone they cannot judge anything: `verificar_fuentes.py` and
+`verificar_stats.py` read `cache/` (92 MB, rebuilt with `scrape_paleo.py`),
+`probar_demo.py` reads `amber-demo.html` (built from `.privado/`), and
+`verificar_version.py` and `probar_version.py` read `.privado/LEEME.md`, which is
+never published. Leave those out **and say so** rather than counting them as
+passed. Only `probar_demo.py` announces that it cannot judge: the other four stop
+with a failure that on a clone reads like a defect in the code.
 
 ## 📚 Where the data comes from
 

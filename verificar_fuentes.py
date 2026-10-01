@@ -208,6 +208,19 @@ ok("the 4 sanctuary ones have no ingredients, and they are the only ones",
    repartoBase["santuario"] == 4 and repartoHib["santuario"] == 0,
    "%d base, %d hybrids" % (repartoBase["santuario"], repartoHib["santuario"]))
 
+# The 271 split by category, pinned. This column was PRINTED but not asserted,
+# and the manual's table for it drifted to 146 · 106 · 2 — which sums 270,
+# against the 271 of the sentence printed right below it. Nothing caught that,
+# because the check above pins the totals for the 519 and not this column.
+# Measured: 147 · 107 · 1 · 4 · 12.
+ESPERADO_BASE = {"dardeo": 147, "combate": 107, "ambos": 1, "santuario": 4, "sin fuente": 12}
+ok("the 271 without ingredients split into the measured five counts",
+   all(repartoBase[k] == v for k, v in ESPERADO_BASE.items()),
+   " | ".join("%s %d (expected %d)" % (k, repartoBase[k], v)
+              for k, v in ESPERADO_BASE.items() if repartoBase[k] != v) or
+   "darting %d · combat %d · both %d · sanctuary %d · no source %d"
+   % tuple(repartoBase[k] for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente")))
+
 # ---------- 6. the level a fusion requires never drops below birth ----------
 """`NIVEL_MIN_INGREDIENTE[rareza]` is «one less than the creation level of the
 hybrid», and that is the level at which the report's «breed» button puts an

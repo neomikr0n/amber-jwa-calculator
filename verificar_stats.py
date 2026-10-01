@@ -53,8 +53,9 @@ from modelo import (BOOST_FRACCION, BOOST_VELOCIDAD, MEJORA_NIVEL_MIN,
                     MEJORA_ORDEN, MEJORA_PASOS, MULT_NIVEL, PUNTOS_OMEGA_NIVEL,
                     TOPE_BOOST_STAT)
 
+from rutas import DATOS
+
 CACHE = os.path.join(RAIZ, "cache")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 IMG = os.path.join(RAIZ, "img")
 
 fallos = []

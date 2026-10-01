@@ -8,10 +8,12 @@ derived from a third-party source. It does not contain third-party artwork.
 1. GAME DATA
 --------------------------------------------------------------------------
 
-data/jwa-3.23.json holds the creature data the calculator works from: stats,
-fusion ingredients, DNA and coin costs, and darting zones. That data describes
-the mechanics of Jurassic World Alive and was extracted from the community site
-paleo.gg, which the application itself credits on screen.
+data/jwa.json holds the creature data the calculator works from: stats, fusion
+ingredients, DNA and coin costs, and darting zones. That data describes the
+mechanics of Jurassic World Alive and was extracted from the community site
+paleo.gg, which the application itself credits on screen. Its name carries no
+version on purpose; the game version lives inside the file, in
+`meta.version_juego`.
 
 It is included so the calculator works offline and out of the box. The Apache
 License 2.0 in LICENSE covers the source code of this repository. It does not

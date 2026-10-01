@@ -1,7 +1,7 @@
 # Amber — working notes for an agent
 
 Amber is a DNA and cost calculator for **Jurassic World Alive 3.23**. It is one
-self-contained HTML file, built from `plantilla.html` + `data/jwa-3.23.json` +
+self-contained HTML file, built from `plantilla.html` + `data/jwa.json` +
 `modelo.py`. Read `README.md` first; this file is what you need in order to
 change the code without breaking it.
 
@@ -30,6 +30,34 @@ by hand.
 
 Python 3 only, no third-party dependencies.
 
+## Updating to a new game version
+
+The version is authored in exactly ONE place, and it is not in any file name.
+
+    python3 scrape_paleo.py --version 3.24   # rewrites data/jwa.json
+    python3 build.py                         # rewrites index.html
+    python3 verificar_version.py             # names every place still on 3.23
+
+That is the whole procedure. `verificar_version.py` is what makes it safe: it
+fails until the four documents that state the version agree with the data, and
+it names the file and the figure for each one. Nothing else in the project
+carries a version, and that is deliberate:
+
+- **`data/jwa.json` keeps its name.** The version goes inside it, in
+  `meta.version_juego`. Ten scripts used to spell out `data/jwa-<version>.json`,
+  and one forgotten edit was a file that looked right and read the wrong data.
+- **`index.html` keeps its name, and that one is not cosmetic.** A `file://`
+  document gets its storage keyed to the FULL PATH, so a versioned name is a new
+  empty store. It has already cost n30 his saved creatures twice; the account is
+  at the top of `build.py`.
+- **`jwa322` never moves.** It is the localStorage prefix, the export mark and
+  the exported file name. Renaming it does not migrate anything: it hides every
+  saved creature behind an empty calculator, in silence. `verificar_version.py`
+  fails if it moves.
+
+Do not put a version in a file name, and do not add a second output. If a future
+update makes either of those look like tidying, read this section again first.
+
 ## Run everything before committing
 
     python3 modelo.py             # 40 self-check cases plus level-cap invariants
@@ -43,10 +71,11 @@ Python 3 only, no third-party dependencies.
     python3 probar_rareza.py      # rarity colours and contrast
     python3 verificar_idioma.py   # dictionary parity, English default, pin precedence
     python3 probar_demo.py        # the one-file demo: nothing external, nothing stale
+    python3 verificar_version.py  # one version, and every place that shows it agrees
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Three of the eleven need material that is not in the repository.** `cache/` is
+**Three of the twelve need material that is not in the repository.** `cache/` is
 92 MB of scraped pages, excluded by `.gitignore`:
 
     python3 verificar_fuentes.py  # reads cache/

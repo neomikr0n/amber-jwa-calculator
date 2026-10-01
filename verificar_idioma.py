@@ -32,8 +32,9 @@ import sys
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 IMGDIR = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-idioma"
 PERFIL = os.path.join(DIR, "perfil")

@@ -38,8 +38,9 @@ sys.path.insert(0, RAIZ)
 
 from modelo import LOC_COMBATE, LOC_DARDEO, LOC_ETIQUETAS
 
+from rutas import DATOS
+
 CACHE = os.path.join(RAIZ, "cache")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 
 fallos = []
 n_ok = 0

@@ -33,9 +33,9 @@ import re
 import sys
 from datetime import date
 
+from rutas import DATOS, HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-ARTEFACTO = os.path.join(RAIZ, "index.html")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 IMG = os.path.join(RAIZ, "img")
 GUARDADO = os.path.join(RAIZ, ".privado", "jwa322-mis-criaturas(2026-09-27).json")
 SALIDA = os.path.join(RAIZ, "amber-demo.html")
@@ -83,7 +83,7 @@ def main():
     if not os.path.exists(guardado):
         raise SystemExit("!! no saved file at %s (it lives in .privado/, which is not published)"
                          % guardado)
-    html = open(ARTEFACTO, encoding="utf-8").read()
+    html = open(HTML, encoding="utf-8").read()
     if html.count(VACIO) != 1:
         raise SystemExit("!! the artefact does not carry the empty image map (%r): rebuild"
                          % VACIO)
@@ -150,7 +150,7 @@ try { elegir(%s); refrescar(); } catch (e) {}
 
     sha = hashlib.sha256(html.encode("utf-8")).hexdigest()
     marca = ("<!-- amber-demo: empaquetado de %s sha256=%s el %s · %d criaturas · %d imágenes -->"
-             % (os.path.basename(ARTEFACTO), sha, date.today().isoformat(), len(inv), len(mapa)))
+             % (os.path.basename(HTML), sha, date.today().isoformat(), len(inv), len(mapa)))
 
     html = html.replace("<head>", "<head>\n" + semilla, 1)
     html = html.replace("</head>", marca + "\n</head>", 1)

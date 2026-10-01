@@ -2,8 +2,9 @@
 """Test harness: injects a diagnostic script into the HTML and captures it with Firefox."""
 import os, re, subprocess, sys, shutil, glob
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 DIR = "/tmp/jwa-test"
 PERFIL = os.path.join(DIR, "perfil")
 FUERA = os.path.join(DIR, "diag.html")

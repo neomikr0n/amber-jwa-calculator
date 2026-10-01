@@ -15,9 +15,10 @@ Usage:  python3 descargar_imagenes.py [--refetch]
 """
 import json, os, sys, time, urllib.request
 
+from rutas import DATOS
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 DEST = os.path.join(RAIZ, "img")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 CDN = "https://cdn.paleo.gg/games/jwa/images/creature/%s.png"
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "

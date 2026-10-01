@@ -17,11 +17,11 @@ __pycache__/
 *.pyc
 .venv/
 
-# Superseded artefacts of earlier game versions. They are kept on disk on
+# Superseded HTML artefacts of earlier game versions. They are kept on disk on
 # purpose: the browser ties saved data to the file PATH, so each of these files
 # is the origin its creatures were saved under, and deleting the file would
 # strand them. Untracked so the repository carries only the current version;
-# all of them are in the history, and nothing reads them any more.
+# both are in the history, and nothing reads them any more.
 #
 # amber-jwa-3.23.html is in this list from 1-oct-2026: `build.py` stopped
 # writing it and writes only index.html, because a versioned name creates a new
@@ -29,12 +29,15 @@ __pycache__/
 # creatures still live under its path until he migrates them.
 amber-jwa-3.22.html
 amber-jwa-3.23.html
-data/jwa-3.22.json
 
-# Byte-identical duplicate of data/jwa-3.22.json; nothing reads it. Anchored:
-# unanchored, this pattern also swallowed data/jwa-3.22.json, which is a
-# different file with its own rule above.
-/jwa-3.22.json
+# A safety net, not a description. From 1-oct-2026 the dataset has a stable
+# name, data/jwa.json, and the game version lives INSIDE it in
+# `meta.version_juego`; nothing in the project reads or writes a versioned
+# dataset any more, and one appearing again would mean the old scheme has crept
+# back. The three that existed were moved to .privado/historico-datos/ and are
+# also in the history (`git show v3.23:data/jwa-3.23.json`).
+data/jwa-[0-9]*.json
+/jwa-[0-9]*.json
 
 # Personal working notes for this author; never published.
 AGENTS.local.md

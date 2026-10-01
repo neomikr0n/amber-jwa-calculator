@@ -42,7 +42,9 @@ PRUEBA = ["indoraptor", "trykosaurus", "paralidactylus", "aliorasuchus",
           "koolatrodon", "arsionosaurus", "indominus_rex", "acrocanthops",
           "93_classic_t_rex", "rajadorixis", "ankylocodon", "diplotator"]
 
-cri = json.load(open(os.path.join(RAIZ, "data", "jwa-3.23.json")))["criaturas"]
+from rutas import DATOS
+
+cri = json.load(open(DATOS))["criaturas"]
 
 
 # ---------------- reference in Python ----------------

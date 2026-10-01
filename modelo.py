@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-Cost model for Jurassic World Alive 3.23 — verified.
+Cost model for Jurassic World Alive — verified.
+
+The game version is NOT written here. It lives in `data/jwa.json`
+(`meta.version_juego`) and is read through `rutas.version()`; a copy in this
+file would be one more place to forget on an update, and nothing would compare
+it against the data. This file holds the model, the data holds the version.
 
 Everything in here has been checked against independent sources.
 The `confianza` field of each block says where it comes from and how safe it is.
@@ -13,8 +18,6 @@ shows in its own calculator (hybrid DNA, level-up coins, fusion coins) on the
 """
 
 from math import ceil
-
-VERSION = "3.23"
 
 # Tool name. It lives here, and not hard-written in the template, because it
 # appears in TWO places that have to say the same thing: the <title> of the tab

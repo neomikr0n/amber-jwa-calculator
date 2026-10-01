@@ -6,27 +6,35 @@ paleo.gg is Next.js: it serves all the data inside <script id="__NEXT_DATA__">.
 No browser is needed. A normal request is enough.
 
 Usage:
-    python3 scrape_paleo.py            # uses the cache, only downloads what is missing
-    python3 scrape_paleo.py --refetch  # downloads everything again
+    python3 scrape_paleo.py --version 3.24            # uses the cache, only downloads what is missing
+    python3 scrape_paleo.py --version 3.24 --refetch  # downloads everything again
+
+`--version` is mandatory and it is THE ONE THING to change when the game
+updates. It is written into the dataset as `meta.version_juego`, and the whole
+project reads it from there (`rutas.version()`): the page title, the header
+badge, the language strings and the exported data all take it from the same
+value. Nothing else in the repository carries a version, and no file name does.
 
 Output:
     cache/dinodex.html          index
     cache/<uuid>.html           raw card of each creature
-    data/jwa-3.23.json          normalized dataset
+    data/jwa.json               normalized dataset
 """
 
+import argparse
 import json
 import os
 import re
-import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
+from rutas import DATOS
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(RAIZ, "cache")
-DATA = os.path.join(RAIZ, "data")
+CARPETA_DATOS = os.path.join(RAIZ, "data")
 BASE = "https://www.paleo.gg/games/jurassic-world-alive/dinodex"
 
 UA = (
@@ -35,6 +43,40 @@ UA = (
 )
 RETARDO = 0.25       # seconds between requests, out of politeness
 REINTENTOS = 3
+
+
+def version_valida(texto):
+    """`3.24`, not `3,24`, not `v3.24`, not `3.24.1`.
+
+    The value ends up in the page title and in the stored dataset, so a typo
+    here is a typo the user reads. Better to reject it than to write it.
+    """
+    if not re.fullmatch(r"\d+\.\d+", texto):
+        raise argparse.ArgumentTypeError("has to look like 3.24, not %r" % texto)
+    return texto
+
+
+def argumentos():
+    p = argparse.ArgumentParser(
+        description="Downloads the complete dinodex from paleo.gg for "
+                    "Jurassic World Alive.")
+    p.add_argument("--version", required=True, metavar="X.Y", type=version_valida,
+                   help="the game version this download belongs to, e.g. 3.24. "
+                        "It is the only thing an update has to change.")
+    p.add_argument("--refetch", action="store_true",
+                   help="download everything again instead of reusing the cache")
+    return p.parse_args()
+
+
+def version_guardada():
+    """The version already in the dataset, or None if there is no dataset."""
+    if not os.path.exists(DATOS):
+        return None
+    try:
+        with open(DATOS, encoding="utf-8") as f:
+            return json.load(f)["meta"]["version_juego"]
+    except (OSError, ValueError, KeyError):
+        return None
 
 
 def bajar(url, destino, refetch=False):
@@ -95,9 +137,16 @@ def entrenamiento(points):
 
 
 def main():
-    refetch = "--refetch" in sys.argv
+    args = argumentos()
+    refetch = args.refetch
+    version = args.version
     os.makedirs(CACHE, exist_ok=True)
-    os.makedirs(DATA, exist_ok=True)
+    os.makedirs(CARPETA_DATOS, exist_ok=True)
+
+    anterior = version_guardada()
+    if anterior == version:
+        print(f"      NOTE: the dataset already says {version}. If this is a new "
+              f"game version, --version was not bumped.")
 
     print("[1/3] dinodex index...")
     idx_html = bajar(BASE, os.path.join(CACHE, "dinodex.html"), refetch)
@@ -184,7 +233,7 @@ def main():
     salida = {
         "meta": {
             "juego": "Jurassic World Alive",
-            "version_juego": "3.23",
+            "version_juego": version,
             "fuente": "paleo.gg/games/jurassic-world-alive/dinodex",
             "fuente_actualizada": meta["lastModifiedDate"],
             "descargado": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -193,7 +242,7 @@ def main():
         },
         "criaturas": criaturas,
     }
-    destino = os.path.join(DATA, "jwa-3.23.json")
+    destino = DATOS
     with open(destino, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
     kb = os.path.getsize(destino) / 1024

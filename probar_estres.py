@@ -28,8 +28,9 @@ import os, re, shutil, subprocess
 import informe_browser
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-estres"
 PERFIL = os.path.join(DIR, "perfil")

@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """
-Builds index.html from data/jwa-3.23.json + modelo.py.
+Builds index.html from data/jwa.json + modelo.py.
 
 The result is a SINGLE self-contained HTML file: no CDN, no network, no
 dependencies. It opens with a double click and works offline.
 
     python3 build.py
+
+WHERE THE GAME VERSION COMES FROM
+
+Not from this file and not from a constant. It is read from the dataset
+(`meta.version_juego`, through `rutas.version()`) and written into two places:
+the `meta.version` of the embedded data and the `__VERSION__` placeholders of
+the template. So bumping the game version is passing `--version` to
+`scrape_paleo.py`; there is nothing to edit here.
 
 WHY THERE IS EXACTLY ONE OUTPUT, AND WHY ITS NAME CARRIES NO VERSION
 
@@ -36,14 +44,12 @@ from modelo import (ADN_31_35, ADN_POR_FUSION, ADN_POR_FUSION_MEDIA, COINR,
                     LOC_ETIQUETAS, MEJORA_NIVEL_MIN, MEJORA_PASOS,
                     MIN_LV, MONEDAS_FUSION, MULT_NIVEL, NIVEL_MAX,
                     NIVEL_MIN_INGREDIENTE, NOMBRE, OMEGA_31_35, OMEGA_COINR,
-                    OMEGA_L, PUNTOS_OMEGA_NIVEL, TIER, TOPE_BOOST_STAT, TOPES_ADN,
-                    VERSION)
+                    OMEGA_L, PUNTOS_OMEGA_NIVEL, TIER, TOPE_BOOST_STAT, TOPES_ADN)
+from rutas import DATOS, HTML, version
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-ORIGEN = os.path.join(RAIZ, "data", "jwa-3.23.json")
 FAVICON = os.path.join(RAIZ, "img", "favicon.svg")
 LOGO = os.path.join(RAIZ, "img", "logo.svg")
-DESTINO = os.path.join(RAIZ, "index.html")
 
 # Order of the six stats in slot 8. It is the same one the game uses and the
 # same one in which paleo.gg shows them in its «Basic Stats» block.
@@ -51,7 +57,7 @@ STATS_ORDEN = ("vida", "dano", "velocidad", "armadura", "critico", "dano_critico
 
 
 def cargar_datos():
-    with open(ORIGEN, encoding="utf-8") as f:
+    with open(DATOS, encoding="utf-8") as f:
         d = json.load(f)
     cri = d["criaturas"]
     # only the fields the browser needs are kept
@@ -124,10 +130,13 @@ def svg_en_linea(ruta):
 
 def main():
     meta, criaturas = cargar_datos()
+    # The version comes from the dataset, so the number the page shows and the
+    # data it was built from cannot drift apart.
+    v = version()
 
     datos = {
         "meta": {
-            "version": VERSION,
+            "version": v,
             "fuente": meta["fuente"],
             "fuenteActualizada": meta["fuente_actualizada"],
             "descargado": meta["descargado"],
@@ -172,17 +181,18 @@ def main():
     carga = json.dumps(datos, ensure_ascii=False, separators=(",", ":"))
     html = html.replace("__DATOS__", carga)
     html = html.replace("__NOMBRE__", NOMBRE)
+    html = html.replace("__VERSION__", v)
     html = html.replace("__FAVICON__", svg_en_linea(FAVICON))
     html = html.replace("__LOGO__", svg_en_linea(LOGO))
     # No inlined images in the delivered file: every path is the relative one.
     # `build_demo.py` fills this same map to pack the whole thing into one file.
     html = html.replace("__IMAGENES__", "{}")
 
-    with open(DESTINO, "w", encoding="utf-8") as f:
+    with open(HTML, "w", encoding="utf-8") as f:
         f.write(html)
 
-    kb = os.path.getsize(DESTINO) / 1024
-    print(f"wrote {DESTINO}  ({kb:.0f} KB)")
+    kb = os.path.getsize(HTML) / 1024
+    print(f"wrote {HTML}  ({kb:.0f} KB)")
     print(f"creatures: {len(criaturas)}")
 
 

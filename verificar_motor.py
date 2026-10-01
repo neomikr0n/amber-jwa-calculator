@@ -17,9 +17,8 @@ sys.path.insert(0, RAIZ)
 from modelo import (ADN_31_35, ADN_POR_FUSION_MEDIA, COINR, COIN_31_35,
                     CREACION, L, MIN_LV, MONEDAS_FUSION, OMEGA_31_35, OMEGA_COINR,
                     OMEGA_L, TOPES_ADN, nivel_maximo)
+from rutas import DATOS, HTML
 
-HTML = os.path.join(RAIZ, "index.html")
-DATOS = os.path.join(RAIZ, "data", "jwa-3.23.json")
 IMG = os.path.join(RAIZ, "img")
 
 
@@ -384,7 +383,7 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
     import build as _build
     with tempfile.TemporaryDirectory() as td:
         ruta_esperada = os.path.join(td, "esperado.html")
-        destino_original = _build.DESTINO
+        destino_original = _build.HTML
         # The build has to land in the temporary directory. Pointing it at the
         # real file made `main()` overwrite the very file this check compares
         # against, so it compared something it had just repaired: it could not
@@ -392,12 +391,12 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
         # run. There is now a single output, so there is a single redirection —
         # and if a second output is ever added back, it has to be redirected
         # here too or this check goes blind again.
-        _build.DESTINO = ruta_esperada
+        _build.HTML = ruta_esperada
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 _build.main()
         finally:
-            _build.DESTINO = destino_original
+            _build.HTML = destino_original
         with open(ruta_esperada, encoding="utf-8") as f:
             esperado_html = f.read()
     if not os.path.exists(HTML):

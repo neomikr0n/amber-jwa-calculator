@@ -18,8 +18,9 @@ Usage:  python3 probar_ui.py
 import os, re, shutil, subprocess, json
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-ui"
 PERFIL = os.path.join(DIR, "perfil")

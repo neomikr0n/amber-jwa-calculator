@@ -28,8 +28,9 @@ you see the result: all of them at the Fusion level and the shortcut gone.
 """
 import os, sys, subprocess
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 IMG = os.path.join(RAIZ, "img")
 
 TEMA = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else "yellow"

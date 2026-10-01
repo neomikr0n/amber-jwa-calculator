@@ -10,8 +10,9 @@ Usage:  python3 captura.py
 """
 import os, re, shutil, subprocess
 
+from rutas import HTML
+
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-HTML = os.path.join(RAIZ, "index.html")
 IMG = os.path.join(RAIZ, "img")
 DIR = "/tmp/jwa-ui"
 PERFIL = os.path.join(DIR, "perfil")

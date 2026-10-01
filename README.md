@@ -69,10 +69,15 @@ called `amber-jwa-3.23.html`.
 ## 📥 Regenerate the data
 
 The creature data is committed, so this is only needed when the game updates.
+`--version` is mandatory: it is the one thing an update changes, and it is
+written into the data (`meta.version_juego`) so that the whole project reads the
+version from a single place. No file name carries it.
 
 ```bash
-python3 scrape_paleo.py          # rebuilds cache/ and data/jwa-3.23.json
-python3 descargar_imagenes.py    # optional: fetches the creature photos
+python3 scrape_paleo.py --version 3.24   # rebuilds cache/ and data/jwa.json
+python3 build.py                         # rebuilds index.html from it
+python3 verificar_version.py             # fails until every mention agrees
+python3 descargar_imagenes.py            # optional: fetches the creature photos
 ```
 
 `scrape_paleo.py` downloads the dinodex and writes `cache/`, which is about

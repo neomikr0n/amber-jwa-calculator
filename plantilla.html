@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__NOMBRE__ — Jurassic World Alive 3.23 DNA calculator</title>
+<!-- __VERSION__ is filled in by build.py from data/jwa.json. Never write the
+     number here: verificar_version.py fails if these places disagree. -->
+<title>__NOMBRE__ — Jurassic World Alive __VERSION__ DNA calculator</title>
 <!-- The tab icon: it is the only thing seen when the focus is on another
      tab, so it goes INLINE (data URI) and not as a file next to it. A
      <link href="img/favicon.svg"> would break as soon as the HTML were copied
@@ -26,6 +28,26 @@
      «boring» so that whoever had chosen it keeps the same look: the storage key
      is a contract with saved data, and migrating the value is the cheap half of
      keeping it. The new default's value stays «yellow», its historical name. -->
+<!-- ============================================================================
+     THE `jwa322` PREFIX IS A FROZEN IDENTIFIER. IT IS NOT THE GAME VERSION.
+     ============================================================================
+
+     `jwa322` appears in four localStorage keys (`jwa322.tema`,
+     `jwa322.idioma`, `jwa322.inventario`, `jwa322.mios`), in the `jwa322` mark
+     of the exported file and in the name of that file. None of those six is a
+     version number, and none of them is ever bumped when the game updates.
+
+     It was picked once, when the game was on 3.22, and it has to stay
+     literally `jwa322` for the life of this tool. The reason is the same one
+     that keeps the output file named `index.html` with no version in it: for a
+     `file://` document the browser ties saved data to the storage key, so
+     renaming `jwa322.inventario` to `jwa324.inventario` does not migrate
+     anything — it makes every saved creature invisible, in silence, with an
+     empty calculator on screen and no error anywhere to explain it.
+
+     `verificar_version.py` fails if this prefix moves. If some future update
+     makes you want to «tidy» it, read the note at the top of build.py first:
+     it is the same trap, one step removed. -->
 <script>
 try {
   const guardado = localStorage.getItem("jwa322.tema");
@@ -54,6 +76,8 @@ try {
    Reading the stored value first would make the rendered language depend on
    leftover state, which is exactly how a test ends up asserting on the wrong
    language while still passing. */
+/* `jwa322` is frozen: it is the storage prefix, not the game version. Do not
+   bump it on an update — see the note at the top of the file. */
 const IDIOMA_CLAVE = "jwa322.idioma";
 const IDIOMA_DEFECTO = "en";
 const I18N_ES = {
@@ -321,6 +345,11 @@ const I18N_ES = {
   "Target level:": "Nivel objetivo:",
   "Creature data:": "Datos de criaturas:",
   "Generated on": "Generado el",
+  /* The «3.23» in this sentence is NOT the current version, and it must NOT
+     become __VERSION__. It is a provenance claim: it says which release notes
+     the cost model was checked against, and that stays true for ever.
+     Templating it would make the page assert, the moment the version is
+     bumped, something nobody has verified. */
   "Cost model verified against paleo.gg's own calculator (221 entries, 0 discrepancies), the official 3.23 release notes and the <span class=\"mono\">jurassic-journal</span> database.": "Modelo de costes verificado contra el propio calculador de paleo.gg (221 fichas, 0 discrepancias), el comunicado oficial de la 3.23 y la base de datos de <span class=\"mono\">jurassic-journal</span>.",
   "The DNA per fusion is an <b>average of 22</b>: each fusion gives a random amount of DNA, so the computed fusions are an estimate, not a promise.": "El ADN por fusión es una <b>media de 22</b>: el resultado de cada fusión es aleatorio, así que las fusiones calculadas son una estimación, no una promesa.",
   "Unofficial tool, not affiliated with Ludia.": "Herramienta no oficial, sin relación con Ludia.",
@@ -1216,7 +1245,7 @@ footer code{color:var(--tx2)}
     <div class="marca">
       <img class="logo" src="__LOGO__" alt="" width="46" height="46" aria-hidden="true">
       <div>
-        <h1>__NOMBRE__ <span class="v">JWA 3.23</span></h1>
+        <h1>__NOMBRE__ <span class="v">JWA __VERSION__</span></h1>
         <div class="sub" id="hSub"></div>
       </div>
     </div>
@@ -1635,6 +1664,8 @@ const nFus   = d => d <= 0 ? 0 : Math.ceil(d / M.media);
    ingredient in the tree put that ingredient into the list: pressing Save ended
    up leaving the whole family tree saved. Now the list and the data are two
    things, and only the button adds to the list. */
+/* `jwa322` is frozen: it is the storage prefix, not the game version. Do not
+   bump it on an update — see the note at the top of the file. */
 const CLAVE = "jwa322.inventario";
 const CLAVE_MIOS = "jwa322.mios";
 let INV = {};
@@ -3326,7 +3357,12 @@ document.getElementById("btnCat").onclick = () => {
 /* BOTH things are exported: the list and the data. The file carries a `jwa322`
    mark so it can be told apart. A file from an earlier version (the plain
    object of always, without the mark) is still read: its keys become the list,
-   which is exactly what they meant back then. */
+   which is exactly what they meant back then.
+
+   The mark and the file name carry `jwa322` and NOT the game version, on
+   purpose: an exported file is read back by this same page, and renaming the
+   mark would stop it from recognising its own files. Frozen identifier — see
+   the note at the top of the file. */
 document.getElementById("btnExport").onclick = () => {
   const b = new Blob([JSON.stringify({jwa322: 1, mios: MIS, inventario: INV}, null, 2)],
                      {type:"application/json"});
@@ -3397,6 +3433,8 @@ document.getElementById("btnBorrar").onclick = () => {
    choice survive: «default» was the value the green theme used to be stored
    under, so it is read as «boring» (the <head> script does that mapping).
    Rewriting it here would make the two indistinguishable. */
+/* `jwa322` is frozen: it is the storage prefix, not the game version. Do not
+   bump it on an update — see the note at the top of the file. */
 const CLAVE_TEMA = "jwa322.tema";
 const selTema = document.getElementById("tema");
 /* The values with an attribute. «yellow» (the Default option) is the one that
@@ -3433,8 +3471,11 @@ pintarStats();
 /* Static markup carries data-i18n (plain text) or data-i18n-html (markup with
    nested tags). In both cases the attribute value is the English source, which
    is also the dictionary key, so the Spanish original is restored verbatim. */
-const TITULO = {en: "Jurassic World Alive 3.23 DNA calculator",
-                es: "calculadora de ADN de Jurassic World Alive 3.23"};
+/* The document title per language. __VERSION__ is filled by build.py, the same
+   as in the <title> and the <h1>: the three have to say the same thing, and
+   verificar_version.py is what checks it. */
+const TITULO = {en: "Jurassic World Alive __VERSION__ DNA calculator",
+                es: "calculadora de ADN de Jurassic World Alive __VERSION__"};
 const NOMBRE_APP = document.querySelector("h1").textContent.replace(/\s*JWA 3\.23\s*$/, "").trim();
 
 function aplicarIdioma(){

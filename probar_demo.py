@@ -38,9 +38,9 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, RAIZ)
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
+from rutas import HTML
 
 DEMO = os.path.join(RAIZ, "amber-demo.html")
-ARTEFACTO = os.path.join(RAIZ, "index.html")
 DIR = "/tmp/jwa-demo"
 PERFIL = os.path.join(DIR, "perfil")
 
@@ -62,10 +62,10 @@ m = re.search(r"<!-- amber-demo: empaquetado de (\S+) sha256=([0-9a-f]{64}) el (
 fresco = None
 if not m:
     print("FAIL the demo does not carry its packing mark: rebuild it with build_demo.py")
-elif m.group(1) != os.path.basename(ARTEFACTO):
-    print("FAIL the demo was packed from %s, not from %s" % (m.group(1), os.path.basename(ARTEFACTO)))
+elif m.group(1) != os.path.basename(HTML):
+    print("FAIL the demo was packed from %s, not from %s" % (m.group(1), os.path.basename(HTML)))
 else:
-    real = hashlib.sha256(open(ARTEFACTO, "rb").read()).hexdigest()
+    real = hashlib.sha256(open(HTML, "rb").read()).hexdigest()
     fresco = (m.group(2) == real)
     print("%s the demo was packed from the CURRENT artefact (%s, %s)"
           % ("OK   " if fresco else "FAIL ", m.group(2)[:16], m.group(3)))

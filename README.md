@@ -17,7 +17,7 @@ default, and the choice is remembered — and it ships with **seven themes**: fi
 on the amber base, plus the deep-black default and the original slate-and-green
 look it started as. The screenshot above is one of them, *Amber-OLED*.
 
-**Live site:** **[neomikr0n.github.io/amber-jwa-calculator](https://neomikr0n.github.io/amber-jwa-calculator/)**
+**🦕 Live site:** **[neomikr0n.github.io/amber-jwa-calculator](https://neomikr0n.github.io/amber-jwa-calculator/)**
 
 It is the same `index.html` this repository builds, served as it is. The
 creature photos are missing there on purpose — see the note at the end.
@@ -59,6 +59,59 @@ creature photos are missing there on purpose — see the note at the end.
   kept as it was. The choice is saved in `localStorage` and survives a reload, and
   the motion switches off under `prefers-reduced-motion`.
 
+## ❓ FAQ
+
+### How do I get my creatures onto another device, or onto the live site?
+
+**Export JSON**, under *My creatures* → *Summary*, downloads
+`jwa322-mis-criaturas.json`: a plain-text file holding two things — the data of
+every creature you have entered a figure for (its level, the DNA you hold, your
+enhancement points), including the ones you only opened inside a fusion tree, and
+the list of the ones you saved on purpose, each with its target level. Keep it,
+mail it to yourself, put it in cloud storage: it is the only thing that carries
+your data out of the browser.
+
+On the other device, open Amber and press **Import JSON**. That is also the way
+between your local copy and the live site, because they are two different pages as
+far as the browser is concerned: each keeps its own store, and the file is the
+bridge between them.
+
+### Does importing replace what I have, or add to it?
+
+**It adds.** Importing never wipes anything. For every creature in the file, its
+data replaces that same creature's data if you already had it, and the ones you
+did not have are added to *My creatures*. Nothing gets duplicated. The
+confirmation tells the two apart — «Imported 12 creatures, 3 added to «My
+Creatures»» means nine were already there and were updated, and three were new.
+
+### Can I look inside the file?
+
+Yes, it is JSON in plain text. The two keys that matter are `inventario` (the data
+per creature) and `mios` (the list you saved). What is left is a version mark.
+
+### Will a file from an older version still import?
+
+Yes. The file carries a `jwa322` mark, and both the mark and the file name leave
+the **game** version out on purpose, so the page keeps recognising its own files
+across game updates. Files from before the mark existed — a plain object of
+creature keys — are read too, and their keys become your saved list.
+
+### What if the file is wrong?
+
+It says so and changes nothing. Anything that is not a JSON object — an array, a
+truncated download — is refused with «That file is not valid», and the import
+stops before touching your data. Enhancement points that do not fit the level they
+arrived with are trimmed as they are read, so what you see right after importing
+is what is still there after a reload.
+
+### And «Clear all»?
+
+It deletes every saved creature **and** the stored data, targets included, on that
+page, and it cannot be undone. Export first if there is any doubt.
+
+Nothing above leaves your machine: there is no account and no server, and the data
+lives in the browser's `localStorage`.
+
 ## 🔧 Build it
 
 Only Python 3 is needed, and there are no third-party dependencies — neither to
@@ -67,12 +120,45 @@ neither path: `img/readme/generar-titulo.py`, which draws the title artwork at t
 top of this file, needs `fontTools` and is only run by hand when that artwork has
 to change. The three SVGs it writes are committed, so a clone never needs it.
 
+**To use it you need none of this.** `index.html` is committed, so downloading the
+repository and opening that file is the whole installation — there is no
+installer, no service and no account. What follows is for building it from source,
+which asks for Python 3 and git:
+
+**Windows 11**, in PowerShell
+```powershell
+winget install --id Python.Python.3.13 --exact
+winget install --id Git.Git --exact
+git clone https://github.com/neomikr0n/amber-jwa-calculator.git
+cd amber-jwa-calculator
+python build.py
+```
+On Windows the interpreter is `python` — or `py` — and not `python3`.
+`winget search Python.Python` lists the newer lines if 3.13 has been superseded.
+
+**macOS**
 ```bash
+xcode-select --install   # Python 3 and git ship with the Command Line Tools
+# or, with Homebrew: brew install python git
+git clone https://github.com/neomikr0n/amber-jwa-calculator.git
+cd amber-jwa-calculator
+python3 build.py
+```
+
+**Arch Linux**
+```bash
+sudo pacman -S --needed python git
+git clone https://github.com/neomikr0n/amber-jwa-calculator.git
+cd amber-jwa-calculator
 python3 build.py
 ```
 
 That writes `index.html`: one self-contained file you open by double-clicking and
 the same file the site serves. It is not edited by hand.
+
+The browser tests are the one part shaped for Linux: they launch Firefox at
+`/usr/lib/firefox/firefox`, so on Windows and macOS those two need the path
+changed or a `PATH` that resolves it — see Tests.
 
 **Its name carries no version on purpose.** A `file://` document gets its
 `localStorage` keyed to the full path, so renaming the file does not rename a
@@ -207,10 +293,6 @@ project with no connection to the game's owners.
 - **The deployed site shows no creature photos.** They are copyrighted game
   artwork and are excluded on purpose. Clone the repository and run
   `descargar_imagenes.py` to see them locally.
-- **Advertising is a deliberate later decision, not an oversight.** If ads are
-  ever added, the sensible order is to ask the rights holders first; monetising
-  a fan tool built on someone else's game changes its legal character, and no
-  software licence changes that.
 
 ---
 

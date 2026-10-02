@@ -740,6 +740,37 @@ try {
        !!es && es.borderRadius === "50%" && ancho >= 12 && Math.abs(ancho - alto) < 1.5,
        es ? ancho + "x" + alto + " · radio " + es.borderRadius : "(no badge)");
 
+    /* HAVING the `title` is not the same as being able to REACH it. If something
+       covered the badge, or if it inherited `pointer-events:none`, the tooltip
+       would never appear and a check that only reads the attribute would stay
+       green. So the badge is hit-tested at its own centre, and focused. Both the
+       scroll and the focus are put back afterwards, for the reason `elegir()` is
+       restored: a check that leaves the page changed breaks the ones after it. */
+    if (insignia){
+      var cont = insignia.parentElement;
+      while (cont && cont !== document.body &&
+             cont.scrollHeight <= cont.clientHeight) cont = cont.parentElement;
+      var topAntes = cont && cont !== document.body ? cont.scrollTop : 0;
+      var yAntes = window.scrollY;
+      var focoAntes = document.activeElement;
+      insignia.scrollIntoView({block: "center"});
+      var rb = insignia.getBoundingClientRect();
+      var cx = Math.round(rb.left + rb.width / 2);
+      var cy = Math.round(rb.top + rb.height / 2);
+      var golpe = document.elementFromPoint(cx, cy);
+      ok("the badge is where the pointer can reach it, and nothing covers it",
+         !!golpe && (golpe === insignia || insignia.contains(golpe)),
+         (golpe ? golpe.tagName + "." + (golpe.className || "(no class)")
+                : "nothing") + " at " + cx + "," + cy);
+      insignia.focus();
+      ok("and the keyboard reaches it too, so the help is not mouse-only",
+         document.activeElement === insignia,
+         "activeElement=" + (document.activeElement ? document.activeElement.tagName : "?"));
+      if (cont && cont !== document.body) cont.scrollTop = topAntes;
+      window.scrollTo(0, yAntes);
+      if (focoAntes && focoAntes.focus) focoAntes.focus();
+    }
+
     /* The seven themes, one after the other, in the SAME page: the theme CSS is
        keyed on `data-tema`, so switching the attribute exercises the real cascade
        and seven reloads would say nothing extra. The ring was `var(--borde)` until

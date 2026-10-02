@@ -123,6 +123,13 @@ it quit.** A probe that forgets it hangs until the 180-second timeout and looks 
 a slow page, not like a missing flag. The report travels back through the local
 server, so the PNG is throwaway — it is there to end the process.
 
+**The report table lives in the calculator section (`#s-calc`), and the sections
+switch with `display:none`.** A probe that clicks the tree tab to «bring up the
+report» therefore HIDES it: `#informeArbol` is still found by a selector and its
+`title` attributes still read, but every box it measures is `0x0` at `0,0`. Read
+the report's geometry from the calculator tab, and never take a selector hit as
+proof that something is on screen.
+
 **Ten of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot return a verdict. Grouped by what they are missing:
 

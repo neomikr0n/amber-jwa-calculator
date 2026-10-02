@@ -2004,6 +2004,24 @@ window.addEventListener("load", function(){
        gc ? ("controles " + Math.round(gc.left) + ".." + Math.round(gc.right) +
              " · page " + document.documentElement.scrollWidth + "px in " +
              innerWidth + "px") : "(no controls)");
+
+    /* The box is the whole point of the tap, so it is measured here and not only on
+       a wide screen. The badge is brought into view FIRST: opened from a badge that
+       is off screen, the box is placed next to something nobody can see, and the
+       measurement would say «it does not fit» about a situation that never happens. */
+    var ins = document.querySelector("#informeArbol thead th .ayuda");
+    ins.scrollIntoView({block: "center"});
+    ins.click();
+    var cj = document.getElementById("ayudaDardeo");
+    var rcj = cj.getBoundingClientRect();
+    ok("the help box opens fully on screen on a phone, and its text fits inside it",
+       cj.classList.contains("on") &&
+       rcj.left >= 0 && rcj.right <= innerWidth + 1 &&
+       rcj.top >= 0 && rcj.bottom <= innerHeight + 1 &&
+       rcj.width >= 200 && cj.scrollHeight <= cj.clientHeight + 1,
+       Math.round(rcj.width) + "x" + Math.round(rcj.height) + " at " +
+       Math.round(rcj.left) + "," + Math.round(rcj.top) + " inside " +
+       innerWidth + "x" + innerHeight + " · " + cj.textContent.length + " characters");
   } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
   RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
   var p = document.createElement("pre"); p.id = "__diag";

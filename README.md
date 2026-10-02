@@ -45,7 +45,10 @@ creature photos are missing there on purpose — see the note at the end.
   heading: hover it, or tap it on a phone, and it opens in a box of its own.
 - **📸 My creatures.** Everything you enter is saved in the browser, with a target
   level per creature, and exportable as JSON. The photo strip is ordered by
-  rarity, rarest first.- **📊 Real stats.** Health, damage, speed, armour and both critical values at any
+  rarity, rarest first. On the creature's card the one button under the numbers
+  saves it or takes it out, depending on whether it is already in your list: it
+  says which, and pressing it flips it.
+- **📊 Real stats.** Health, damage, speed, armour and both critical values at any
   level, with the enhancement track and its cost, and the class badge of the
   creature (fierce, resilient, cunning, wild card) before its name.
 - **🧠 Omega training.** Omega creatures earn training points by levelling (7 per

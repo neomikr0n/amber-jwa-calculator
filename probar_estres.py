@@ -117,6 +117,12 @@ function celdaDe(tr, cabecera){
   return tds[i].textContent.trim();
 }
 function ev(el, t){ el.dispatchEvent(new Event(t, {bubbles:true})); }
+/* The label of the card's save/remove button. It is read by id because the id is
+   stable: it is the same button on both sides, and only its text changes. */
+function btnTxt(){
+  var b = document.getElementById("btnGuardar");
+  return b ? b.textContent.trim() : "(there is no save button)";
+}
 /* Does the «Nivel» cell of the report show a RANGE of levels («16 → 20»)?
    The full signature is looked for —number, arrow, number— and not the arrow on
    its own, because since 25-sep-2026 the arrow is used for TWO things: the range
@@ -437,6 +443,39 @@ window.addEventListener("load", function(){
        MIS.length === 1 && MIS[0] === "indoraptor",
        MIS.length + " in the list (" + MIS.join(", ") + ") with " + Object.keys(INV).length +
        " creatures touched in the tree");
+    /* The button is the two ends of one thing, and which end it shows is
+       decided when the card is painted. A card painted once and never repainted
+       would keep saying «Save to» over a creature that is already saved: that is
+       the first thing checked, before pressing anything. */
+    ok("a creature that is ALREADY saved offers to take it out, not to save it",
+       btnTxt() === i18n("Remove from «My creatures»"), btnTxt());
+    /* ...and the other way round, so that removing is not simply the only text
+       the button can ever have. */
+    elegir("velociraptor");
+    ok("a creature that is NOT saved offers to save it",
+       btnTxt() === i18n("Save to «My creatures»"), btnTxt());
+    /* Removing from the card has to leave the same state as the × of «My
+       creatures»: gone from the list AND its data forgotten. Half the job would
+       leave its figures in the tree, which is the failure this is here to stop. */
+    elegir("indoraptor");
+    document.getElementById("btnGuardar").click();
+    ok("the card's «remove» takes it out of the list", MIS.indexOf("indoraptor") === -1,
+       MIS.length + " left in the list (" + MIS.join(", ") + ")");
+    ok("and it forgets the creature's data, like the × does", !INV["indoraptor"],
+       JSON.stringify(INV["indoraptor"] || null) + " — " + Object.keys(INV).length + " creatures touched");
+    ok("and the button comes back offering to save it",
+       btnTxt() === i18n("Save to «My creatures»"), btnTxt());
+    /* Put back the state the rest of the test expects: saved, with its data.
+       Nothing is pressed here to REPAINT the button after removing: if the card
+       only changed its label, this line would be the one covering it up. It is
+       pressed because the rest of the test needs the creature saved again. */
+    elegir("indoraptor");
+    teclear(document.getElementById("nivelAct"), "24");
+    teclear(document.getElementById("adnTengo"), "4321");
+    document.getElementById("btnGuardar").click();
+    ok("saving it again brings back both the row and its data",
+       MIS.length === 1 && MIS[0] === "indoraptor" && !!INV["indoraptor"],
+       MIS.join(", ") + " / " + Object.keys(INV).length + " creatures touched");
     var antes = JSON.parse(JSON.stringify(INV));
     var listaAntes = MIS.slice();
     log("creatures before exporting", Object.keys(antes).length);
@@ -586,6 +625,18 @@ window.addEventListener("load", function(){
     teclear(document.getElementById("adnTengo"), "7777");
     document.getElementById("nivelObj").value = 28;
     ev(document.getElementById("nivelObj"), "input");
+    /* If it came in from the earlier block still saved, the button is the
+       «remove» side and this click would do the opposite. It is taken out first
+       and saved after, which is also the order the rest of the test runs in. */
+    elegir("indoraptor");
+    if (btnTxt() === i18n("Remove from «My creatures»")){
+      document.getElementById("btnGuardar").click();
+      elegir("indoraptor");
+      teclear(document.getElementById("nivelAct"), String(lvOk));
+      teclear(document.getElementById("adnTengo"), "7777");
+      document.getElementById("nivelObj").value = 28;
+      ev(document.getElementById("nivelObj"), "input");
+    }
     document.getElementById("btnGuardar").click();
     var guardado = INV["indoraptor"];
     ok("the Guardar button also records the target",
@@ -601,12 +652,27 @@ window.addEventListener("load", function(){
     ok("and the field is corrected, so that what is seen is what is saved",
        document.getElementById("nivelAct").value === "0", document.getElementById("nivelAct").value);
 
-    // it is put back the way it was
+    /* it is put back the way it was, and SAVED. The button is the two ends of
+       one thing now, so which end it shows is checked before pressing: pressing
+       the «remove» side here would take the creature out and the next block,
+       which needs it in the list, would fail for a reason of its own. */
     elegir("indoraptor");
     teclear(document.getElementById("nivelAct"), String(lvOk));
     teclear(document.getElementById("adnTengo"), "7777");
     document.getElementById("nivelObj").value = 28;
     ev(document.getElementById("nivelObj"), "input");
+    ok("the card of a creature that came in saved offers to take it out",
+       btnTxt() === i18n("Remove from «My creatures»"), btnTxt());
+    /* Taken out and saved again, so that the values are certainly the saved
+       ones: leaving it saved only by the previous block would make this one
+       depend on what happened there. */
+    if (btnTxt() !== i18n("Save to «My creatures»")) document.getElementById("btnGuardar").click();
+    elegir("indoraptor");
+    teclear(document.getElementById("nivelAct"), String(lvOk));
+    teclear(document.getElementById("adnTengo"), "7777");
+    document.getElementById("nivelObj").value = 28;
+    ev(document.getElementById("nivelObj"), "input");
+    ok("and it offers to save it again now", btnTxt() === i18n("Save to «My creatures»"), btnTxt());
     document.getElementById("btnGuardar").click();
 
     // we go to another creature and another tab, so that the jump has to undo something
@@ -616,7 +682,8 @@ window.addEventListener("load", function(){
     /* This one is saved TOO. The × test needs two creatures in the list, and
        before they were there by accident: everything that was touched ended up in
        «Mis criaturas». Now they have to be saved on purpose, which is precisely
-       the new rule. */
+       the new rule. Rajadorixis never came in saved, so its card offers to save
+       it: a guard here would hide the day that stops being true. */
     document.getElementById("btnGuardar").click();
     irA("mios");
     ok("we are in Mis criaturas",

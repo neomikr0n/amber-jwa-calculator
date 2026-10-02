@@ -450,6 +450,28 @@ the tests can clean it: `probar_ui.py` and `probar_estres.py` have to remove it
 AND put the value back by hand, through the page's own handler, the same way they
 already do with `INV` and `MIS`. Removing the key alone is not enough.
 
+### The card's save button is the two ends of one thing
+
+Since 2-oct-2026 the button under the numbers of the creature's card **saves or
+takes out**, depending on whether the creature is already in «My creatures». It is
+one control and one `id` (`btnGuardar`): two buttons meaning opposite things, one
+of them dead, is one button too many.
+
+- **Which end it shows is decided when the card is painted.** `calcular()` is the
+  one that paints it, so **any change of state has to go through `calcular()`**:
+  repainting only the button's label leaves a card saying «Save to» over a
+  creature that is already saved.
+- **Removing takes the data with it**, exactly as the × of «My creatures» does
+  (`quitarMia` + `delete INV[u]`). Doing only half leaves its figures in the tree
+  and it looks like the button did nothing.
+- **The label is the confirmation.** There is no «Saved ✓» message to put up and
+  take down after 1,4 s: the new label is the state and stays. A timed message
+  here would also be the thing that makes a test pass while the card is stale.
+- **The tests read the label, not the assumption.** `probar_ui.py` and
+  `probar_estres.py` check which end is showing before pressing, because pressing
+  the «remove» side when the test expected to save silently wrecks the state the
+  next check depends on. That happened while adding this, twice.
+
 ## What must never be published
 
 - **Creature images.** Copyrighted game artwork. Excluded by `.gitignore` and

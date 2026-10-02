@@ -57,6 +57,12 @@ function log(k, v){ RES.push(k + ": " + (v === undefined ? "" : v)); }
 function ok(k, cond, detalle){ if (!cond) FALLOS++; log((cond ? "OK   " : "FALLO") + " " + k, detalle); }
 function txt(id){ var e = document.getElementById(id); return e ? e.innerText.replace(/\s+/g," ").trim() : "(falta "+id+")"; }
 function ev(el, tipo){ el.dispatchEvent(new Event(tipo, {bubbles:true})); }
+/* The label of the card's save/remove button. One id, two texts: which one it
+   shows is part of the state, so it is read and not assumed. */
+function btnTxt(){
+  var b = document.getElementById("btnGuardar");
+  return b ? b.textContent.trim() : "(there is no save button)";
+}
 /* Writes the value in one go. Useful for setting up a scenario, but it does NOT
    test typing: the field never goes through an intermediate state. */
 function teclear(el, valor){
@@ -470,7 +476,19 @@ try {
      /Mejoras/.test(cabMios), cabMios);
   btn.click();
   var filas3 = document.querySelectorAll("#miosCuerpo tbody tr");
-  ok("pressing Guardar again does not duplicate the row", filas3.length === 1, filas3.length + " rows");
+  /* Pressing it AGAIN does the opposite, on purpose: the button shows whichever
+     of the two ends the creature is at. What has to hold is that the list never
+     grows a second row for the same creature — and the old wording said
+     «duplicate», which is what this checks. */
+  ok("pressing Guardar again does not duplicate the row", filas3.length === 0, filas3.length + " rows");
+  /* ...and that it was a real removal and not the button falling silent: the
+     card offers to save it again. */
+  ok("the second press offered to remove, and the card goes back to saving",
+     btnTxt() === i18n("Save to «My creatures»"), btnTxt());
+  btn.click();                                  // and it is saved again for what follows
+  pintarMios();
+  var filas4 = document.querySelectorAll("#miosCuerpo tbody tr");
+  ok("and saving it again brings back the single row", filas4.length === 1, filas4.length + " rows");
   /* The table keeps the compact thumbnail, like the search dropdown. */
   var miniTab = document.querySelector("#miosCuerpo img.mini");
   var ctab = miniTab ? getComputedStyle(miniTab) : null;

@@ -200,6 +200,8 @@ const I18N_ES = {
   "<b>gather the DNA</b> in encounters, incubators or events.</div>": "<b>reunir el ADN</b> en encuentros, incubadoras o eventos.</div>",
   "<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>": "<button class=\"acc\" id=\"btnGuardar\">Guardar en «Mis criaturas»</button></div></div>",
   "Save to «My creatures»": "Guardar en «Mis criaturas»",
+  "<button class=\"acc\" id=\"btnGuardar\">Remove from «My creatures»</button></div></div>": "<button class=\"acc\" id=\"btnGuardar\">Quitar de «Mis criaturas»</button></div></div>",
+  "Remove from «My creatures»": "Quitar de «Mis criaturas»",
   "<p class=\"vacio-txt\">Choose a creature in the «Calculator» tab.</p>": "<p class=\"vacio-txt\">Elige una criatura en la pestaña «Calculadora».</p>",
   "<div class=\"cifra al\"><div class=\"k\">DNA to collect</div><div class=\"v\">": "<div class=\"cifra al\"><div class=\"k\">ADN a recolectar</div><div class=\"v\">",
   "<div class=\"n\">of the ": "<div class=\"n\">de las ",
@@ -3306,24 +3308,55 @@ function calcular(){
          i18n("<b>gather the DNA</b> in encounters, incubators or events.</div>");
   }
 
+  /* The button is the two ends of the same thing: saving the creature, and
+     taking it out of the list. It is ONE control because for the person in
+     front of it there is only one question — «is this creature mine or not» —
+     and two buttons meaning opposite things, one of them live, is one button
+     too many. Which one it is gets decided when the card is painted, and
+     `refrescar()` repaints the card, so after pressing it the button comes back
+     saying the opposite.
+
+     The `id` stays `btnGuardar` even on the «remove» side: it is a hook the
+     interface tests and the styles use, and changing it with the state would
+     leave two names for one thing. */
+  const yaGuardada = esMia(u);
   h += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">' +
-       i18n("<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>");
+       (yaGuardada
+         ? i18n("<button class=\"acc\" id=\"btnGuardar\">Remove from «My creatures»</button></div></div>")
+         : i18n("<button class=\"acc\" id=\"btnGuardar\">Save to «My creatures»</button></div></div>"));
   document.getElementById("resultado").innerHTML = h;
 
   document.getElementById("btnGuardar").onclick = () => {
-    /* The only place that adds to «My creatures»: only the chosen creature, never
-       the tree hanging from it. The target level was already written by
-       `fijarObjetivo` when moving the slider; here it is kept as is instead of
-       deducing it again, so that there are not two ways of computing it. */
-    const yaEstaba = esMia(u);
-    INV[u] = Object.assign({}, INV[u],
-      {nivel: desde, adn: tengo, creado: inv.creado,
-       objetivo: (INV[u] && INV[u].objetivo) || hasta, nombre: c[0]});
-    anadirMia(u);
-    guardar(); refrescar(); pintarLista();
-    const b = document.getElementById("btnGuardar");
-    b.textContent = yaEstaba ? "Actualizado ✓" : "Guardado ✓";
-    setTimeout(() => b.textContent = i18n("Save to «My creatures»"), 1400);
+    if (esMia(u)) {
+      /* Taking it out moves it ENTIRELY: the list and the data of that creature.
+         Removing it from the list alone would leave its figures in the tree and
+         it would look like the button had done nothing — the same reason given
+         at the × of «My creatures», and the same behaviour, so the two ends do
+         not disagree. The target written by the slider goes with it: the record
+         that held it is the one being deleted. */
+      quitarMia(u);
+      delete INV[u];
+      guardar(); refrescar(); pintarLista();
+    } else {
+      /* The only place that adds to «My creatures»: only the chosen creature,
+         never the tree hanging from it. The target level was already written by
+         `fijarObjetivo` when moving the slider; here it is kept as is instead of
+         deducing it again, so that there are not two ways of computing it. */
+      INV[u] = Object.assign({}, INV[u],
+        {nivel: desde, adn: tengo, creado: inv.creado,
+         objetivo: (INV[u] && INV[u].objetivo) || hasta, nombre: c[0]});
+      anadirMia(u);
+      guardar(); refrescar(); pintarLista();
+    }
+    /* THE CARD IS REPAINTED, and not just the button's label. `calcular()` builds
+       this card, and it is the only way the OTHER texts that depend on whether
+       the creature is saved — there are none today, but the tree and the list
+       already hang off the same state — cannot drift from the button.
+       Repainting also means the button comes back saying the opposite, so there
+       is no confirmation text to put up and take down 1,4 s later: the new label
+       IS the confirmation, and it stays because it is the state and not a
+       message. */
+    calcular();
   };
 
   pintarArbol();

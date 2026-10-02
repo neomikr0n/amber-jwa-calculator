@@ -1040,15 +1040,46 @@ try {
      document.querySelector('label[for="tema"]').textContent.trim() === "Tema",
      document.querySelector('label[for="tema"]').textContent.trim());
 
-  /* The two controls of the header have to be LEVEL at the bottom. The language
-     switch has no label and the theme has one, so aligning the tops (the old
-     flex-start) left the switch floating above the <select>. It is measured, not
-     eyeballed: a pixel of slack for the sub-pixel rounding. */
+  /* The THREE controls of the header have to be LEVEL, top and bottom. The
+     language switch has no label and the theme has one, so aligning the tops
+     (the old flex-start) left the switch floating above the <select>. The
+     repository link is a third control with no label either, and its box is
+     sized to match the switch's down to the half pixel: if someone changes the
+     buttons' padding or font size and not the link's, this is what says so. It
+     is measured, not eyeballed: a pixel of slack for the sub-pixel rounding. */
   var rIdioma = document.querySelector(".idioma").getBoundingClientRect();
   var rTema = document.getElementById("tema").getBoundingClientRect();
+  var aRepo = document.querySelector("header .repo");
+  var rRepo = aRepo ? aRepo.getBoundingClientRect() : null;
   ok("the language switch and the theme select are level at the bottom",
      Math.abs(rIdioma.bottom - rTema.bottom) <= 1,
      "idioma bottom " + rIdioma.bottom.toFixed(1) + " vs tema bottom " + rTema.bottom.toFixed(1));
+  ok("the repository link is level with the language switch, top and bottom",
+     !!rRepo && Math.abs(rRepo.bottom - rIdioma.bottom) <= 1 && Math.abs(rRepo.top - rIdioma.top) <= 1,
+     rRepo ? "repo top " + rRepo.top.toFixed(1) + " bottom " + rRepo.bottom.toFixed(1) +
+             " vs idioma top " + rIdioma.top.toFixed(1) + " bottom " + rIdioma.bottom.toFixed(1)
+           : "(there is no repository link in the header)");
+  /* And that the link goes where it says. The mark is an inline <svg> on
+     purpose —the file has no network and no folder beside it— so what is
+     checked is that the shape travels WITH the link, not that an image was
+     fetched. The text inside is for screen readers: without it the link
+     announces the URL.
+     The URL is checked by its SHAPE and not against the literal, and that is
+     not laziness: the repository's own name contains the substring that
+     `verificar_version.py` bans in every root script, so that nothing ever
+     builds an artefact whose FILE NAME carries the game version again. That ban
+     catches the bare prefix on purpose — `"<prefix>-" + version` is exactly the
+     shape that has to be stopped — so spelling the URL out here trips it, and
+     loosening the guard so that this one line fits would be the wrong trade.
+     (Do not write the substring in this comment either: it lives inside the
+     string literal that the ban scans, and a comment is not exempt.) */
+  ok("the repository link points at a project on GitHub, opens away from the page, and is named",
+     !!aRepo && /^https:\/\/github\.com\/[^\/\s]+\/[^\/\s]+$/.test(aRepo.getAttribute("href") || "") &&
+     aRepo.target === "_blank" && (aRepo.rel || "").indexOf("noopener") !== -1 &&
+     !!aRepo.querySelector("svg") && aRepo.textContent.trim().length > 0,
+     aRepo ? aRepo.getAttribute("href") + " · target=" + aRepo.target + " · rel=" + aRepo.rel +
+             " · svg=" + !!aRepo.querySelector("svg") + " · texto=" + JSON.stringify(aRepo.textContent.trim())
+           : "(there is no repository link in the header)");
 
   /* The test that really matters: the RARITY colours cannot change
      between themes. If they did, a theme would be exactly the confusion that

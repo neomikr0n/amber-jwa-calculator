@@ -130,6 +130,14 @@ report» therefore HIDES it: `#informeArbol` is still found by a selector and it
 the report's geometry from the calculator tab, and never take a selector hit as
 proof that something is on screen.
 
+**At 390px wide and in Spanish the page is 6px wider than the viewport, and that is
+OLDER than the report's seventh column.** Measured against `434f10f` — the commit
+before it — the overflow is the same 6px with and without the column: it is the
+theme selector in the header controls (`header .controles`, 18..396), not the
+report. The narrow-screen pass of `probar_ui.py` prints it as a note and does **not**
+assert it, so that a red test keeps meaning «this change broke something». It is
+left alone on purpose: it is the header's layout, not this column's.
+
 **Ten of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot return a verdict. Grouped by what they are missing:
 

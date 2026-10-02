@@ -1873,7 +1873,110 @@ __ENTREGA__
     return fallos
 
 
-codigo_final = codigo or pasada_tira() or pasada_tema()
+# ---------------------------------------------------------------------------
+# 4) THE NARROW SCREEN. The report grew a seventh column on 1-oct-2026, and the
+#    one thing that quietly breaks a phone layout is a column too many. The table
+#    lives in a box with `overflow:auto`, so scrolling INSIDE the box is the
+#    design; what must not happen is the PAGE scrolling sideways.
+# ---------------------------------------------------------------------------
+def pasada_movil():
+    DIR4 = "/tmp/jwa-ui-movil"
+    PERFIL4 = os.path.join(DIR4, "perfil")
+    os.makedirs(DIR4, exist_ok=True)
+    os.makedirs(PERFIL4, exist_ok=True)
+    enlazar_img(os.path.join(DIR4, "img"), IMG)
+
+    html = open(HTML, encoding="utf-8").read()
+    # The language is pinned to Spanish on purpose: the Spanish labels are the long
+    # ones («Sesiones de dardeo» against «Darting sessions»), and a check that is
+    # about the widest case must not depend on whatever key happens to be stored.
+    SEMILLA = ('<script>try { localStorage.setItem("jwa322.idioma","es"); }'
+               ' catch(e){}</script>\n')
+    html = inyectar_en_cabeza(html, SEMILLA, "probar_ui.py")
+
+    srv4 = arrancar()
+    diag = r"""
+<script>
+window.addEventListener("load", function(){
+  var RES = [], FALLOS = 0;
+  function ok(n, c, d){ if (!c) FALLOS++; RES.push((c ? "OK   " : "FALLO") + " " + n + ": " + (d===undefined?"":d)); }
+  function log(n, v){ RES.push(n + ": " + (v === undefined ? "" : v)); }
+  try {
+    pintarFotos(); elegir("indoraptor");
+    var inf = document.getElementById("informeArbol");
+    var tabla = inf.querySelector("table");
+    var nombres = Array.prototype.map.call(inf.querySelectorAll("thead th"), function(t){
+      return t.textContent.trim(); }).join(" | ");
+    /* The box that scrolls is found by WALKING UP to the first ancestor with
+       `overflow-x: auto|scroll`. Asking `closest("div")` returns `#informeArbol`
+       itself and measures the wrong thing — it did, and the check passed for a
+       reason that had nothing to do with the table being wide. */
+    function cajaQueDesplaza(el){
+      var n = el;
+      while (n && n !== document.body){
+        var o = getComputedStyle(n).overflowX;
+        if (o === "auto" || o === "scroll") return n;
+        n = n.parentElement;
+      }
+      return null;
+    }
+    var caja = cajaQueDesplaza(tabla);
+    var cb = caja ? caja.getBoundingClientRect() : null;
+    var anchoTabla = tabla ? Math.round(tabla.getBoundingClientRect().width) : 0;
+    ok("the wide report sits in a box that scrolls, and that box fits on screen",
+       !!caja && !!cb && cb.right <= innerWidth + 1 && cb.left >= -1 && anchoTabla > cb.width,
+       caja ? ("box " + Math.round(cb.left) + ".." + Math.round(cb.right) + " of " +
+               Math.round(cb.width) + "px holding a " + anchoTabla + "px table · " + nombres)
+            : "no scrolling box around the table");
+    var barra = document.querySelector(".barra-sup");
+    var bb = barra ? barra.getBoundingClientRect() : null;
+    ok("and the top strip still fits with the player-level box inside it",
+       !!bb && bb.right <= innerWidth + 1 && bb.left >= -1,
+       bb ? ("barra-sup " + Math.round(bb.left) + ".." + Math.round(bb.right) + " · viewport " +
+             innerWidth + "px · " + barra.children.length + " controls")
+          : "no .barra-sup");
+    /* NOT a verdict: the page itself is 6px wider than the viewport at 390px in
+       Spanish, and it was ALREADY 6px wider before this column existed — measured
+       against 434f10f, the commit before it. The overflow is the theme selector in
+       the header controls (18..396), not the report. It is written down instead of
+       asserted so that a red test keeps meaning «this change broke something». */
+    log("page width, for the record", document.documentElement.scrollWidth + "px in a " +
+        innerWidth + "px viewport (the 6px over is the header's theme selector, older " +
+        "than this column)");
+  } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
+  RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
+  var p = document.createElement("pre"); p.id = "__diag";
+  p.style.cssText = "position:fixed;inset:0;z-index:999999;background:#fff;color:#000;" +
+                    "font:13px/1.5 monospace;padding:14px;margin:0;white-space:pre-wrap";
+  p.textContent = RES.join("\n"); document.body.appendChild(p);
+__ENTREGA__
+});
+</script>"""
+    diag = diag.replace("__ENTREGA__", srv4.js("__diag"))
+    _ok4, _msg4 = comprobar_scripts(html + diag, "probar_ui.py (the narrow screen)")
+    if not _ok4:
+        raise SystemExit("!! " + _msg4)
+    destino = os.path.join(DIR4, "movil.html")
+    open(destino, "w", encoding="utf-8").write(html + diag)
+    env = dict(os.environ)
+    env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",
+                "MOZ_HEADLESS": "1", "MOZ_DISABLE_CONTENT_SANDBOX": "1", "HOME": DIR4})
+    subprocess.run(["/usr/lib/firefox/firefox", "--headless", "--profile", PERFIL4,
+                    "--window-size", "390,844", "--screenshot",
+                    os.path.join(DIR4, "movil.png"), "file://" + destino],
+                   env=env, capture_output=True, text=True, timeout=180)
+    srv4.parar()
+    print("-" * 72)
+    print("=== the report on a narrow screen, 390x844 ===")
+    info4 = srv4.texto().strip()
+    print(info4)
+    c4, lineas4 = veredicto(info4)
+    for l in lineas4:
+        print(l)
+    return 1 if c4 else 0
+
+
+codigo_final = codigo or pasada_tira() or pasada_tema() or pasada_movil()
 # The exit code, in order of what matters most. `codigo or pasada_tira() or
 # pasada_tema()` is kept because the three passes still run in that order, but the
 # result is no longer returned as is: when a check could not run, saying «green»

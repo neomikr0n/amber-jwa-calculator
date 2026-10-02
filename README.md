@@ -228,3 +228,7 @@ project with no connection to the game's owners.
   independent readings the cost model was verified against, and the app is a
   great piece of work in its own right. Thank you for keeping it open.
 
+Work in progress tho... 🚜👷🚧🏗️
+
+![Work in progress](https://user-images.githubusercontent.com/74038190/215283228-89a6af16-23b1-4144-ac9b-064dc973b3db.gif)
+

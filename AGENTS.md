@@ -195,6 +195,13 @@ time, record the exit code.
   up, so it is a FLOOR on the work and the hover says so. It is read with the
   player level of the box next to the search box, which is clamped to 1..35 and
   saved under `jwa322.nivelJugador` — its own key, so «Clear all» cannot wipe it.
+- **The column's explanation hangs off the «?» badge, not off the header label.**
+  Since 2-oct-2026 the `<th class="num">` carries no `title`: the long text lives on
+  the `<span class="ayuda">` inside it, which renders as a 15×15 circle — measured
+  in the browser by `probar_ui.py`, not read off the CSS rule, because a rule that
+  says 50% does not say what the browser did with it. If the help moves back onto
+  the label there would be two tooltips for one question. The per-row `title` STAYS:
+  it says something else, the division of THAT row.
 - **The Omega training table comes only from `detail.points`, and only Omegas have
   it.** `criaturas[u].entrenamiento` (scraper) → `C[u][11] = [cap, delta, pcap]` per
   stat, in the order of `M.statsOrden`. `verificar_stats.py` checks it in both

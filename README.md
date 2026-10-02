@@ -41,7 +41,8 @@ creature photos are missing there on purpose — see the note at the end.
   is at most 15 darts, all of them direct hits, and how much DNA that is depends
   on your level and on the creature's rarity. It is the **least** it can take,
   since a real session brings less, and it only appears where the game publishes
-  the numbers.
+  the numbers. The column's own explanation is behind the **«?»** next to its
+  heading, and each row's figure explains itself on hover.
 - **📸 My creatures.** Everything you enter is saved in the browser, with a target
   level per creature, and exportable as JSON. The photo strip is ordered by
   rarity, rarest first.- **📊 Real stats.** Health, damage, speed, armour and both critical values at any

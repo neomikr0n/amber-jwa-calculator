@@ -695,9 +695,16 @@ try {
     elegir("skorpiostegotops");
     var ths = document.querySelectorAll("#informeArbol thead th");
     var ultima = ths[ths.length - 1];
+    /* The «?» badge lives INSIDE the header cell, so the badge's text is part of
+       the cell's textContent. The label is taken off by removing the badge's own
+       text and not by chopping the last character, which would break the day the
+       badge becomes an emoji. */
+    var insignia = ultima.querySelector(".ayuda");
+    var etiqueta = insignia ? ultima.textContent.replace(insignia.textContent, "").trim()
+                            : ultima.textContent.trim();
     ok("the report has the darting column right after «Fusions»",
        ths.length === 7 && ths[5].textContent.trim() === "Fusiones" &&
-       ultima.textContent.trim() === "Sesiones de dardeo",
+       etiqueta === "Sesiones de dardeo",
        [].map.call(ths, function(t){ return t.textContent.trim(); }).join(" | "));
     /* A column added to the header and not to the rows leaves a table where every
        reading by position is off by one. The file already carries a note about
@@ -709,10 +716,29 @@ try {
     });
     ok("every row —the total one included— has as many cells as the header",
        nFilas > 1 && malCuenta === 0, nFilas + " rows, " + malCuenta + " with a different count");
-    var ayuda = ultima.getAttribute("title") || "";
-    ok("the header explains itself on hover, and says that the figure is a floor",
+    /* The explanation moved OFF the cell and ONTO the badge on 2-oct-2026 (n30:
+       «mejor a un lado de sesiones de darde pon un "?" encerrado en un circulo …
+       y ahi al pasar el mouse que despliegue la ayuda»). The two halves are
+       checked together, because what matters is that the help is reachable from
+       the badge AND that it is no longer on the label: leaving it on both would
+       mean two tooltips for one question, and the first one to appear would be
+       the wrong one. */
+    var ayuda = insignia ? (insignia.getAttribute("title") || "") : "";
+    ok("the «?» badge beside the header carries the explanation on hover",
+       !!insignia && insignia.textContent.trim() === "?" &&
        /sesi/i.test(ayuda) && /15 dardos/i.test(ayuda) && /M[IÍ]NIMO/i.test(ayuda),
-       ayuda.slice(0, 110) + " …");
+       insignia ? ayuda.slice(0, 110) + " …" : "(no badge)");
+    ok("the explanation is no longer hanging off the header label itself",
+       !ultima.getAttribute("title"),
+       ultima.getAttribute("title") || "(the cell carries no title)");
+    /* The box is MEASURED and not read off the rule: a badge that renders 15 by
+       9 is not a circle, and a rule that says 50% does not say what the browser
+       did with it. */
+    var es = insignia ? getComputedStyle(insignia) : null;
+    var ancho = es ? parseFloat(es.width) : 0, alto = es ? parseFloat(es.height) : 0;
+    ok("the badge is a circle of a readable size, not a bare question mark",
+       !!es && es.borderRadius === "50%" && ancho >= 12 && Math.abs(ancho - alto) < 1.5,
+       es ? ancho + "x" + alto + " · radio " + es.borderRadius : "(no badge)");
 
     /* Every row that shows a figure has to BE that figure: the DNA needed of that
        row divided by the session's maximum at that level, rounded up. It is

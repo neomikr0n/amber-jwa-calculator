@@ -1223,6 +1223,22 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--borde)}
 th{color:var(--tx2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+/* The «?» badge of the darting column. The column's explanation is long on
+   purpose, but until 2-oct-2026 it hung off the header label itself: the only way
+   to find it was to hover the words «Sesiones de dardeo», and nothing on screen
+   said there was anything to find, because a `title` draws no mark of its own.
+   The badge makes it visible, and it is a circle because a bare «?» next to a
+   word reads as a typo.
+   Asked for on 2-oct-2026 (n30: «mejor a un lado de sesiones de darde pon
+   un "?" encerrado en un circulo … y ahi al pasar el mouse que despliegue la
+   ayuda que tienes cuando se pasa por el texto ahora mismo»). */
+.ayuda{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;border:1px solid var(--borde);
+  color:var(--tx2);font-size:10px;font-weight:600;letter-spacing:0;
+  text-transform:none;cursor:help;vertical-align:middle;margin-left:6px;
+}
+.ayuda:hover,.ayuda:focus-visible{color:var(--tx);border-color:var(--pill);outline:none}
 tbody tr:hover{background:#ffffff06}
 
 .aviso{
@@ -2276,14 +2292,21 @@ function informeHTML(t, tt){
   /* The darting column. Its own explanation is long on purpose: «sessions» is
      the whole point of the column and the word alone does not say that a session
      is capped, that the cap moves with the player level, or that the figure is a
-     floor. A figure nobody can interpret is worse than no figure. */
+     floor. A figure nobody can interpret is worse than no figure.
+     Since 2-oct-2026 that text hangs off a «?» badge next to the header and not
+     off the header cell itself, so that the label stays clean and the help has
+     something visible to point at. The per-row hover STAYS, because it says
+     something else —the division of THAT row— and it is what makes each figure
+     checkable. */
   const ayudaDardeo = i18n("Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have, and it is empty for creatures that are not hunted on the map and for the levels that legendary and unique creatures do not have published.");
 
   h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
         i18n("<th>Creature</th><th class=\"num\">Level</th>") +
        i18n("<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>") +
        i18n("<th class=\"num\">Missing</th><th class=\"num\">Fusions</th>") +
-       '<th class="num" title="'+esc(ayudaDardeo)+'">'+i18n("Darting sessions")+'</th>' +
+       '<th class="num">'+i18n("Darting sessions")+
+         '<span class="ayuda" tabindex="0" title="'+esc(ayudaDardeo)+'" '+
+         'aria-label="'+esc(ayudaDardeo)+'">?</span></th>' +
        '</tr></thead><tbody>';
   /* The criar buttons. The individual one's text is short because it goes INSIDE
      a cell of the «Level» column, next to the arrow and the target.

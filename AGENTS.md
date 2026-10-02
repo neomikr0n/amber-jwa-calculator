@@ -228,14 +228,41 @@ time, record the exit code.
   check must not repair what it measures.** `verificar_motor.py` rebuilds into a
   temporary directory and demands that the file on disk be exactly that, naming the
   `data-page-node-id` attributes when an editor has rewritten it (it happened on
-  25-sep with 133, and again on 30-sep with 155, spread over 122 lines). Redirecting
-  only `build.DESTINO`
-  left `main()` overwriting the real `index.html`, so the comparison read a file the
-  test had just repaired: it could not fail, and it hid a stale `index.html` on every
-  run. Both destinations are redirected. When it goes red the routine is
-  `python3 build.py` and run it again — and if the working tree goes dirty after you
-  open the artefact in a preview or a page editor, that is the same failure: rebuild
-  before committing.
+  25-sep with 133, and again on 30-sep with 155, spread over 122 lines).
+  **Attributed on 1-oct-2026, and it is the tool this file is being read in.** Creating
+  a preview panel for an HTML file makes the app annotate every editable node of that
+  file — the `pnid` a comment anchors to — and it writes the annotated version back to
+  the file ON DISK. Measured as an A/B three times: with the file clean, creating the
+  panel took it from **0 to 155 attributes within seconds** (mtime 19:23:10, the moment
+  the panel was made); with a panel already open, opening it again **changed nothing**;
+  and a fresh panel on a copy at another path annotated **the copy** (155, mtime
+  19:24:34) while leaving the repository file alone. So the act is **creating** the
+  panel, not looking at it — and it accounts for the twelve recontaminations of 1-oct:
+  twelve panels. **Opening the artefact to look at it is a WRITE.** The literal lives in
+  the app bundle itself (`buildNodeIdRefMap`, `countNodeIdEls`, next to
+  `data-sp-bindable` and `data-dm-*`) and in the `library` plugin's
+  `page/edit-flow.md` and `manage/get_node_comments.py`; the frontend only ever READS
+  it, which is why the annotation is not something a script here can reproduce.
+  Measured on a capture: 155
+  attributes, 6,665 bytes, over 23 tag types (`div` 56, `span` 18, `b` 18, `label`
+  10, `button` 10, `input` 8, `option` 7, `h2` 6, `section` 4, `br` 3, and one each
+  on `html`, `head`, `body`, `meta`, `link`, `header`, `img`, `h1`, `select`, `nav`,
+  `p`, `code`, `footer`). **Closing tags are never touched**, which is why `<head>`
+  is the only anchor it breaks — see `inyectar_en_cabeza` in `rutas.py`.
+  It is inert for the app and **purely additive**: stripping the attributes from
+  three independent captures gives back the clean artefact byte for byte, so the
+  repair is `git restore index.html` while the build has not moved since the commit,
+  and otherwise
+  `sed -E 's/ data-page-node-id="[^"]*"//g' index.html > t && mv t index.html`.
+  The redirect is a SINGLE one, because there is a single destination. It used to be
+  two, and redirecting only one of them left `main()` overwriting the real
+  `index.html`, so the comparison read a file the test had just repaired: it could
+  not fail, and it hid a stale `index.html` on every run. If a second output is ever
+  added back, it has to be redirected here too or this check goes blind again. When
+  it goes red the routine is `python3 build.py` and run it again — and if the working
+  tree goes dirty after you open the artefact in a preview or a page editor, that is
+  the same failure: rebuild before committing. **Check `git status` before every
+  commit if you have looked at the tool.**
 - **Motion off means off, pseudo-elements included.** The rule that switches every
   animation and transition off under `prefers-reduced-motion` has to name
   `*::before` and `*::after` as well: `*` does not reach a pseudo-element, and the

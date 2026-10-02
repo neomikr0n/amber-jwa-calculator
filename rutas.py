@@ -77,17 +77,18 @@ def inyectar_en_cabeza(html, codigo, etiqueta="the test"):
 
     WHY IT IS NOT `html.replace("<head>", ...)`
     -------------------------------------------
-    The editor that works on this project leaves `data-page-node-id` attributes
-    on the opening tags, so the real tag becomes `<head data-page-node-id="...">`
-    and the literal `"<head>"` disappears from it. But the literal string does
-    NOT disappear from the file: it survives inside a comment of the
-    application's own JavaScript, «…read as «boring» (the <head> script does
-    that mapping)». So a naive replace found that comment first and injected the
-    code INTO the middle of a `<script>` block, in the middle of a comment. The
-    injected `</script>` then closed the block early, the browser painted the
-    rest of the application as TEXT on the page, the application never ran, and
-    the only symptom was «the browser did not deliver the report»: the test came
-    out unjudgeable and the cause was nowhere in the message.
+    The WorkBuddy page editor annotates every editable node with
+    `data-page-node-id` when the artefact is opened in its page view, so the real
+    tag becomes `<head data-page-node-id="...">` and the literal `"<head>"`
+    disappears from it. But the literal string does NOT disappear from the file:
+    it survives inside a comment of the application's own JavaScript, «…read as
+    «boring» (the <head> script does that mapping)». So a naive replace found that
+    comment first and injected the code INTO the middle of a `<script>` block, in
+    the middle of a comment. The injected `</script>` then closed the block early,
+    the browser painted the rest of the application as TEXT on the page, the
+    application never ran, and the only symptom was «the browser did not deliver
+    the report»: the test came out unjudgeable and the cause was nowhere in the
+    message.
 
     It cost a full diagnosis on 1-oct-2026, with the screenshot as evidence.
     `probar_ui.py` had already learned the same lesson for `<body>` —«The viewer

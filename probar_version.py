@@ -149,10 +149,17 @@ def sucio(rel):
 
 
 # --------------------------------------------------------------- the setup
+# A document that is not THERE and a document that is DIRTY are two different
+# things, and this test used to answer «FAIL» to both. A clone does not have
+# `.privado/LEEME.md`, and `FAIL — cannot start` reads as «something is broken»,
+# which is a false claim about a repository that is exactly as it should be. The
+# two are counted apart and the exit code says which happened: 1 is a real
+# problem, 2 is «cannot judge».
 guardado = {}
+faltan = []
 for rel in VIGILADOS:
     if not os.path.exists(ruta_de(rel)):
-        fallo("setup", "%s is not there and the test needs it" % rel)
+        faltan.append(rel)
         continue
     if sucio(rel):
         fallo("setup", "%s differs from its committed version. Commit it or "
@@ -161,11 +168,22 @@ for rel in VIGILADOS:
     with open(ruta_de(rel), "rb") as f:
         guardado[rel] = f.read()
 
-if fallos:
-    print("RESULT: FAIL — cannot start")
-    for que, detalle in fallos:
-        print("  · %s\n      %s" % (que, detalle))
-    sys.exit(1)
+if fallos or faltan:
+    if fallos:
+        print("RESULT: FAIL — cannot start")
+        for que, detalle in fallos:
+            print("  · %s\n      %s" % (que, detalle))
+        if faltan:
+            print("  (and %d more are not in the repository at all: %s)"
+                  % (len(faltan), ", ".join(faltan)))
+        sys.exit(1)
+    print("RESULT: cannot judge — this test cannot start, and that is not a failure.")
+    for rel in faltan:
+        print("  · %s is not there" % rel)
+    print("      It mutates the documents it watches and leans on git to restore them,")
+    print("      so it cannot run without them. `.privado/` is never published: on a")
+    print("      clone, leave this one out and say so. Exit 2 means «cannot judge».")
+    sys.exit(2)
 
 originales = {rel: hashlib.sha256(b).hexdigest() for rel, b in guardado.items()}
 

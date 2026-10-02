@@ -50,6 +50,28 @@ def version():
         return json.load(f)["meta"]["version_juego"]
 
 
+def exigir_material(ruta, motivo, arreglo, guion):
+    """Stops with exit 2 — «cannot judge» — when the material is not there.
+
+    Exit 2 and not 1, and the difference is not cosmetic. A test that cannot read
+    what it verifies has not failed: it has not run. Measured on a real clone, two
+    of these tests came back with a `FileNotFoundError` traceback and the reader
+    goes looking for the defect in the code, where there is none.
+
+    The message has to name three things or it is not worth having: what is
+    missing, why a clone does not have it, and how to get it back. `probar_demo.py`
+    has always done this; it lives here now so the rest do not each invent it.
+    """
+    if os.path.exists(ruta):
+        return
+    print("RESULT: cannot judge — %s is not there." % os.path.relpath(ruta, RAIZ))
+    print("        %s" % motivo)
+    print("        %s" % arreglo)
+    print("        %s has not run and has not failed: it has nothing to read."
+          % guion)
+    raise SystemExit(2)
+
+
 def inyectar_en_cabeza(html, codigo, etiqueta="the test"):
     """Puts `codigo` right after the REAL `<head ...>` tag, and returns the page.
 
@@ -88,3 +110,45 @@ def inyectar_en_cabeza(html, codigo, etiqueta="the test"):
     if not m:
         raise SystemExit("%s: the HTML has no <head>" % etiqueta)
     return html[:m.end()] + "\n" + codigo + html[m.end():]
+
+
+def enlazar_img(destino, origen):
+    """Points `destino` at `origen`, replacing whatever was there.
+
+    WHY IT DOES NOT DELETE FIRST
+    ----------------------------
+    `os.symlink` fails when the path exists, so the obvious move is to delete
+    it, and that is what nine copies of this idiom did. Two problems, both
+    measured on 1-oct-2026 while checking a fresh clone:
+
+    · `os.unlink` does not delete on this machine: the sandbox intercepts it and
+      moves the file to the trash instead. To do that it RESOLVES the link and
+      builds a trash directory at the root of the mount the target lands on. A
+      link pointing at a second checkout of this project lives under `/home`, so
+      the shim tried `/home/.Trash-1000`, which the user cannot create, and the
+      scripts died with `PermissionError: [Errno 13]` in the middle of their
+      setup — before opening the browser, and naming a trash directory that has
+      nothing to do with the test. That is the whole reason this function
+      exists: the tests have to survive being run from two checkouts on the same
+      machine, which is exactly what checking a clone means.
+
+    · And the old `if not os.path.exists(destino): os.symlink(...)` is wrong
+      when the link exists but its target does not: `exists` follows the link
+      and answers False, so the `os.symlink` that follows dies with
+      `FileExistsError`.
+
+    Renaming over the link does the same job, atomically, and never touches the
+    trash. The temporary name carries the pid and a counter so it cannot
+    collide, and nothing is ever deleted to make room.
+    """
+    if os.path.isdir(destino) and not os.path.islink(destino):
+        import shutil
+        shutil.rmtree(destino, ignore_errors=True)
+    if os.path.islink(destino) and os.readlink(destino) == origen:
+        return
+    tmp, n = "%s.%d" % (destino, os.getpid()), 0
+    while os.path.lexists(tmp):
+        n += 1
+        tmp = "%s.%d.%d" % (destino, os.getpid(), n)
+    os.symlink(origen, tmp)
+    os.replace(tmp, destino)

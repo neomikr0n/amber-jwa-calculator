@@ -22,13 +22,18 @@ the `load` event, so if the report were painted after an `await` the screenshot
 would come out blank. That is why the page's FileReader is replaced with a
 synchronous double (what is doubled is the browser API, not the page's logic).
 
+One of its checks loads every image the page references, and those images are
+game artwork that is not published with the repository. Without them the check is
+skipped and said out loud, and the script exits 2 — «cannot judge» — instead of
+reporting a failure that is not the page's. See the tail of the file.
+
 Usage:  python3 probar_estres.py
 """
-import os, re, shutil, subprocess
+import os, re, subprocess
 import informe_browser
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML, inyectar_en_cabeza
+from rutas import HTML, enlazar_img, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -1256,9 +1261,17 @@ window.addEventListener("load", function(){
   // ---------- images ----------
   var bien = 0, mal = [];
   CLONES.forEach(function(c){ if (c.el.complete && c.el.naturalWidth > 0) bien++; else mal.push(c.src); });
-  if (CLONES.length)
+  /* __HAY_FOTOS__ comes from Python: the creature photos are game artwork and
+     are NOT published with the repository, so on a clone every reference would
+     fail and the failure would be read as a defect of the page. When they are
+     not there the check is SKIPPED and said out loud, and Python turns that into
+     exit 2 — «cannot judge» — instead of a green verdict it did not earn. */
+  if (CLONES.length && __HAY_FOTOS__)
     ok("all the referenced images load", mal.length === 0,
        bien + "/" + CLONES.length + " ok" + (mal.length ? " fail: " + mal.slice(0,3).join(", ") : ""));
+  if (CLONES.length && !__HAY_FOTOS__)
+    log("SKIPPED all the referenced images load",
+        CLONES.length + " references, and no photo to load: they are not in the repository");
 
   log("", "");
   log(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===", "");
@@ -1292,14 +1305,14 @@ __ENTREGA__
 
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
-enlace = os.path.join(DIR, "img")
-if os.path.islink(enlace):
-    if os.readlink(enlace) != IMG:
-        os.unlink(enlace)
-elif os.path.isdir(enlace):
-    shutil.rmtree(enlace, ignore_errors=True)
-if not os.path.exists(enlace):
-    os.symlink(IMG, enlace)
+enlazar_img(os.path.join(DIR, "img"), IMG)
+
+# Are the creature photos here? They are 519 `.webp` files of game artwork and
+# they are NOT published with the repository, so a clone does not have them. One
+# check of this test loads every image the page references, and without the files
+# it fails — which on a clone reads as a defect of the page. It is skipped and
+# named instead, and the script exits 2 rather than claiming a verdict.
+HAY_FOTOS = os.path.isdir(IMG) and any(f.endswith(".webp") for f in os.listdir(IMG))
 
 html = open(HTML, encoding="utf-8").read()
 # Pin the language for this run. The assertions below are written against the
@@ -1311,7 +1324,9 @@ PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
 html = inyectar_en_cabeza(html, PIN, "probar_estres.py")
 m = re.search(r"<body[^>]*>", html)
-html = html[:m.end()] + CAZA + html[m.end():] + DIAG.replace("__ENTREGA__", srv.js("__diag"))
+html = html[:m.end()] + CAZA + html[m.end():] + (DIAG
+        .replace("__ENTREGA__", srv.js("__diag"))
+        .replace("__HAY_FOTOS__", "true" if HAY_FOTOS else "false"))
 # Before opening the browser: if the diagnostic does not compile together with
 # the application —name collision in the global scope—, the test would not run
 # and the symptom would be «it did not deliver the report», which says nothing.
@@ -1345,4 +1360,17 @@ print("-" * 72)
 codigo, lineas = veredicto(informe)
 for l in lineas:
     print(l)
+if codigo == 1:
+    raise SystemExit(1)          # something is really wrong: that is said first
+if codigo == 2:
+    raise SystemExit(2)          # the report itself says why, and it is already printed
+if not HAY_FOTOS:
+    print()
+    print("RESULT: cannot judge — one check did not run: «all the referenced images load».")
+    print("        The creature photos are 519 `.webp` files of game artwork and they are")
+    print("        NOT published with the repository, so on a clone every reference fails")
+    print("        and the failure reads like a defect of the page. The other checks DID run")
+    print("        and came out green. Exit 2, not a failure — and not a green verdict either,")
+    print("        because one check did not run. Leave it out and say so.")
+    raise SystemExit(2)
 raise SystemExit(codigo)

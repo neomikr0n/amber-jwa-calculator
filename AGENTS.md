@@ -118,32 +118,52 @@ major digit down to zero.
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Six of the fourteen need material that is not in the repository**, so on a
-fresh clone they cannot return a verdict. `cache/` is 92 MB of scraped pages,
-excluded by `.gitignore`:
+**Ten of the fourteen need material that is not in the repository**, so on a
+fresh clone they cannot return a verdict. Grouped by what they are missing:
 
-    python3 verificar_fuentes.py  # reads cache/
-    python3 verificar_recetas.py  # reads cache/
-    python3 verificar_stats.py    # reads cache/
+    cache/ — 92 MB of scraped pages, excluded by .gitignore, rebuilt with scrape_paleo.py
+        python3 verificar_fuentes.py
+        python3 verificar_recetas.py
+        python3 verificar_stats.py
+    img/*.webp — 519 files of game artwork, which this project does not distribute
+        python3 probar_estres.py
+        python3 probar_rareza.py
+        python3 probar_ui.py
+    .privado/LEEME.md — never published
+        python3 verificar_motor.py
+        python3 verificar_version.py
+        python3 probar_version.py
+    .privado/amber-demo.html — built from .privado/, and it inlines the photos
+        python3 probar_demo.py
 
-On a fresh clone they do not return a verdict, they crash: `os.listdir` on a
-directory that is not there. Regenerate it once with `python3 scrape_paleo.py`,
-which downloads the dinodex, or leave them out **and say so** rather than
-counting them as passed.
+All ten exit **2** and print `RESULT: cannot judge —`, naming what is missing, why
+a clone does not have it and how to get it back. Exit 2 is not exit 1, and the
+difference is the whole point: **a test that cannot read what it verifies has not
+failed, it has not run.** Leave them out **and say so** rather than counting them as
+passed. The four that do give a verdict on a clone are `modelo.py`,
+`verificar_arbol.py`, `equivalencia.py` and `verificar_idioma.py`.
 
-`probar_demo.py` is the fourth: it reads `amber-demo.html`, which is built from
-`.privado/` and carries copyrighted artwork, so it is not published either. On a
-fresh clone it exits 2 with a message saying exactly that.
+**This count was wrong three times, and the reason is worth keeping.** It said
+**«Three»** until 1-oct-2026, reasoned from the code rather than measured. It then
+said **«Six»**, measured — but only the scripts that *crashed* were counted, and a
+crash is not the only way to fail to judge. Measured properly on 1-oct-2026, one
+script at a time in a clone and recording each exit code, it is **ten**, and the
+four that were missed failed in worse ways than a crash:
 
-`verificar_version.py` and `probar_version.py` are the last two, and they are the
-ones most easily mistaken for a defect in the code: both read `.privado/LEEME.md`,
-which is never published, and both stop with `FAIL` naming that file instead of
-announcing that they cannot judge. This paragraph said **«Three»** until
-1-oct-2026. The count was measured on a real clone — `git clone` into an empty
-directory, one script at a time — and it is six now that `verificar_recetas.py`
-exists. Two of them announce that they cannot judge — `probar_demo.py` and
-`verificar_recetas.py`, which is new and had no reason to be built with the wart;
-the other four crash.
+- `verificar_motor.py` printed `RESULT: FAIL` and a list of things that «no longer
+  add up» when all that had happened was that the LEEME was not there. It judged
+  960 cost fields, 9,408 level-cap fields and the deliverable itself — all of them
+  judgeable on a clone — and then reported a failure over the two size claims it
+  could not read.
+- `probar_estres.py` and `probar_ui.py` reported a failure of the *page* — «all the
+  referenced images load: 9/11 ok» — when the photos simply were not on disk.
+- `probar_rareza.py` was the worst: it printed `RESULT: all OK (17 checks)` **twice**
+  and exited 1, because a third verdict that nobody printed counted the missing
+  photos as failures.
+
+A count reasoned from the code is a guess with a number on it. This one is
+measured, and the way to re-measure it is written above: clone, one script at a
+time, record the exit code.
 
 ## Invariants that are easy to break
 

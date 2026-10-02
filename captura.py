@@ -8,9 +8,9 @@ Generates three PNGs in /tmp/jwa-ui/: calculadora, arbol and mios.
 
 Usage:  python3 captura.py
 """
-import os, re, shutil, subprocess
+import os, re, subprocess
 
-from rutas import HTML
+from rutas import HTML, enlazar_img
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -118,14 +118,7 @@ GUION = r"""
 def preparar():
     os.makedirs(DIR, exist_ok=True)
     os.makedirs(PERFIL, exist_ok=True)
-    enlace = os.path.join(DIR, "img")
-    if os.path.islink(enlace):
-        if os.readlink(enlace) != IMG:
-            os.unlink(enlace)
-    elif os.path.isdir(enlace):
-        shutil.rmtree(enlace, ignore_errors=True)
-    if not os.path.exists(enlace):
-        os.symlink(IMG, enlace)
+    enlazar_img(os.path.join(DIR, "img"), IMG)
 
 
 def capturar(vista, salida, alto):

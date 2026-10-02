@@ -159,10 +159,17 @@ DOCS = [
     (".privado/LEEME.md",
      r"^# Ámbar — calculadora de ADN de Jurassic World Alive ([\d.]+)"),
 ]
+# A document that is not THERE is not a version disagreement, and calling it one
+# would be a false claim. This file is the guard that has to fail when two places
+# disagree; a missing file is a different thing, so the two are counted apart and
+# the exit code says which happened. `.privado/LEEME.md` is the one a clone does
+# not have, and before this it came back as `FAIL — the file is not there`, which
+# reads as «the version is wrong».
+faltan = []
 for rel, patron in DOCS:
     ruta = os.path.join(RAIZ, rel)
     if not os.path.exists(ruta):
-        fallo(rel, "the file is not there, and it states the version")
+        faltan.append(rel)
         continue
     dicho = re.findall(patron, lee(ruta), re.M)
     if not dicho:
@@ -248,9 +255,13 @@ for nombre in sorted(f for f in os.listdir(RAIZ) if f.endswith(".py")):
 print("Game version: %s   (authored once, in %s)"
       % (v, os.path.relpath(DATOS, RAIZ)))
 print("Checked: the 4 places the page shows it, the version inside the embedded")
-print("         data, the 4 documents that state it, the two names that carry")
-print("         no version, the frozen jwa322 identifier, data/ holding a single")
-print("         dataset, and every .py in the root for versioned paths.")
+if faltan:
+    print("         data, the %d of the %d documents that state it that are here, the two"
+          % (len(DOCS) - len(faltan), len(DOCS)))
+else:
+    print("         data, the %d documents that state it, the two" % len(DOCS))
+print("         names that carry no version, the frozen jwa322 identifier, data/")
+print("         holding a single dataset, and every .py in the root for versioned paths.")
 print()
 if fallos:
     print("RESULT: FAIL — %d problem%s" % (len(fallos), "s" if len(fallos) != 1 else ""))
@@ -258,4 +269,14 @@ if fallos:
         print("  · %s" % que)
         print("      %s" % detalle)
     sys.exit(1)
+if faltan:
+    print("RESULT: cannot judge — %d of the %d documents that state the version are not"
+          % (len(faltan), len(DOCS)))
+    print("        in the repository, so this run cannot certify that they agree:")
+    for rel in faltan:
+        print("  · %s" % rel)
+    print("        Every place that IS here agrees, so this is not a FAIL and not a PASS.")
+    print("        Exit 2 means «cannot judge». `.privado/` is never published; on a clone,")
+    print("        leave this one out and say so.")
+    sys.exit(2)
 print("RESULT: PASS — one version, and every place that shows it agrees.")

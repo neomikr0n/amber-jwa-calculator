@@ -22,7 +22,7 @@ expected values to stdout and left it there. It always exited with code 0, so
 it could not fail. Now every row is an OK or a FALLO and the exit code is 1 if
 anything disagrees, 2 if the browser never delivered the report.
 """
-import json, math, os, shutil, subprocess, sys
+import json, math, os, subprocess, sys
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, RAIZ)
@@ -42,7 +42,7 @@ PRUEBA = ["indoraptor", "trykosaurus", "paralidactylus", "aliorasuchus",
           "koolatrodon", "arsionosaurus", "indominus_rex", "acrocanthops",
           "93_classic_t_rex", "rajadorixis", "ankylocodon", "diplotator"]
 
-from rutas import DATOS, inyectar_en_cabeza
+from rutas import DATOS, enlazar_img, inyectar_en_cabeza
 
 cri = json.load(open(DATOS))["criaturas"]
 
@@ -124,11 +124,7 @@ os.makedirs(PERFIL, exist_ok=True)     # Firefox does NOT create the profile: wi
 # get console errors that are not needed to judge this, but they clutter the
 # diagnostic output.
 en = os.path.join(DIR, "img"); IMG = os.path.join(RAIZ, "img")
-if os.path.islink(en):
-    if os.readlink(en) != IMG:
-        os.unlink(en)
-if not os.path.exists(en):
-    os.symlink(IMG, en)
+enlazar_img(en, IMG)
 
 srv = arrancar()
 DIAG = DIAG.replace("__US__", json.dumps(PRUEBA)).replace("__ENTREGA__", srv.js("__eq"))

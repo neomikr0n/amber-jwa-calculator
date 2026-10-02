@@ -150,15 +150,22 @@ The browser tests need Firefox at `/usr/lib/firefox/firefox` and pin the
 interface language to Spanish, which is the language their assertions are
 written in.
 
-**Six of the fourteen need material that is not in the repository**, so on a
+**Ten of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot judge anything: `verificar_fuentes.py`,
-`verificar_stats.py` and `verificar_recetas.py` read `cache/` (92 MB, rebuilt with
-`scrape_paleo.py`), `probar_demo.py` reads `amber-demo.html` (built from
-`.privado/`), and `verificar_version.py` and `probar_version.py` read
-`.privado/LEEME.md`, which is never published. Leave those out **and say so**
-rather than counting them as passed. Two of them announce that they cannot judge
-— `probar_demo.py` and `verificar_recetas.py`; the other four stop with a failure
-that on a clone reads like a defect in the code.
+`verificar_recetas.py` and `verificar_stats.py` read `cache/` (92 MB, rebuilt with
+`scrape_paleo.py`); `probar_estres.py`, `probar_rareza.py` and `probar_ui.py` load
+`img/*.webp` (519 files of game artwork, which this project does not distribute);
+`verificar_motor.py`, `verificar_version.py` and `probar_version.py` read
+`.privado/LEEME.md`; and `probar_demo.py` reads `amber-demo.html`, which is built
+from `.privado/`. The other four — `modelo.py`, `verificar_arbol.py`,
+`equivalencia.py` and `verificar_idioma.py` — do give a verdict on a clone.
+
+All ten **say so**: they print `RESULT: cannot judge —`, name what is missing and
+exit **2**, which is not 1. The difference is not cosmetic — a test that cannot
+read what it verifies has not failed, it has not run — and a clone used to get a
+list of things that «no longer add up» followed by `FAIL`, which reads exactly like
+a defect in the code. Leave them out **and say so** rather than counting them as
+passed.
 
 `verificar_recetas.py` is the one that closes the last hole in the chain.
 Everything else compares the page against `modelo.py`, and both read the same

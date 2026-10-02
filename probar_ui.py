@@ -13,12 +13,18 @@ informe_browser.py), besides leaving it in the screenshot. The script prints the
 report and returns exit code 0 only if everything passes: reading the PNG by eye
 is not a test.
 
+Three of its checks — that the images load and decode, and that the photos of the
+strip are loaded and visible — need the creature photos, and those are game artwork
+that is not published with the repository. Without them the checks are skipped and
+said out loud, and the script exits 2, «cannot judge», instead of reporting a
+failure that is not the page's. See the tail of the file.
+
 Usage:  python3 probar_ui.py
 """
-import os, re, shutil, subprocess, json
+import os, re, subprocess, json
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML, inyectar_en_cabeza
+from rutas import HTML, enlazar_img, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -1220,11 +1226,20 @@ window.addEventListener("load", function(){
   CLONES.forEach(function(c){
     if (c.el.complete && c.el.naturalWidth > 0) bien++; else mal.push(c.src);
   });
-  if (CLONES.length){
+  /* __HAY_FOTOS__ comes from Python. The creature photos are game artwork and
+     are NOT published with the repository, so on a clone every reference would
+     fail and the failure would read like a defect of the page. When they are not
+     there the check is SKIPPED and said out loud, and Python turns that into exit
+     2 — «cannot judge» — instead of a green verdict it did not earn. */
+  if (CLONES.length && __HAY_FOTOS__){
     ok("all the image files load and decode", mal.length === 0,
        bien + "/" + CLONES.length + " ok" + (mal.length ? "  fail: " + mal.slice(0,3).join(", ") : ""));
     var una = CLONES[0].el;
     log("example image", una.naturalWidth + "x" + una.naturalHeight + "  " + una.src.split("/").pop());
+  }
+  if (CLONES.length && !__HAY_FOTOS__){
+    log("SKIPPED all the image files load and decode",
+        CLONES.length + " references, and no photo to load: they are not in the repository");
   }
   log("", "");
   log(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===", "");
@@ -1242,14 +1257,17 @@ __ENTREGA__
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
 # the images are referenced as img/<uuid>.webp, relative to the HTML
-enlace = os.path.join(DIR, "img")
-if os.path.islink(enlace):
-    if os.readlink(enlace) != IMG:
-        os.unlink(enlace)          # os.remove is intercepted by the system shim
-elif os.path.isdir(enlace):
-    shutil.rmtree(enlace, ignore_errors=True)
-if not os.path.exists(enlace):
-    os.symlink(IMG, enlace)
+enlazar_img(os.path.join(DIR, "img"), IMG)
+
+# Are the creature photos here? They are 519 `.webp` files of game artwork and
+# they are NOT published with the repository, so a clone does not have them. One
+# check of this test loads every image the page references, and without the files
+# it fails — which on a clone reads as a defect of the page. It is skipped and
+# named instead, and the script exits 2 rather than claiming a verdict.
+HAY_FOTOS = os.path.isdir(IMG) and any(f.endswith(".webp") for f in os.listdir(IMG))
+# Resolved once, here, so the two places that embed the diagnostic cannot
+# disagree about it.
+DIAG = DIAG.replace("__HAY_FOTOS__", "true" if HAY_FOTOS else "false")
 
 # An error hunter BEFORE the main script: if the script blows up on
 # loading, everything it defines stops existing and the symptom is "X is not defined",
@@ -1338,12 +1356,7 @@ def pasada_tira():
     SHOT2 = os.path.join(DIR2, "tira.png")
     os.makedirs(DIR2, exist_ok=True)
     os.makedirs(PERFIL2, exist_ok=True)
-    enlace = os.path.join(DIR2, "img")
-    if os.path.islink(enlace):
-        if os.readlink(enlace) != IMG:
-            os.unlink(enlace)
-    if not os.path.exists(enlace):
-        os.symlink(IMG, enlace)
+    enlazar_img(os.path.join(DIR2, "img"), IMG)
 
     html = open(HTML, encoding="utf-8").read()
     # Pin the language for this run: the assertions below read the Spanish
@@ -1378,13 +1391,22 @@ window.addEventListener("load", function(){
       vistas.push(im.getAttribute("src") + " " + im.naturalWidth + "x" + im.naturalHeight);
       if (!(im.naturalWidth > 0)) malas.push(im.getAttribute("src"));
     });
-    ok("and the photos are LOADED when the startup finishes, not half-way",
-       imgs.length > 0 && malas.length === 0,
-       malas.length ? "not loaded: " + malas.join(", ") : vistas.join(" | "));
-    // and they are really visible: an image loaded but with visibility:hidden is no good
-    var ocultas = 0;
-    imgs.forEach(function(im){ if (getComputedStyle(im).visibility !== "visible") ocultas++; });
-    ok("and none is hidden because of a load failure", ocultas === 0, ocultas + " hidden");
+    /* The two checks below need the creature photos to be on disk. They are game
+       artwork and are NOT published with the repository, so on a clone there is
+       nothing to load and both would fail — reading like a defect of the page.
+       They are skipped and said out loud; Python turns that into exit 2. */
+    if (__HAY_FOTOS__){
+      ok("and the photos are LOADED when the startup finishes, not half-way",
+         imgs.length > 0 && malas.length === 0,
+         malas.length ? "not loaded: " + malas.join(", ") : vistas.join(" | "));
+      // and they are really visible: an image loaded but with visibility:hidden is no good
+      var ocultas = 0;
+      imgs.forEach(function(im){ if (getComputedStyle(im).visibility !== "visible") ocultas++; });
+      ok("and none is hidden because of a load failure", ocultas === 0, ocultas + " hidden");
+    } else {
+      RES.push("SKIPPED the photos load and are visible: " + imgs.length +
+               " references, and no photo to load: they are not in the repository");
+    }
     // the tree can still be lazy: 519 files at once, no
     var vagas = document.querySelectorAll('#arbolCuerpo img[loading="lazy"]').length;
     RES.push("   (informational) lazy images in the tree: " + vagas);
@@ -1402,7 +1424,8 @@ __ENTREGA__
 </script>"""
     open(FUERA2, "w", encoding="utf-8").write(html)
     with open(FUERA2, "a", encoding="utf-8") as f:
-        f.write(diag.replace("__ENTREGA__", srv2.js("__diag")))
+        f.write(diag.replace("__ENTREGA__", srv2.js("__diag"))
+                    .replace("__HAY_FOTOS__", "true" if HAY_FOTOS else "false"))
     _ok2, _msg2 = comprobar_scripts(html + diag, "probar_ui.py (the strip)")
     print(_msg2)
     if not _ok2:
@@ -1445,12 +1468,7 @@ def pasada_tema():
     PERFIL3 = os.path.join(DIR3, "perfil")
     os.makedirs(DIR3, exist_ok=True)
     os.makedirs(PERFIL3, exist_ok=True)
-    enlace = os.path.join(DIR3, "img")
-    if os.path.islink(enlace):
-        if os.readlink(enlace) != IMG:
-            os.unlink(enlace)
-    if not os.path.exists(enlace):
-        os.symlink(IMG, enlace)
+    enlazar_img(os.path.join(DIR3, "img"), IMG)
 
     CASOS = [
         # (name, what is stored, expected data-tema, expected brand hex)
@@ -1541,4 +1559,24 @@ __ENTREGA__
     return fallos
 
 
-raise SystemExit(codigo or pasada_tira() or pasada_tema())
+codigo_final = codigo or pasada_tira() or pasada_tema()
+# The exit code, in order of what matters most. `codigo or pasada_tira() or
+# pasada_tema()` is kept because the three passes still run in that order, but the
+# result is no longer returned as is: when a check could not run, saying «green»
+# would be claiming a verdict this run did not earn.
+if codigo_final == 1:
+    raise SystemExit(1)
+if codigo_final == 2:
+    raise SystemExit(2)          # the report itself says why, and it is already printed
+if not HAY_FOTOS:
+    print()
+    print("RESULT: cannot judge — the checks that load the creature photos did not run.")
+    print("        `img/*.webp` is 519 files of game artwork and it is NOT published with the")
+    print("        repository, so on a clone there is nothing to load and those checks would")
+    print("        fail, which reads like a defect of the page. They are in the main pass")
+    print("        («all the image files load and decode») and in the strip pass («the photos")
+    print("        are LOADED when the startup finishes» and «none is hidden because of a load")
+    print("        failure»). Everything else DID run and came out green. Exit 2, not a")
+    print("        failure — and not a green verdict either, because part of it did not run.")
+    raise SystemExit(2)
+raise SystemExit(0)

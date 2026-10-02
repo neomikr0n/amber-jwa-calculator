@@ -8,6 +8,14 @@ Unlike equivalencia.py, here there is NO screenshot and no visual reading:
 the comparison is numeric and automatic. If anything differs, it fails with
 exit code 1.
 
+There is a second verdict, and it is the one that used to lie. The engine and
+the deliverable are always judgeable — index.html, build.py and modelo.py are
+all published — but the sizes the LEEME claims are not, because the LEEME lives
+in `.privado/`, which is never published. Until 1-oct-2026 a clone got
+`RESULT: FAIL` and a list of things «that no longer add up», which is exactly
+what a real discrepancy prints. Now the two are separate: what does not add up
+is exit 1, what cannot be read is exit 2 and says so.
+
 Usage:  python3 verificar_motor.py
 """
 import json, math, os, re, subprocess, sys
@@ -327,44 +335,52 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
     silently choosing one. (And the BYTES are compared, not the KB, because the
     KB is rounded.)"""
     fallos_doc = []
+    # What cannot be judged is kept apart from what does not add up, and the
+    # difference is the whole point: both used to print as a list of things that
+    # «no longer add up» followed by `RESULT: FAIL`, so a clone — where the
+    # LEEME is simply not there — got a verdict that read like a real
+    # discrepancy. The engine and the deliverable ARE judgeable on a clone,
+    # because index.html, build.py and modelo.py are all published, so they keep
+    # running and keep reporting; only the sizes the LEEME claims drop out.
+    sin_leeme = []
     # The LEEME lives under .privado/ and is not published: it documents the
     # project for its author, including material about third parties that is
     # deliberately kept out of the repository and off the site. The size claims
     # it makes are still checked, which is why this reads it from there.
     leeme_ruta = os.path.join(RAIZ, ".privado", "LEEME.md")
-    if not os.path.exists(leeme_ruta):
-        fallos_doc.append(("LEEME", "no encuentro .privado/LEEME.md, que es donde vive"))
-        leeme = ""
-    else:
-        leeme = open(leeme_ruta, encoding="utf-8").read()
+    leeme = open(leeme_ruta, encoding="utf-8").read() if os.path.exists(leeme_ruta) else ""
     real_html = os.path.getsize(HTML)
-    ms = re.findall(r"El HTML solo pesa\s*\*\*([\d.]+) bytes \(([\d.]+) KB\)\*\*", leeme)
-    if not ms:
-        fallos_doc.append(("LEEME, HTML size",
-                           "cannot find «El HTML solo pesa **N bytes (M KB)**»; "
-                           "the HTML weighs %d bytes" % real_html))
-    elif len(ms) > 1:
-        fallos_doc.append(("LEEME, HTML size",
-                           "the declaration appears %d times (%s); it has to be a single one"
-                           % (len(ms), " / ".join(a for a, _ in ms))))
-    else:
-        dicho = int(ms[0][0].replace(".", ""))
-        if dicho != real_html:
-            fallos_doc.append(("LEEME, HTML size",
-                               "it says %s bytes and they are %d (%.0f KB)"
-                               % (ms[0][0], real_html, real_html / 1024)))
     fotos = [f for f in os.listdir(IMG) if f.endswith(".webp")]
     mb_fotos = sum(os.path.getsize(os.path.join(IMG, f)) for f in fotos) / 1e6
-    m2 = re.findall(r"las fotos son ([\d,]+) MB", leeme)
-    if not m2:
-        fallos_doc.append(("LEEME, photo size", "cannot find «las fotos son N MB»"))
-    elif len(m2) > 1:
-        fallos_doc.append(("LEEME, photo size",
-                           "the declaration appears %d times (%s); it has to be a single one"
-                           % (len(m2), " / ".join(m2))))
-    elif abs(float(m2[0].replace(",", ".")) - mb_fotos) > 0.15:
-        fallos_doc.append(("LEEME, photo size",
-                           "it says %s MB and they are %.1f MB in %d webp" % (m2[0], mb_fotos, len(fotos))))
+    if not leeme:
+        sin_leeme.append("LEEME, the two sizes it claims")
+    else:
+        ms = re.findall(r"El HTML solo pesa\s*\*\*([\d.]+) bytes \(([\d.]+) KB\)\*\*", leeme)
+        if not ms:
+            fallos_doc.append(("LEEME, HTML size",
+                               "cannot find «El HTML solo pesa **N bytes (M KB)**»; "
+                               "the HTML weighs %d bytes" % real_html))
+        elif len(ms) > 1:
+            fallos_doc.append(("LEEME, HTML size",
+                               "the declaration appears %d times (%s); it has to be a single one"
+                               % (len(ms), " / ".join(a for a, _ in ms))))
+        else:
+            dicho = int(ms[0][0].replace(".", ""))
+            if dicho != real_html:
+                fallos_doc.append(("LEEME, HTML size",
+                                   "it says %s bytes and they are %d (%.0f KB)"
+                                   % (ms[0][0], real_html, real_html / 1024)))
+        m2 = re.findall(r"las fotos son ([\d,]+) MB", leeme)
+        if not m2:
+            fallos_doc.append(("LEEME, photo size", "cannot find «las fotos son N MB»"))
+        elif len(m2) > 1:
+            fallos_doc.append(("LEEME, photo size",
+                               "the declaration appears %d times (%s); it has to be a single one"
+                               % (len(m2), " / ".join(m2))))
+        elif abs(float(m2[0].replace(",", ".")) - mb_fotos) > 0.15:
+            fallos_doc.append(("LEEME, photo size",
+                               "it says %s MB and they are %.1f MB in %d webp"
+                               % (m2[0], mb_fotos, len(fotos))))
 
     # ---------- the deliverable has to be what build.py produces ----------
     """On 25-Sep an HTML of 255,844 bytes appeared on disk that was NOT the
@@ -436,6 +452,13 @@ process.stdout.write(JSON.stringify({base: salida, nm: salidaNm}));
         print()
         print("RESULT: FAIL")
         return 1
+    if sin_leeme:
+        print("RESULT: cannot judge — %s" % ", ".join(sin_leeme))
+        print("        `.privado/LEEME.md` is never published, so on a clone it is not there.")
+        print("        Everything else WAS judged and it agrees: the %d cost fields, the %d" % (total, total_nm))
+        print("        level-cap fields and the deliverable itself. What is missing is only the")
+        print("        two figures the LEEME states about this build. Exit 2, not a failure.")
+        return 2
     print("RESULT: %d/%d cost fields and %d/%d level-cap fields identical "
           "between the HTML engine and modelo.py." % (total, total, total_nm, total_nm))
     print("index.html is exactly what build.py produces, and "

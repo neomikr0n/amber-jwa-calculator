@@ -53,9 +53,18 @@ from modelo import (BOOST_FRACCION, BOOST_VELOCIDAD, MEJORA_NIVEL_MIN,
                     MEJORA_ORDEN, MEJORA_PASOS, MULT_NIVEL, PUNTOS_OMEGA_NIVEL,
                     TOPE_BOOST_STAT)
 
-from rutas import DATOS
+from rutas import DATOS, exigir_material, version
 
 CACHE = os.path.join(RAIZ, "cache")
+
+# Exit 2, not a traceback: on a fresh clone this script used to die on the first
+# `os.listdir` with a FileNotFoundError, which reads like a defect in the code.
+# It has not run and it has not failed — it has nothing to read.
+exigir_material(
+    CACHE,
+    "It is 92 MB of pages downloaded from paleo.gg, and it is not in the repository.",
+    "Rebuild it once with:  python3 scrape_paleo.py --version %s" % version(),
+    "verificar_stats.py")
 IMG = os.path.join(RAIZ, "img")
 
 fallos = []

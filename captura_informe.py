@@ -28,7 +28,7 @@ you see the result: all of them at the Fusion level and the shortcut gone.
 """
 import os, sys, subprocess
 
-from rutas import HTML
+from rutas import HTML, enlazar_img
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -91,9 +91,7 @@ GUION = r"""
 
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
-enlace = os.path.join(DIR, "img")
-if not os.path.exists(enlace):
-    os.symlink(IMG, enlace)
+enlazar_img(os.path.join(DIR, "img"), IMG)
 
 ruta = os.path.join(DIR, "informe.html")
 open(ruta, "w", encoding="utf-8").write(open(HTML, encoding="utf-8").read() + GUION)

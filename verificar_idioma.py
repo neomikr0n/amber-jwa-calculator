@@ -32,7 +32,7 @@ import sys
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML, inyectar_en_cabeza
+from rutas import HTML, enlazar_img, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMGDIR = os.path.join(RAIZ, "img")
@@ -156,9 +156,7 @@ __ENTREGA__
 os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
 # The page loads img/ relatively: the symlink puts the photos within reach.
-enlace = os.path.join(DIR, "img")
-if not os.path.exists(enlace):
-    os.symlink(IMGDIR, enlace)
+enlazar_img(os.path.join(DIR, "img"), IMGDIR)
 
 env = dict(os.environ)
 env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",

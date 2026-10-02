@@ -38,7 +38,7 @@ RAIZ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, RAIZ)
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
-from rutas import HTML
+from rutas import HTML, exigir_material
 
 DEMO = os.path.join(RAIZ, "amber-demo.html")
 DIR = "/tmp/jwa-demo"
@@ -50,10 +50,13 @@ CRIATURA = "fukuitops"
 NIVEL = 34
 
 if not os.path.exists(DEMO):
-    print("!! there is no amber-demo.html: it is built from .privado/, which is not")
-    print("   published, so on a fresh clone this test is NOT judgeable.")
-    print("   python3 build.py && python3 build_demo.py")
-    raise SystemExit(2)
+    exigir_material(
+        DEMO,
+        "It is built from `.privado/`, which is not published: the demo inlines the "
+        "creature photos, which are game artwork this project does not distribute.",
+        "Build it with `python3 build.py && python3 build_demo.py`, which needs the saved "
+        "file under `.privado/`.",
+        "probar_demo.py")
 
 # ---------------------------------------------------------------- 1) staleness
 fuente = open(DEMO, encoding="utf-8").read()

@@ -14,6 +14,13 @@ reading the computed color proves the browser applies it.
 And the report travels over synchronous XHR (see informe_browser.py), not inside a
 PNG: if a tag comes out with no color, the script fails with exit code 1.
 
+There is a third verdict, and it is the one that used to contradict the other
+two. The photo-frame table reads `img/*.webp`; those 519 files are game artwork
+and are not published, so on a clone there is nothing to measure. That used to
+count as a failure, and since the two printed verdicts are the browser's and
+this one decides the exit code, the script printed «RESULT: all OK (17 checks)»
+and exited 1 at the same time. Now what cannot be measured exits 2 and says so.
+
 Generates /tmp/jwa-rareza/rareza.png
 
 Usage:
@@ -26,7 +33,7 @@ Usage:
 import os, re, subprocess, sys
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
-from rutas import DATOS, HTML, inyectar_en_cabeza
+from rutas import DATOS, HTML, enlazar_img, inyectar_en_cabeza
 
 VISUAL = "--visual" in sys.argv
 
@@ -350,13 +357,22 @@ def hexs(rgb):
     return "#%02x%02x%02x" % rgb
 
 fallosMarco = 0
+# What could NOT be measured, kept apart from what came out WRONG. The creature
+# photos are game artwork and are not in the repository, so on a clone there is
+# no frame to measure — and counting that as a failure is how this script came
+# to print «RESULT: all OK (17 checks)» twice and exit 1 at the same time. The
+# two verdicts it prints are the browser's; this counter decides the exit code,
+# and nobody was reading the contradiction. Found on 1-oct-2026 by running it
+# from a clone.
+sin_fotos = []
+sin_datos = False
 print()
 print("=== the photo frame: it comes from the WebP, not the CSS ===")
 print("-" * 72)
 
 if not os.path.exists(DATOS):
     print("!! %s not found: without it there are no rarities to compare" % DATOS)
-    fallosMarco += 1
+    sin_datos = True
 else:
     cr = json.load(open(DATOS, encoding="utf-8"))["criaturas"]
     print("%-11s %4s  %-22s %-8s %-9s %-9s %s" %
@@ -366,7 +382,7 @@ else:
               if v.get("rareza") == r and os.path.exists(os.path.join(FOTO, u + ".webp"))]
         if not us:
             print("%-11s %4d  (no images)" % (ES[r], 0))
-            fallosMarco += 1
+            sin_fotos.append(ES[r])
             continue
         cnt = collections.Counter()
         fam = collections.Counter()
@@ -758,16 +774,8 @@ auditoria_js = """
        "entrega": srv2.js("__diag")}
 
 # the deliverable needs img/ next to it
-enlace = os.path.join(DIR, "img")
 IMGDIR = os.path.join(RAIZ, "img")
-if os.path.islink(enlace):
-    if os.readlink(enlace) != IMGDIR:
-        os.unlink(enlace)
-elif os.path.isdir(enlace):
-    import shutil
-    shutil.rmtree(enlace, ignore_errors=True)
-if not os.path.exists(enlace):
-    os.symlink(IMGDIR, enlace)
+enlazar_img(os.path.join(DIR, "img"), IMGDIR)
 
 AUD = os.path.join(DIR, "auditoria.html")
 # Before opening the browser: if the audit does not compile alongside the application
@@ -793,5 +801,32 @@ print("-" * 72)
 codigo2, lineas2 = veredicto(aud)
 for l in lineas2:
     print(l)
-raise SystemExit(codigo or codigo2 or (1 if fallosMarco else 0))
+
+# The exit code, in order of what matters most. It used to be
+# `codigo or codigo2 or (1 if fallosMarco else 0)`, which is three codes
+# fighting in one expression: the frame counter could return 1 while both
+# printed verdicts said «all OK». Now a real failure is 1, something that could
+# not be read is 2, and only then is it green.
+if fallosMarco or codigo == 1 or codigo2 == 1:
+    raise SystemExit(1)
+if codigo == 2 or codigo2 == 2:
+    raise SystemExit(2)        # the report itself says why, and it is already printed
+if sin_datos:
+    print()
+    print("RESULT: cannot judge — %s is not there, so no rarity could be compared."
+          % os.path.relpath(DATOS, RAIZ))
+    print("        That file IS published with the repository, so this is not a clone:")
+    print("        something moved it. Exit 2, not a failure.")
+    raise SystemExit(2)
+if sin_fotos:
+    print()
+    print("RESULT: cannot judge — %d of the %d rarities have no photo to measure: %s"
+          % (len(sin_fotos), len(ORDEN), ", ".join(sin_fotos)))
+    print("        The creature photos are 519 `.webp` files of game artwork and they are")
+    print("        NOT published with the repository, so on a clone there is no frame to")
+    print("        measure here. The two verdicts above DID run — they are the browser's and")
+    print("        both came out green — and what could not be read is this one table.")
+    print("        Exit 2, not a failure. Leave it out and say so rather than counting it.")
+    raise SystemExit(2)
+raise SystemExit(0)
 

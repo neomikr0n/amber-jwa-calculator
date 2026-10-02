@@ -201,7 +201,12 @@ time, record the exit code.
   in the browser by `probar_ui.py`, not read off the CSS rule, because a rule that
   says 50% does not say what the browser did with it. If the help moves back onto
   the label there would be two tooltips for one question. The per-row `title` STAYS:
-  it says something else, the division of THAT row.
+  it says something else, the division of THAT row. Its ring is
+  `1px solid currentColor` and **not** `var(--borde)`: measured against the panel
+  behind it, the hairline `--borde` gives 1.39:1 in the default theme and 1.31:1 in
+  «boring», so the badge would read as a bare «?». `probar_ui.py` sweeps the seven
+  themes in one page and holds the ring at 3:1 or better — the worst theme sits at
+  5.93:1.
 - **The Omega training table comes only from `detail.points`, and only Omegas have
   it.** `criaturas[u].entrenamiento` (scraper) → `C[u][11] = [cap, delta, pcap]` per
   stat, in the order of `M.statsOrden`. `verificar_stats.py` checks it in both

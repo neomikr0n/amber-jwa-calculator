@@ -298,6 +298,12 @@ project with no connection to the game's owners.
 
 ## 💛 Thanks
 
+- **And of course to Ludia 🦖**, who make
+  **[Jurassic World Alive](https://jurassicworldalive.com/)**, the game all of
+  this is about. Every creature, every stat and every cost in Amber is a
+  description of their work, and without the game there would be nothing to
+  calculate. Amber is an unofficial fan project with no connection to them.
+  Thank you for the game.
 - **Congratulations to [paleo.gg](https://paleo.gg) 🎉.** Their dinodex is the
   backbone of this tool: every creature, every DNA cost, every coin figure and
   every ingredient in Amber comes from their pages, and their own calculator is

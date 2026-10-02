@@ -61,7 +61,11 @@ creature photos are missing there on purpose — see the note at the end.
 
 ## 🔧 Build it
 
-Only Python 3 is needed. There are no third-party dependencies.
+Only Python 3 is needed, and there are no third-party dependencies — neither to
+build it nor to run the fourteen tests. There is one exception and it is in
+neither path: `img/readme/generar-titulo.py`, which draws the title artwork at the
+top of this file, needs `fontTools` and is only run by hand when that artwork has
+to change. The three SVGs it writes are committed, so a clone never needs it.
 
 ```bash
 python3 build.py

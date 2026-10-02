@@ -28,7 +28,14 @@ quietly deleted. Three habits follow:
 Writes `index.html`, and that is the only output. It is generated: never edit it
 by hand.
 
-Python 3 only, no third-party dependencies.
+Python 3 only, no third-party dependencies — to build it and to test it. The one
+exception is `img/readme/generar-titulo.py`, which draws the README's title
+artwork and needs `fontTools`. It is in neither path: it is run by hand, only when
+that artwork has to change, and the three SVGs it writes are committed. It is
+kept because the alternative is worse — an asset that nothing in the repository
+can regenerate, and a set of colours whose reason (contrast, measured) lives in
+nobody's memory. If a dependency ever appears in `build.py` or in a test, that is
+a different thing and it does not get this exemption.
 
 ## Updating to a new game version
 

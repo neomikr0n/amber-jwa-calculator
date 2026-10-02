@@ -98,6 +98,7 @@ major digit down to zero.
     python3 verificar_motor.py    # the HTML engine against modelo.py, field by field
     python3 verificar_arbol.py    # the fusion tree, node by node
     python3 verificar_fuentes.py  # ingredient relationships and fusion levels
+    python3 verificar_recetas.py  # the recipes, against the RENDERED source page
     python3 verificar_stats.py    # stats, boosts and the level multiplier table
     python3 equivalencia.py       # the engine in a real browser vs modelo.py
     python3 probar_ui.py          # interface behaviour in a real browser
@@ -110,11 +111,12 @@ major digit down to zero.
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Five of the thirteen need material that is not in the repository**, so on a
+**Six of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot return a verdict. `cache/` is 92 MB of scraped pages,
 excluded by `.gitignore`:
 
     python3 verificar_fuentes.py  # reads cache/
+    python3 verificar_recetas.py  # reads cache/
     python3 verificar_stats.py    # reads cache/
 
 On a fresh clone they do not return a verdict, they crash: `os.listdir` on a
@@ -122,7 +124,7 @@ directory that is not there. Regenerate it once with `python3 scrape_paleo.py`,
 which downloads the dinodex, or leave them out **and say so** rather than
 counting them as passed.
 
-`probar_demo.py` is the third: it reads `amber-demo.html`, which is built from
+`probar_demo.py` is the fourth: it reads `amber-demo.html`, which is built from
 `.privado/` and carries copyrighted artwork, so it is not published either. On a
 fresh clone it exits 2 with a message saying exactly that.
 
@@ -131,8 +133,10 @@ ones most easily mistaken for a defect in the code: both read `.privado/LEEME.md
 which is never published, and both stop with `FAIL` naming that file instead of
 announcing that they cannot judge. This paragraph said **«Three»** until
 1-oct-2026. The count was measured on a real clone — `git clone` into an empty
-directory, one script at a time — and it is five. Only `probar_demo.py` announces
-that it cannot judge.
+directory, one script at a time — and it is six now that `verificar_recetas.py`
+exists. Two of them announce that they cannot judge — `probar_demo.py` and
+`verificar_recetas.py`, which is new and had no reason to be built with the wart;
+the other four crash.
 
 ## Invariants that are easy to break
 

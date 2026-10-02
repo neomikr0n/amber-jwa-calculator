@@ -130,6 +130,7 @@ python3 modelo.py             # 40 self-check cases plus level-cap invariants
 python3 verificar_motor.py    # the HTML engine against modelo.py, field by field
 python3 verificar_arbol.py    # the fusion tree, node by node
 python3 verificar_fuentes.py  # ingredient relationships and fusion levels
+python3 verificar_recetas.py  # the recipes, against the RENDERED source page
 python3 verificar_stats.py    # stats, boosts and the level multiplier table
 python3 equivalencia.py       # the engine inside a real browser vs modelo.py
 python3 probar_ui.py          # interface behaviour in a real browser
@@ -145,14 +146,22 @@ The browser tests need Firefox at `/usr/lib/firefox/firefox` and pin the
 interface language to Spanish, which is the language their assertions are
 written in.
 
-**Five of the thirteen need material that is not in the repository**, so on a
-fresh clone they cannot judge anything: `verificar_fuentes.py` and
-`verificar_stats.py` read `cache/` (92 MB, rebuilt with `scrape_paleo.py`),
-`probar_demo.py` reads `amber-demo.html` (built from `.privado/`), and
-`verificar_version.py` and `probar_version.py` read `.privado/LEEME.md`, which is
-never published. Leave those out **and say so** rather than counting them as
-passed. Only `probar_demo.py` announces that it cannot judge: the other four stop
-with a failure that on a clone reads like a defect in the code.
+**Six of the fourteen need material that is not in the repository**, so on a
+fresh clone they cannot judge anything: `verificar_fuentes.py`,
+`verificar_stats.py` and `verificar_recetas.py` read `cache/` (92 MB, rebuilt with
+`scrape_paleo.py`), `probar_demo.py` reads `amber-demo.html` (built from
+`.privado/`), and `verificar_version.py` and `probar_version.py` read
+`.privado/LEEME.md`, which is never published. Leave those out **and say so**
+rather than counting them as passed. Two of them announce that they cannot judge
+— `probar_demo.py` and `verificar_recetas.py`; the other four stop with a failure
+that on a clone reads like a defect in the code.
+
+`verificar_recetas.py` is the one that closes the last hole in the chain.
+Everything else compares the page against `modelo.py`, and both read the same
+`data/jwa.json`: if the extraction were wrong, the two would be wrong together.
+That script re-reads the ingredients and the children from the **rendered HTML**
+of the cached page, while `scrape_paleo.py` reads the JSON payload, so the
+extraction is compared against the source through a second door.
 
 ## 📚 Where the data comes from
 

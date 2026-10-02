@@ -17,7 +17,10 @@ default, and the choice is remembered — and it ships with **seven themes**: fi
 on the amber base, plus the deep-black default and the original slate-and-green
 look it started as. The screenshot above is one of them, *Amber-OLED*.
 
-**Live site:** _not published yet_
+**Live site:** **[neomikr0n.github.io/amber-jwa-calculator](https://neomikr0n.github.io/amber-jwa-calculator/)**
+
+It is the same `index.html` this repository builds, served as it is. The
+creature photos are missing there on purpose — see the note at the end.
 
 ---
 

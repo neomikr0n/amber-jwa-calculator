@@ -58,6 +58,40 @@ carries a version, and that is deliberate:
 Do not put a version in a file name, and do not add a second output. If a future
 update makes either of those look like tidying, read this section again first.
 
+## Releases
+
+The release number is a DIFFERENT fact from the game version, and it lives in a
+different place: **the git tag, and nowhere else.** It is never written into
+`index.html`, into `data/jwa.json` or into any document. Writing it down would
+create a second version to keep in sync, which is the exact failure the section
+above removed — and `verificar_version.py` does not guard it, so nothing would
+catch it drifting.
+
+The form is `v0.<game minor>.<n>`, one step at a time:
+
+    v0.23.0   the first release of the 3.23 line
+    v0.23.1   the next one
+    v0.23.2   ...
+
+**Nothing bumps this automatically.** A commit does not move the number. Before
+proposing the next one, read the record — which is the repository itself, not
+anybody's memory:
+
+    git log --oneline $(git describe --tags --abbrev=0)..HEAD
+
+That list is what "how big was this" is judged on, and it is the same list for
+whoever reads it next, in this session or in another one.
+
+**Only the first digit can carry a big change**, because the middle one is taken
+by the game. So a change that is not a small step forward is `v1.0.0`, not
+`v0.24.0` — `0.24.0` is reserved for JWA 3.24. The size of a release is also said
+in the tag message, which is where it is actually read.
+
+One consequence to keep in mind rather than discover: JWA 4.0 would want
+`v0.0.0`, which sorts *below* `v0.23.0`. When the game reaches 4.0 the sensible
+move is to promote the tool to `v1.0.0` and say so, not to follow the game's
+major digit down to zero.
+
 ## Run everything before committing
 
     python3 modelo.py             # 40 self-check cases plus level-cap invariants

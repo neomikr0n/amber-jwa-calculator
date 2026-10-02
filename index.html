@@ -1231,10 +1231,19 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
    word reads as a typo.
    Asked for on 2-oct-2026 (n30: «mejor a un lado de sesiones de darde pon
    un "?" encerrado en un circulo … y ahi al pasar el mouse que despliegue la
-   ayuda que tienes cuando se pasa por el texto ahora mismo»). */
+   ayuda que tienes cuando se pasa por el texto ahora mismo»).
+
+   The ring is `currentColor` and NOT `var(--borde)`, and that is a measured
+   decision: against the panel behind it, the hairline `--borde` gives 1.39:1 in
+   the default theme and 1.31:1 in «boring» — an outline nobody sees, so the badge
+   reads as a bare «?», which is the typo look the circle exists to avoid. Across
+   the seven themes `--borde` swings between 1.31 and 19.88. Tying the ring to the
+   glyph's own colour makes the worst case 5.9:1 and stops the badge's visibility
+   from depending on which theme happens to be on. The sweep in `probar_ui.py`
+   measures it, theme by theme. */
 .ayuda{
   display:inline-flex;align-items:center;justify-content:center;
-  width:15px;height:15px;border-radius:50%;border:1px solid var(--borde);
+  width:15px;height:15px;border-radius:50%;border:1px solid currentColor;
   color:var(--tx2);font-size:10px;font-weight:600;letter-spacing:0;
   text-transform:none;cursor:help;vertical-align:middle;margin-left:6px;
 }

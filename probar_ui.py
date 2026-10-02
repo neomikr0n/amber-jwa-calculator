@@ -740,6 +740,64 @@ try {
        !!es && es.borderRadius === "50%" && ancho >= 12 && Math.abs(ancho - alto) < 1.5,
        es ? ancho + "x" + alto + " · radio " + es.borderRadius : "(no badge)");
 
+    /* The seven themes, one after the other, in the SAME page: the theme CSS is
+       keyed on `data-tema`, so switching the attribute exercises the real cascade
+       and seven reloads would say nothing extra. The ring was `var(--borde)` until
+       2-oct-2026 and this sweep is why it is not any more: against the panel behind
+       it, `--borde` gave 1.39:1 in the default theme and 1.31:1 in «boring» — an
+       outline nobody sees, so the badge read as a bare «?». The theme is put back
+       where it was at the end, for the same reason `elegir()` is restored: a check
+       that leaves the page changed breaks the checks that come after it. */
+    if (insignia){
+      var raiz = document.documentElement;
+      var temaAntes = raiz.getAttribute("data-tema");
+      function aRGB(s){
+        var m = /rgba?\(([^)]+)\)/.exec(s);
+        if (!m) return null;
+        var q = m[1].split(",").map(parseFloat);
+        return {r:q[0], g:q[1], b:q[2], a: q.length > 3 ? q[3] : 1};
+      }
+      function lum(c){
+        function f(v){ v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }
+        return 0.2126*f(c.r) + 0.7152*f(c.g) + 0.0722*f(c.b);
+      }
+      function contraste(a, b){
+        if (!a || !b) return 0;
+        var la = lum(a), lb = lum(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+      }
+      /* The background the badge is really on: the cell and the table are
+         transparent, so it is the first ancestor that paints something opaque. */
+      function fondoDe(el){
+        var n = el;
+        while (n && n !== document.documentElement){
+          var c = aRGB(getComputedStyle(n).backgroundColor);
+          if (c && c.a > 0.5) return c;
+          n = n.parentElement;
+        }
+        return aRGB(getComputedStyle(document.body).backgroundColor);
+      }
+      var malos = [], peor = 99, peorTema = "";
+      ["yellow", "crystal", "neon", "oled", "liquid", "cinema", "boring"].forEach(function(t){
+        if (t === "yellow") raiz.removeAttribute("data-tema");
+        else raiz.setAttribute("data-tema", t);
+        var e3 = getComputedStyle(insignia);
+        var a3 = parseFloat(e3.width), h3 = parseFloat(e3.height);
+        var r3 = contraste(aRGB(e3.borderTopColor), fondoDe(insignia));
+        if (r3 < peor){ peor = r3; peorTema = t; }
+        if (e3.borderRadius !== "50%" || Math.abs(a3 - h3) > 1.5)
+          malos.push(t + ": not a circle (" + a3 + "x" + h3 + ")");
+        if (r3 < 3)
+          malos.push(t + ": ring at " + r3.toFixed(2) + ":1");
+      });
+      if (temaAntes === null) raiz.removeAttribute("data-tema");
+      else raiz.setAttribute("data-tema", temaAntes);
+      ok("the badge is a circle in the seven themes, and its ring stays visible in all of them",
+         malos.length === 0,
+         malos.length ? malos.join(" | ")
+                      : "worst ring " + peor.toFixed(2) + ":1, in «" + peorTema + "»");
+    }
+
     /* Every row that shows a figure has to BE that figure: the DNA needed of that
        row divided by the session's maximum at that level, rounded up. It is
        recomputed here from what the row prints, so a column that painted a

@@ -167,6 +167,34 @@ time, record the exit code.
 
 ## Invariants that are easy to break
 
+- **The darting figures come from two sources, and legendary and unique have
+  ELEVEN levels nobody has published.** `DARDO_BASE` in `modelo.py` gives the DNA
+  a direct hit brings as `base + player level` (common 10, rare 6, epic 5, omega 4,
+  legendary 3, unique 1). The JWA wiki's *Encounters* page states that rule and
+  its level 1–20 table reproduces it in 199 of its 200 cells; the odd one out is
+  level 1, unique, free, where the page prints 14 and the rule gives 24 — 14 is not
+  divisible by 12, DNA per dart is a whole number, and the VIP cell of that same
+  row says 30 = 2 × 15, so the page is what is wrong. Ludia's *Player Cap Level Up
+  + FAQ* (6-aug-2025) raised the cap to 35 and publishes the value at 21, 25, 30
+  and 35 for the six rarities: common, rare, epic and omega follow the rule at all
+  four, and **legendary and unique break it**, which is exactly what the warning in
+  that same note describes. The eleven levels in between are `None` on purpose and
+  the interface shows «—» with the reason on hover: **do not interpolate them.**
+  `DARDO_POR_SESION` is 15 — the VIP column — because n30's two figures, 600 epic
+  and 675 common at level 35, are 40 × 15 and 45 × 15; without VIP they would be
+  480 and 540. Omega below level 21 is the single inference in the table and the
+  code says so. `modelo.py` self-checks it (38 cases, its own line of output) and
+  `probar_ui.py` re-derives every row of the report from `C` and `M.locDardeo`
+  instead of trusting the page.
+- **The darting column exists only for creatures that are darted on the map, and
+  every one of them is a base creature.** 148 of the 519 — 147 darted and nothing
+  else, plus Moros Intrepidus, which has a continental zone and a Strike Tower —
+  and **none of the 248 hybrids has a darting location**, which
+  `verificar_fuentes.py` pins. The column divides the row's **DNA needed** (not
+  what is missing: what you already hold is not subtracted) by the session, rounded
+  up, so it is a FLOOR on the work and the hover says so. It is read with the
+  player level of the box next to the search box, which is clamped to 1..35 and
+  saved under `jwa322.nivelJugador` — its own key, so «Clear all» cannot wipe it.
 - **The Omega training table comes only from `detail.points`, and only Omegas have
   it.** `criaturas[u].entrenamiento` (scraper) → `C[u][11] = [cap, delta, pcap]` per
   stat, in the order of `M.statsOrden`. `verificar_stats.py` checks it in both
@@ -350,9 +378,17 @@ for exactly that reason.
 ## Storage keys are a contract with saved data
 
 The interface keeps the user's creatures in `localStorage` under `jwa322.mios`,
-`jwa322.inventario` and `jwa322.tema`. **Renaming one silently wipes what the
-user has entered**, with no error and no warning. If a key ever has to change,
-read the old one and write the new one in the same step.
+`jwa322.inventario`, `jwa322.tema`, `jwa322.idioma` and `jwa322.nivelJugador`.
+**Renaming one silently wipes what the user has entered**, with no error and no
+warning. If a key ever has to change, read the old one and write the new one in
+the same step.
+
+`jwa322.nivelJugador` is the player level the darting column is read with. It is
+its own key and **not** a field of the inventory, so «Clear all» — which is about
+the collection — does not reset it. And it is the one key the page READS BEFORE
+the tests can clean it: `probar_ui.py` and `probar_estres.py` have to remove it
+AND put the value back by hand, through the page's own handler, the same way they
+already do with `INV` and `MIS`. Removing the key alone is not enough.
 
 ## What must never be published
 

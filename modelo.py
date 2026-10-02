@@ -268,6 +268,102 @@ LOC_ETIQUETAS = {
 }
 
 
+# --------------------------------------------------------------------------
+# 7b. How much DNA one darting session gives
+# --------------------------------------------------------------------------
+# The report shows, next to each creature you can hunt, how many darting
+# sessions it takes to gather the DNA that creature needs. That figure needs the
+# DNA a single dart brings, and that is what this table is.
+#
+# MEASURED from two independent sources, and they agree:
+#
+#   1. The JWA wiki's «Encounters» page gives the rule: a DIRECT HIT on a common
+#      scores `10 + player level` — 11 at level 1, 30 at level 20 — and the
+#      amount drops by 4 for rares, 5 for epics, 7 for legendaries and 9 for
+#      uniques. The same page carries the maximum DNA per encounter for levels 1
+#      to 20, for free players (12 darts) and for VIP (15). Checked cell by cell,
+#      the rule reproduces 199 of those 200 cells. The odd one out is level 1,
+#      unique, free: the page says 14 and the rule says 24. THE PAGE IS THE ONE
+#      THAT IS WRONG — 14 is not divisible by 12, the DNA per dart is a whole
+#      number, and the VIP cell of that same row says 30 = 2 x 15, which is the
+#      rule.
+#
+#   2. Ludia's own note «Player Cap Level Up + FAQ» (6-aug-2025) raises the
+#      player cap from 20 to 35 and publishes the value at levels 21, 25, 30 and
+#      35 for all six rarities. Its own warning: «Please note that the max DNA
+#      value will not increase with every level at every rarity.»
+#
+# Common, rare, epic and omega follow the rule at all four of those points, so
+# they are exact from 1 to 35. LEGENDARY AND UNIQUE BREAK THE RULE after 21 —
+# which is exactly what that warning describes — and only those four points are
+# published. The levels in between are left as None: they are NOT interpolated,
+# and the interface shows no figure there rather than an invented one.
+#
+# Omega is the single inference in the table: it has no column in the wiki's
+# 1-20 table, so below level 21 its value comes from the rule and not from a
+# published row. The rule fits all four published omega points exactly.
+DARDO_BASE = {"common": 10, "rare": 6, "epic": 5, "omega": 4,
+              "legendary": 3, "unique": 1}
+
+# The rarities whose value stops following the rule, with the points that ARE
+# published. For them the rule is used up to DARDO_HASTA_REGLA and nothing is
+# known between two published points.
+DARDO_PUBLICADO = {
+    "legendary": {21: 24, 25: 26, 30: 28, 35: 31},
+    "unique":    {21: 22, 25: 23, 30: 25, 35: 26},
+}
+DARDO_HASTA_REGLA = 21
+
+# Darts per darting session: 15 with VIP, 12 without. n30 gave the level-35
+# figures «600 epic, 675 common», and both are the VIP column — 40 x 15 and
+# 45 x 15. Without VIP they would be 480 and 540, which is why this is a named
+# constant and not a 15 buried inside a formula.
+DARDO_POR_SESION = 15
+NIVEL_JUGADOR_MAX = 35
+
+
+def dardo(rareza, nivel):
+    """The DNA a single direct hit brings, or None when that is not published.
+
+    None is not zero and it is not «the nearest known value»: it is «this is not
+    known», and the caller is expected to show nothing rather than a number.
+    """
+    if not 1 <= nivel <= NIVEL_JUGADOR_MAX:
+        return None
+    publicado = DARDO_PUBLICADO.get(rareza)
+    if publicado:
+        if nivel in publicado:
+            return publicado[nivel]
+        if nivel > DARDO_HASTA_REGLA:
+            return None                 # between two published points: unknown
+    base = DARDO_BASE.get(rareza)
+    return None if base is None else base + nivel
+
+
+def adn_por_sesion(rareza, nivel, dardos=DARDO_POR_SESION):
+    """The most DNA one darting session can give, or None when not known."""
+    d = dardo(rareza, nivel)
+    return None if d is None else d * dardos
+
+
+def sesiones_dardeo(adn_necesario, rareza, nivel, dardos=DARDO_POR_SESION):
+    """How many darting sessions it takes to gather `adn_necesario`.
+
+    Rounded UP, because part of a session is a whole session: it is the number
+    of times the creature has to turn up on the map.
+
+    It is a FLOOR on the work and not a forecast. It assumes every dart of the
+    session hits the middle of the target, which is the best a session can do, so
+    the real figure is this one or more.
+    """
+    if adn_necesario <= 0:
+        return 0
+    porSesion = adn_por_sesion(rareza, nivel, dardos)
+    if not porSesion:
+        return None
+    return -(-adn_necesario // porSesion)       # integer ceiling
+
+
 # ==========================================================================
 #  Functions
 # ==========================================================================
@@ -557,6 +653,60 @@ def _comprobar():
     eq("omega sin crear con 100", nivel_maximo("omega", 0, 100, False), (1, 100, 0))
     eq("omega sin crear con 99", nivel_maximo("omega", 0, 99, False), (0, 0, 99))
 
+    # --- one darting session's DNA (section 7b) ---
+    # The two rows below are the FIRST and the LAST of the wiki's per-level
+    # table, and they are the anchor for the multiplication by 12 (free) and 15
+    # (VIP). The one cell of that table the rule does not reproduce is named here
+    # so that the disagreement stays visible instead of living in a comment: at
+    # level 1 the unique VIP value is 30 = 2 x 15 and the free figure the page
+    # prints, 14, is not divisible by 12 — the page is what is wrong.
+    WIKI_N1 = {"common": (132, 165), "rare": (84, 105), "epic": (72, 90),
+               "legendary": (48, 60), "unique": (None, 30)}
+    WIKI_N20 = {"common": (360, 450), "rare": (312, 390), "epic": (300, 375),
+                "legendary": (276, 345), "unique": (252, 315)}
+    nDardo = 0
+
+    def d_eq(nombre, obtenido, esperado):
+        nonlocal nDardo
+        nDardo += 1
+        eq(nombre, obtenido, esperado)
+
+    for r, (libre, vip) in WIKI_N1.items():
+        d_eq(f"nivel 1 {r} VIP", adn_por_sesion(r, 1), vip)
+        if libre is not None:
+            d_eq(f"nivel 1 {r} libre", adn_por_sesion(r, 1, 12), libre)
+    for r, (libre, vip) in WIKI_N20.items():
+        d_eq(f"nivel 20 {r} VIP", adn_por_sesion(r, 20), vip)
+        d_eq(f"nivel 20 {r} libre", adn_por_sesion(r, 20, 12), libre)
+
+    # The four points Ludia published for the 21-35 range, which is what makes
+    # the two irregular rarities usable at all.
+    for r, puntos in DARDO_PUBLICADO.items():
+        for nivel, d in puntos.items():
+            d_eq(f"publicado {r} nivel {nivel}", dardo(r, nivel), d)
+
+    # The two figures n30 gave, end to end.
+    d_eq("nivel 35 epica, sesion", adn_por_sesion("epic", 35), 600)
+    d_eq("nivel 35 comun, sesion", adn_por_sesion("common", 35), 675)
+    d_eq("nivel 35 epica, 1200 de ADN", sesiones_dardeo(1200, "epic", 35), 2)
+    d_eq("nivel 35 epica, 1201 de ADN", sesiones_dardeo(1201, "epic", 35), 3)
+    d_eq("sin ADN que juntar", sesiones_dardeo(0, "epic", 35), 0)
+
+    # The holes are EXACTLY where the two irregular rarities are, and nowhere
+    # else: 11 levels each, and every other rarity is complete from 1 to 35.
+    HUECOS = [22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34]
+    d_eq("los huecos son los 11 niveles de legendaria",
+         sorted(n for n in range(1, 36) if dardo("legendary", n) is None), HUECOS)
+    d_eq("los huecos son los 11 niveles de unica",
+         sorted(n for n in range(1, 36) if dardo("unique", n) is None), HUECOS)
+    d_eq("comun, rara, epica y omega estan completas de 1 a 35",
+         sorted(r for r in DARDO_BASE if any(dardo(r, n) is None
+                                             for n in range(1, 36))),
+         ["legendary", "unique"])
+    d_eq("apex no tiene valor de dardeo", dardo("apex", 35), None)
+    d_eq("fuera del rango de nivel no hay valor", dardo("common", 0), None)
+    d_eq("fuera del rango de nivel no hay valor (36)", dardo("common", 36), None)
+
     if fallos:
         print(f"FAILURES ({len(fallos)}):")
         for f in fallos:
@@ -564,8 +714,9 @@ def _comprobar():
         return 1
     print(f"Self-check: 40/40 correct + {casos_nm} maximum level cases "
           f"(round-trip invariants).")
+    print(f"Darting: {nDardo}/{nDardo} correct — rule, published points, holes "
+          f"and the two figures n30 gave.")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(_comprobar())

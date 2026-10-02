@@ -736,15 +736,22 @@ window.addEventListener("load", function(){
          tb.scrollWidth <= tb.clientWidth + 2,
          "scrollWidth " + tb.scrollWidth + " vs clientWidth " + tb.clientWidth);
       // the sum of the "Falta" column has to be the total figure of the report.
-      // Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
-      // (the «Rareza» one was removed on 25-sep, and the «Veces» one too).
+      // Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones | Sesiones de dardeo
+      // (the «Rareza» one and the «Veces» one were removed on 25-sep; the darting
+      // one was added on 1-oct-2026).
       /* The Total row no longer has a cell that spans 2: when the «Criar a todas»
          button was put into the «Nivel» column, the first cell drops to
-         colspan=1 and the row ends up with 6 cells, the same as the header.
+         colspan=1 and the row ends up with as many cells as the header.
          Before, `celdasTotal[3]` was read taking the colspan for granted; that
          index now returns ANOTHER column (Tienes instead of Falta). It is trap 16
          —reading a cell by its position— biting on the change right after
-         documenting it. It is read by the NAME of the column. */
+         documenting it. It is read by the NAME of the column.
+
+         The COUNT is compared against the header and not written here. It said 6,
+         and adding the darting column turned three checks red over a table that
+         was perfectly right. What has to hold is «the total has as many cells as
+         the header», which stays true however many columns there are. */
+      var nCab = inf.querySelectorAll("thead th").length;
       var iF = indiceEtiqueta("informeArbol", /^ADN que falta/i);
       var sumaFalta = 0;
       inf.querySelectorAll("tbody tr:not(.total)").forEach(function(tr){
@@ -753,10 +760,10 @@ window.addEventListener("load", function(){
       var celdasTotal = inf.querySelector("tr.total").querySelectorAll("td");
       var totalFila = Number(celdaDe(inf.querySelector("tr.total"), "Falta").replace(/[^\d]/g, "")) || 0;
       ok("the Total row matches the sum of the rows and the figure above",
-         celdasTotal.length === 6 && iF >= 0 && totalFila === sumaFalta &&
+         celdasTotal.length === nCab && iF >= 0 && totalFila === sumaFalta &&
          totalFila === cifrasDe("informeArbol")[iF],
-         celdasTotal.length + " cells | sum " + sumaFalta + " = total " + totalFila +
-         " = figure " + cifrasDe("informeArbol")[iF]);
+         celdasTotal.length + " cells vs " + nCab + " columns | sum " + sumaFalta +
+         " = total " + totalFila + " = figure " + cifrasDe("informeArbol")[iF]);
     }
 
     // ---------- 11. shared ingredient: the DNA is subtracted ONCE ----------
@@ -802,19 +809,24 @@ window.addEventListener("load", function(){
     ok("the report still warns about the shared ingredient",
        /Velociraptor/.test(txc("informeArbol")) &&
        /varias ramas del árbol/.test(txc("informeArbol")), "report with the shared note");
+    /* By NAME and not by counting the columns. The count was a proxy for «there
+       is no «Veces» column», and adding the darting column broke it without the
+       «Veces» column having come back. What is meant is that neither of those two
+       columns is there, and that is what is asked. */
+    var nombresCab = Array.prototype.map.call(inf.querySelectorAll("thead th"), function(th){
+      return th.textContent.trim(); });
     ok("and the «Veces» column is no longer there: neither in the header nor cited in the note",
-       inf.querySelectorAll("thead th").length === 6 && !/Veces/.test(txc("informeArbol")),
-       Array.prototype.map.call(inf.querySelectorAll("thead th"), function(th){
-         return th.textContent.trim(); }).join(" | "));
+       nombresCab.indexOf("Veces") === -1 && nombresCab.indexOf("Rareza") === -1 &&
+       !/Veces/.test(txc("informeArbol")), nombresCab.join(" | "));
     var filaVel = null;
     inf.querySelectorAll("tbody tr").forEach(function(tr){
       if (/Velociraptor/.test(tr.innerText)) filaVel = tr;
     });
-    ok("the Velociraptor row has 6 cells and the corrected total",
-       filaVel && filaVel.querySelectorAll("td").length === 6 &&
+    ok("the Velociraptor row has as many cells as the header, and the corrected total",
+       filaVel && filaVel.querySelectorAll("td").length === nombresCab.length &&
        Number(celdaDe(filaVel, "Falta").replace(/[^\d]/g, "")) === vel.falta,
-       filaVel ? filaVel.querySelectorAll("td").length + " cells, missing " +
-                 celdaDe(filaVel, "Falta") : "(no row)");
+       filaVel ? filaVel.querySelectorAll("td").length + " cells vs " + nombresCab.length +
+                 " columns, missing " + celdaDe(filaVel, "Falta") : "(no row)");
   } catch (e) {
     log("!! EXCEPTION in the buttons part", e.message + " @@ " + (e.stack || "").split("\n")[1]);
   }
@@ -854,15 +866,17 @@ window.addEventListener("load", function(){
                   falta: Number(celdaDe(tr, "Falta").replace(/[^\d]/g, "")) || 0};
         if (tr.classList.contains("raiz-fila")) raiz = nom;
       });
-      /* Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones
-         (the «Rareza» one and the «Veces» one were removed on 25-sep).
+      /* Columns: Criatura | Nivel | Necesario | Tienes | Falta | Fusiones | Sesiones de dardeo
+         (the «Rareza» one and the «Veces» one were removed on 25-sep; the darting
+         one was added on 1-oct-2026).
          The Total row no longer carries a colspan: when it gained the «Criar a
-         todas» button in the «Nivel» column, its 6 cells match the 6 columns, so
+         todas» button in the «Nivel» column, its cells match the columns, so
          `celdaDe` reads it the same as any other row. */
       var trTot = document.querySelector("#informeArbol tbody tr.total");
       var cT = trTot ? trTot.querySelectorAll("td") : [];
       return {porNombre: m, raiz: raiz,
               nCeldasTotal: cT.length,
+              nCeldasCab: document.querySelectorAll("#informeArbol thead th").length,
               totalNec: cT.length ? Number(celdaDe(trTot, "ADN necesario").replace(/[^\d]/g, "")) || 0 : -1,
               totalFalta: cT.length ? Number(celdaDe(trTot, "Falta").replace(/[^\d]/g, "")) || 0 : -1};
     }
@@ -949,8 +963,9 @@ window.addEventListener("load", function(){
         sumaFalta += p[2].porNombre[k].falta;
       });
       ok("the «ADN necesario» column of the Total matches the rows " + p[0],
-         p[2].nCeldasTotal === 6 && p[2].totalNec === sumaNec,
-         p[2].nCeldasTotal + " cells | total " + p[2].totalNec + " vs sum of rows " + sumaNec);
+         p[2].nCeldasTotal === p[2].nCeldasCab && p[2].totalNec === sumaNec,
+         p[2].nCeldasTotal + " cells vs " + p[2].nCeldasCab + " columns | total " +
+         p[2].totalNec + " vs sum of rows " + sumaNec);
       ok("and the «Falta» column of the Total too " + p[0],
          p[2].totalFalta === sumaFalta,
          "total " + p[2].totalFalta + " vs sum of rows " + sumaFalta);
@@ -970,7 +985,17 @@ window.addEventListener("load", function(){
   try {
     localStorage.removeItem("jwa322.inventario");
     localStorage.removeItem("jwa322.mios");
+    localStorage.removeItem("jwa322.nivelJugador");
     INV = {}; MIS = []; guardar();
+    /* The player level, like the inventory above, is read from storage BEFORE
+       this script runs: removing the key is not enough, the value the page is
+       already holding has to be put back, and it goes back through the page's own
+       handler so that the test does not have a second way of setting it. */
+    (function(){
+      var c = document.getElementById("nivelJugador");
+      c.value = String(M.nivelJugadorMax);
+      c.dispatchEvent(new Event("change", {bubbles:true}));
+    })();
 
     function objetivo(){ return Number(document.getElementById("nivelObj").value); }
     function objGuardado(u){ return INV[u] ? INV[u].objetivo : undefined; }
@@ -1071,7 +1096,17 @@ window.addEventListener("load", function(){
   try {
     localStorage.removeItem("jwa322.inventario");
     localStorage.removeItem("jwa322.mios");
+    localStorage.removeItem("jwa322.nivelJugador");
     INV = {}; MIS = []; guardar();
+    /* The player level, like the inventory above, is read from storage BEFORE
+       this script runs: removing the key is not enough, the value the page is
+       already holding has to be put back, and it goes back through the page's own
+       handler so that the test does not have a second way of setting it. */
+    (function(){
+      var c = document.getElementById("nivelJugador");
+      c.value = String(M.nivelJugadorMax);
+      c.dispatchEvent(new Event("change", {bubbles:true}));
+    })();
     /* The scenario has to cover the FOUR cases at once, because whether the
        shortcut is judged for real depends on it:
          - indoraptor      the ROOT, created at 25 (born at 21, its target is 30).
@@ -1095,7 +1130,15 @@ window.addEventListener("load", function(){
     function montarEscenario(){
       localStorage.removeItem("jwa322.inventario");
       localStorage.removeItem("jwa322.mios");
+      localStorage.removeItem("jwa322.nivelJugador");
       INV = {}; MIS = []; guardar();
+      /* The player level goes back the same way as the inventory: removing the
+         key is not enough, because the page read it before this script ran. */
+      (function(){
+        var c = document.getElementById("nivelJugador");
+        c.value = String(M.nivelJugadorMax);
+        c.dispatchEvent(new Event("change", {bubbles:true}));
+      })();
       elegir("indoraptor");
       document.getElementById("nivelObj").value = 30;
       ev(document.getElementById("nivelObj"), "input");

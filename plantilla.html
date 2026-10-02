@@ -120,7 +120,7 @@ const I18N_ES = {
   "<div class=\"cifra\"><div class=\"k\">Coins</div><div class=\"v\">": "<div class=\"cifra\"><div class=\"k\">Monedas</div><div class=\"v\">",
   "<th>Creature</th><th class=\"num\">Level</th>": "<th>Criatura</th><th class=\"num\">Nivel</th>",
   "<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>": "<th class=\"num\">ADN necesario</th><th class=\"num\">Tienes</th>",
-  "<th class=\"num\">Missing</th><th class=\"num\">Fusions</th></tr></thead><tbody>": "<th class=\"num\">Falta</th><th class=\"num\">Fusiones</th></tr></thead><tbody>",
+  "<th class=\"num\">Missing</th><th class=\"num\">Fusions</th>": "<th class=\"num\">Falta</th><th class=\"num\">Fusiones</th>",
   " to level ": " al nivel ",
   ", which is the minimum required by the ": ", que es el mínimo que exige la ",
   "fusion of this tree. It starts at ": "fusión de este árbol. Nace en el ",
@@ -397,6 +397,37 @@ const I18N_ES = {
   " to level up + ": " por subir + ",
   " to fuse": " por fusionar",
   " of ": " de ",
+  /* --- darting: the player level and the sessions column ---
+     The hover texts are long on purpose. «Sessions» alone does not say that a
+     session has a cap, that the cap moves with the player level, or that the
+     figure is a floor; a figure nobody can interpret is worse than no figure. */
+  "Player level": "Nivel de jugador",
+  "Darting sessions": "Sesiones de dardeo",
+  "Your player level in the game, from 1 to 35. It decides how much DNA one darting session gives, and that is what the «Darting sessions» column of the tree report counts.":
+    "Tu nivel de jugador en el juego, de 1 a 35. Decide cuánto ADN da una sesión de dardeo, y eso es lo que cuenta la columna «Sesiones de dardeo» del informe del árbol.",
+  "Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have, and it is empty for creatures that are not hunted on the map and for the levels that legendary and unique creatures do not have published.":
+    "Sesiones de dardeo, no dardos. Una sesión tiene tope: da como mucho el máximo de ADN de una sesión de dardeo a tu nivel de jugador, que son 15 dardos con todos ellos aciertos directos. La cifra es el ADN necesario dividido entre ese máximo, redondeada hacia arriba, porque parte de una sesión es una sesión entera. Es lo MÍNIMO que puede costar: una sesión real trae menos ADN, nunca más, así que la cifra real es esta o mayor. No descuenta lo que ya tienes, y queda vacía para las criaturas que no se cazan en el mapa y para los niveles que las legendarias y las únicas no tienen publicados.",
+  "Not hunted on the map: its DNA does not come from darting.":
+    "No se caza en el mapa: su ADN no sale de dardear.",
+  "This creature has nothing left to gather, so there is nothing to dart for.":
+    "Esta criatura no tiene nada que juntar, así que no hay nada que dardear.",
+  "At player level ": "A nivel de jugador ",
+  ", the DNA that one dart brings to a creature of this rarity is not published. It is not estimated here: the figure is simply not known.":
+    ", el ADN que trae un dardo a una criatura de esta rareza no está publicado. Aquí no se estima: la cifra simplemente no se conoce.",
+  ", a direct hit brings ": ", un acierto directo trae ",
+  " DNA and a session is ": " de ADN y una sesión son ",
+  " darts, so a session brings at most ": " dardos, así que una sesión trae como mucho ",
+  " DNA. ": " de ADN. ",
+  " DNA needed ÷ ": " de ADN necesario ÷ ",
+  " session.": " sesión.",
+  " sessions.": " sesiones.",
+  " All 15 darts would have to be direct hits, so this is the least it can take.":
+    " Los 15 dardos tendrían que ser aciertos directos, así que esto es lo mínimo que puede costar.",
+  "Darting sessions for the whole tree, adding up the creatures that are hunted on the map and have a published figure: ":
+    "Sesiones de dardeo del árbol entero, sumando las criaturas que se cazan en el mapa y tienen cifra publicada: ",
+  " of the ": " de las ",
+  " creatures of this tree. Each session belongs to ONE creature, so they add up and are not shared. The rest are fused, or fought, or their level is not published.":
+    " criaturas de este árbol. Cada sesión es de UNA criatura, así que se suman y no se comparten. El resto se fusionan, o se combaten, o su nivel no está publicado.",
 };
 
 function idiomaInicial(){
@@ -912,6 +943,15 @@ h1 .v{color:var(--marca);font-weight:600}
 .barra-sup .buscador{flex:0 0 290px;max-width:290px}
 .barra-sup .buscador label{font-size:11px;margin-bottom:4px}
 .barra-sup .buscador input[type=text]{padding:7px 10px;font-size:13px}
+/* Player level: the number the darting column of the report is computed with.
+   It sits next to the search box because it is a setting about the PLAYER, not
+   about one creature, and it applies to the whole page. Fixed width for the
+   same reason the search box has one: a control that grows with its text moves
+   the tabs. It is narrow on purpose — two digits — and the arrows the browser
+   draws inside a number input need the room. */
+.barra-sup .nivel-jugador{flex:0 0 96px;max-width:96px}
+.barra-sup .nivel-jugador label{font-size:11px;margin-bottom:4px}
+.barra-sup .nivel-jugador input[type=number]{padding:7px 10px;font-size:13px}
 nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
 nav button{
   background:none;border:0;border-bottom:2px solid transparent;color:var(--tx2);
@@ -920,10 +960,13 @@ nav button{
 nav button:hover{color:var(--tx);background:#ffffff08}
 nav button.on{color:var(--marca);border-bottom-color:var(--marca)}
 /* On a narrow screen they do not fit side by side: the search box on top and
-   the tabs below, which is how it was before moving it. */
+   the tabs below, which is how it was before moving it. `flex:none` and not
+   just `max-width` on the level control, because in a column the flex basis is
+   the HEIGHT: keeping `flex:0 0 96px` there would give it a 96-pixel-tall box. */
 @media(max-width:820px){
   .barra-sup{flex-direction:column;align-items:stretch;gap:12px}
   .barra-sup .buscador{flex:none;max-width:none}
+  .barra-sup .nivel-jugador{flex:none}
   nav{flex:none}
 }
 section{display:none}
@@ -1330,6 +1373,21 @@ footer code{color:var(--tx2)}
            data-i18n-placeholder="Type a name… (e.g. Indoraptor)" autocomplete="off"
            role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list">
     <div class="lista" id="lista" role="listbox"></div>
+  </div>
+  <!-- The player level. It goes NEXT TO the search box and not inside a tab
+       because it is a setting about the player and not about one creature: the
+       report of any creature is read with it. It is the only thing the darting
+       column of that report is computed with, apart from the rarity.
+
+       The value is written here as a fallback and set from the model on start
+       (`M.nivelJugadorMax`), so that a change in the model cannot leave a box
+       that accepts levels the table does not have. -->
+  <div class="nivel-jugador">
+    <label for="nivelJugador"><span data-i18n="Player level">Player level</span></label>
+    <input type="number" id="nivelJugador" min="1" max="35" step="1" value="35"
+           inputmode="numeric"
+           title="Your player level in the game, from 1 to 35. It decides how much DNA one darting session gives, and that is what the «Darting sessions» column of the tree report counts."
+           data-i18n-title="Your player level in the game, from 1 to 35. It decides how much DNA one darting session gives, and that is what the «Darting sessions» column of the tree report counts.">
   </div>
   <nav>
     <button class="on" data-t="calc" data-i18n="Calculator">Calculator</button>
@@ -2126,6 +2184,49 @@ function totales(n){
    creatures that fell below the required level, and those carry no button. */
 let POR_CRIAR = [];
 
+/* ---------- how many darting sessions a creature costs ----------
+   The DNA the creature needs, divided by the most DNA one darting session can
+   give, rounded up: part of a session is a whole session, because the creature
+   has to turn up on the map again.
+
+   Whether a creature is darted is asked with `M.locDardeo`, the same test
+   `zonaDe` uses to call a zone a darting one. It is asked here and not with
+   `zonaUtil`, which also says yes to the combat zones: Arena is fought, it is
+   not darted, and a session of Arena is not a session of darts.
+
+   THREE THINGS THE FIGURE IS NOT, and they are said because it looks like a
+   promise:
+     - it is a FLOOR and not a forecast. It assumes all 15 darts of the session
+       hit the middle of the target, which is the best a session can do. A real
+       session brings less DNA, never more, so the real figure is this or more;
+     - it is computed on the DNA NEEDED — the column of that name — and not on
+       what is missing: what you already have is not subtracted;
+     - it is `null`, and the cell shows nothing, when the creature is not hunted
+       on the map, when there is nothing to gather, and when the value for that
+       level is not published. Only legendary and unique have unpublished
+       levels, and the cell says so on hover rather than inventing a number.
+
+   The model behind it, with where each value comes from, is section 7b of
+   `modelo.py`; here it is only read.
+
+   It answers with the number AND the reason for having none, in ONE place: the
+   cell has to explain an empty one, and if the reason were worked out a second
+   time there, the two tests would drift apart and a cell could end up saying
+   «not published» about a creature that is simply not darted. The reason travels
+   as a CODE and not as a sentence, because this function knows nothing about the
+   language on screen. */
+function sesionesDardeo(u, adnNec){
+  const c = C[u];
+  if (!c) return {n:null, causa:"sin-criatura"};
+  if (!(c[7] || []).some(x => M.locDardeo.includes(x))) return {n:null, causa:"no-dardeo"};
+  if (!(adnNec > 0)) return {n:null, causa:"nada"};
+  const tabla = M.dardoNivel[c[1]];
+  const porDardo = tabla ? tabla[NIVEL_JUGADOR - 1] : null;
+  if (!porDardo) return {n:null, causa:"sin-dato"};
+  return {n: Math.ceil(adnNec / (porDardo * M.dardoPorSesion)),
+          causa: "ok", porDardo: porDardo};
+}
+
 /* ---------- full tree report ---------- */
 /* All the DNA needed, creature by creature. It goes ABOVE the max level block:
    first how much you need in total, and below how far you get with what you
@@ -2172,10 +2273,18 @@ function informeHTML(t, tt){
       '</div><div class="n">'+nf(tt.mon)+i18n(" to level up + ")+nf(tt.monFus)+i18n(" to fuse")+'</div></div>' +
     '</div>';
 
+  /* The darting column. Its own explanation is long on purpose: «sessions» is
+     the whole point of the column and the word alone does not say that a session
+     is capped, that the cap moves with the player level, or that the figure is a
+     floor. A figure nobody can interpret is worse than no figure. */
+  const ayudaDardeo = i18n("Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have, and it is empty for creatures that are not hunted on the map and for the levels that legendary and unique creatures do not have published.");
+
   h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
         i18n("<th>Creature</th><th class=\"num\">Level</th>") +
        i18n("<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>") +
-       i18n("<th class=\"num\">Missing</th><th class=\"num\">Fusions</th></tr></thead><tbody>");
+       i18n("<th class=\"num\">Missing</th><th class=\"num\">Fusions</th>") +
+       '<th class="num" title="'+esc(ayudaDardeo)+'">'+i18n("Darting sessions")+'</th>' +
+       '</tr></thead><tbody>';
   /* The criar buttons. The individual one's text is short because it goes INSIDE
      a cell of the «Level» column, next to the arrow and the target.
      The level they set the creature to is NOT the hatch level of its rarity, it
@@ -2203,6 +2312,36 @@ function informeHTML(t, tt){
      minimum that can be chosen. A single definition, used by the cell and by the
      shortcut, so that they cannot drift apart. */
   const nivelFusion = p => Math.max(p.objetivo, minLv(p.rareza));
+
+  /* The darting sessions of the whole tree. They ADD UP, unlike the DNA of a
+     shared creature: one session of a creature brings DNA for THAT creature
+     only, so it cannot be spent on another row and there is nothing to pool.
+     The rows that have no figure add nothing, and the total says so on hover. */
+  let sumaDardeo = 0, filasDardeo = 0;
+
+  /* The cell. An empty one carries a hover that says WHICH of the reasons it is:
+     an empty cell that says nothing reads as «no data» in all of them, and they
+     are not the same thing — one is a real gap in what the game publishes, and
+     another is simply «this creature is not darted». */
+  const celdaDardeo = p => {
+    const r = sesionesDardeo(p.uuid, p.nec);
+    if (r.n === null){
+      const motivo = r.causa === "no-dardeo"
+        ? i18n("Not hunted on the map: its DNA does not come from darting.")
+        : r.causa === "nada"
+        ? i18n("This creature has nothing left to gather, so there is nothing to dart for.")
+        : i18n("At player level ")+NIVEL_JUGADOR+i18n(", the DNA that one dart brings to a creature of this rarity is not published. It is not estimated here: the figure is simply not known.");
+      return '<td class="num" title="'+esc(motivo)+'">—</td>';
+    }
+    sumaDardeo += r.n; filasDardeo++;
+    const porSesion = r.porDardo * M.dardoPorSesion;
+    const t = i18n("At player level ")+NIVEL_JUGADOR+i18n(", a direct hit brings ")+r.porDardo+
+      i18n(" DNA and a session is ")+M.dardoPorSesion+i18n(" darts, so a session brings at most ")+
+      nf(porSesion)+i18n(" DNA. ")+nf(p.nec)+i18n(" DNA needed ÷ ")+nf(porSesion)+" = "+r.n+
+      (r.n === 1 ? i18n(" session.") : i18n(" sessions."))+
+      i18n(" All 15 darts would have to be direct hits, so this is the least it can take.");
+    return '<td class="num" title="'+esc(t)+'">'+nf(r.n)+'</td>';
+  };
 
   cri.forEach(p => {
     /* A creature that is not created has NO level: it does not exist. Before it said
@@ -2234,7 +2373,8 @@ function informeHTML(t, tt){
       '<td class="num">'+nf(p.tengo)+'</td>' +
       '<td class="num"><b style="color:'+(p.falta>0?'var(--ambar)':'var(--verde)')+'">'+
         nf(p.falta)+'</b></td>' +
-      '<td class="num">'+(p.fus ? nf(p.fus) : '—')+'</td></tr>';
+      '<td class="num">'+(p.fus ? nf(p.fus) : '—')+'</td>' +
+      celdaDardeo(p) + '</tr>';
   });
   /* The Total row carries a REAL cell in «Level»: the shortcut to create everything
      that is missing. Before the first cell took 2 columns and the «Level» one did
@@ -2259,6 +2399,15 @@ function informeHTML(t, tt){
      that does not appear in the report nor skip one that does. */
   POR_CRIAR = cri.filter(p => p.uuid !== t.uuid && (p.sinCrear || p.desde < p.objetivo))
                 .map(p => ({uuid:p.uuid, nivel:nivelFusion(p)}));
+
+  /* The total of the darting column. It is the sum of the ROWS and not the
+     column of the total divided by a session: each row is already rounded up, and
+     a session of one creature cannot be spent on another. The count of rows that
+     carry a figure goes in the hover, because a sum over a column with holes
+     means nothing unless it says how many holes it left. */
+  const totalDardeo = i18n("Darting sessions for the whole tree, adding up the creatures that are hunted on the map and have a published figure: ")+
+    filasDardeo+i18n(" of the ")+cri.length+i18n(" creatures of this tree. Each session belongs to ONE creature, so they add up and are not shared. The rest are fused, or fought, or their level is not published.");
+
   h += i18n("<tr class=\"total\"><td>Tree total</td>") +
        '<td class="num">' + (POR_CRIAR.length
          ? btnCriarTodas(i18n("Sets to the level required by the fusion these ")+POR_CRIAR.length+i18n(" creatures of the ")+
@@ -2267,7 +2416,9 @@ function informeHTML(t, tt){
                          i18n("above keep their value."))
          : '') + '</td>' +
        '<td class="num">'+nf(tt.adnNec)+'</td><td class="num">'+nf(tt.tengo)+'</td>' +
-       '<td class="num">'+nf(tt.adn)+'</td><td class="num">'+nf(tt.fus)+'</td></tr>';
+       '<td class="num">'+nf(tt.adn)+'</td><td class="num">'+nf(tt.fus)+'</td>' +
+       '<td class="num" title="'+esc(totalDardeo)+'">'+
+         (sumaDardeo ? nf(sumaDardeo) : '—')+'</td></tr>';
   h += '</tbody></table></div>';
 
   /* The «Times» column was removed on 25-sep-2026 (n30: «no da informacion util»).
@@ -2340,6 +2491,53 @@ function irA(t){
   document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
 }
 BOTONES_NAV.forEach(b => { b.onclick = () => irA(b.dataset.t); });
+
+/* ---------- player level ----------
+   The number the darting column of the tree report is computed with. It has its
+   own storage key and does not live inside the inventory, because it is not a
+   creature: «Clear all» is about the collection and must not reset the level.
+
+   THE VALUE IS CLAMPED AND NOT MERELY READ. The box is a number input, and a
+   number input happily accepts `0`, `99`, `-3` or an empty string typed by hand.
+   A level outside 1..M.nivelJugadorMax would index outside `M.dardoNivel`, and
+   every figure computed from it would be an `undefined` that reads like a
+   number: the report has no way to warn about it, because it is a number.
+
+   While the box has the focus its text is NOT rewritten — retyping it under the
+   cursor is what makes a field feel broken. It is normalised when it loses the
+   focus, which is also the moment an out-of-range value becomes visible. */
+const CLAVE_NIVEL = "jwa322.nivelJugador";
+let NIVEL_JUGADOR = M.nivelJugadorMax;
+try {
+  const g = parseInt(localStorage.getItem(CLAVE_NIVEL), 10);
+  if (g >= 1 && g <= M.nivelJugadorMax) NIVEL_JUGADOR = g;
+} catch(e){}
+const acotarNivel = v => {
+  const n = parseInt(v, 10);
+  if (!isFinite(n)) return NIVEL_JUGADOR;   // empty or nonsense: keep the one there was
+  return Math.max(1, Math.min(M.nivelJugadorMax, n));
+};
+const cajaNivel = document.getElementById("nivelJugador");
+/* Written from the model and not left to the markup: a box that accepted levels
+   the table does not have would be a control that lies about its own range. */
+cajaNivel.min = 1;
+cajaNivel.max = M.nivelJugadorMax;
+cajaNivel.value = NIVEL_JUGADOR;
+/* `calcular` and not `refrescar`: the level is read by the report and by nothing
+   else, and `calcular` is the function that paints it — the same one the note on
+   `chkSubida` points to. `refrescar` would also rebuild the photo strip, which
+   would flicker on every keystroke of a two-digit number. */
+cajaNivel.addEventListener("input", () => {
+  const antes = NIVEL_JUGADOR;
+  NIVEL_JUGADOR = acotarNivel(cajaNivel.value);
+  if (NIVEL_JUGADOR !== antes) calcular();
+});
+cajaNivel.addEventListener("change", () => {
+  NIVEL_JUGADOR = acotarNivel(cajaNivel.value);
+  cajaNivel.value = NIVEL_JUGADOR;
+  try { localStorage.setItem(CLAVE_NIVEL, String(NIVEL_JUGADOR)); } catch(e){}
+  calcular();
+});
 
 /* ---------- search box ---------- */
 const q = document.getElementById("q"), lista = document.getElementById("lista");

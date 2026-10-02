@@ -40,11 +40,14 @@ import os
 
 from modelo import (ADN_31_35, ADN_POR_FUSION, ADN_POR_FUSION_MEDIA, COINR,
                     BOOST_FRACCION, BOOST_VELOCIDAD, COIN_31_35,
-                    COIN_OMEGA_31_35, CREACION, L, LOC_COMBATE, LOC_DARDEO,
+                    COIN_OMEGA_31_35, CREACION, DARDO_BASE, DARDO_POR_SESION, L,
+                    LOC_COMBATE, LOC_DARDEO,
                     LOC_ETIQUETAS, MEJORA_NIVEL_MIN, MEJORA_PASOS,
-                    MIN_LV, MONEDAS_FUSION, MULT_NIVEL, NIVEL_MAX,
+                    MIN_LV, MONEDAS_FUSION, MULT_NIVEL, NIVEL_JUGADOR_MAX,
+                    NIVEL_MAX,
                     NIVEL_MIN_INGREDIENTE, NOMBRE, OMEGA_31_35, OMEGA_COINR,
-                    OMEGA_L, PUNTOS_OMEGA_NIVEL, TIER, TOPE_BOOST_STAT, TOPES_ADN)
+                    OMEGA_L, PUNTOS_OMEGA_NIVEL, TIER, TOPE_BOOST_STAT, TOPES_ADN,
+                    dardo)
 from rutas import DATOS, HTML, version
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
@@ -164,6 +167,14 @@ def main():
             "locDardeo": list(LOC_DARDEO),
             "locCombate": list(LOC_COMBATE),
             "locEtiquetas": LOC_ETIQUETAS,
+            # How much DNA one darting session gives, rarity by rarity and level
+            # by level. Position 0 is player level 1 and a null is a level whose
+            # value is NOT published: the browser shows nothing there instead of
+            # a number. Section 7b of modelo.py says where each value comes from.
+            "dardoNivel": {r: [dardo(r, n) for n in range(1, NIVEL_JUGADOR_MAX + 1)]
+                           for r in DARDO_BASE},
+            "dardoPorSesion": DARDO_POR_SESION,
+            "nivelJugadorMax": NIVEL_JUGADOR_MAX,
             "multNivel": MULT_NIVEL,
             "boostVelocidad": BOOST_VELOCIDAD,
             "boostFraccion": BOOST_FRACCION,

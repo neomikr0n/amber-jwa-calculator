@@ -34,6 +34,7 @@ import sys
 from datetime import date
 
 from rutas import DATOS, HTML, inyectar_en_cabeza
+from modelo import NIVEL_JUGADOR_MAX
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -44,13 +45,18 @@ SALIDA = os.path.join(RAIZ, "amber-demo.html")
 CRIATURA = "fukuitops"
 TEMA = "oled"
 IDIOMA = "es"
+# The player level the demo opens at, taken from the model and not written here:
+# the darting column is computed with it, and a demo showing a figure the model
+# does not produce would be a demo of something else.
+NIVEL = NIVEL_JUGADOR_MAX
 
 # The folders of the interface icons. They are small and they are not optional:
 # without them the stats panel, the class badge and the enhancement costs come
 # out with holes.
 CARPETAS_ICONO = ("stat", "cat", "res", "clase")
 
-CLAVES = ("jwa322.inventario", "jwa322.mios", "jwa322.tema", "jwa322.idioma")
+CLAVES = ("jwa322.inventario", "jwa322.mios", "jwa322.tema", "jwa322.idioma",
+          "jwa322.nivelJugador")
 VACIO = "const IMG_EN_LINEA = {};"
 
 
@@ -132,12 +138,14 @@ def main():
     localStorage.setItem(%s, JSON.stringify(g.mios || []));
     localStorage.setItem(%s, %s);
     localStorage.setItem(%s, %s);
+    localStorage.setItem(%s, %s);
   } catch (e) {}
 })();
 </script>
 """ % (json.dumps({"inventario": inv, "mios": mios}, ensure_ascii=False),
        json.dumps(CLAVES[0]), json.dumps(CLAVES[1]), json.dumps(CLAVES[2]),
-       json.dumps(TEMA), json.dumps(CLAVES[3]), json.dumps(IDIOMA))
+       json.dumps(TEMA), json.dumps(CLAVES[3]), json.dumps(IDIOMA),
+       json.dumps(CLAVES[4]), json.dumps(str(NIVEL)))
 
     # ---- the opening view, AFTER the application has painted ---------------
     apertura = """

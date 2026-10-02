@@ -35,10 +35,16 @@ creature photos are missing there on purpose — see the note at the end.
   hanging from it recalculates. **The tree is always drawn complete**, whatever
   the target level: the branches you already cover are marked *not needed* and
   add nothing to the totals, and pressing any name opens that creature.
+- **🎯 Darting sessions.** Next to the *Fusions* column, the report says how many
+  darting sessions it takes to gather the DNA a creature needs. Set your player
+  level beside the search box — up to 35 — and the figure follows it: one session
+  is at most 15 darts, all of them direct hits, and how much DNA that is depends
+  on your level and on the creature's rarity. It is the **least** it can take,
+  since a real session brings less, and it only appears where the game publishes
+  the numbers.
 - **📸 My creatures.** Everything you enter is saved in the browser, with a target
   level per creature, and exportable as JSON. The photo strip is ordered by
-  rarity, rarest first.
-- **📊 Real stats.** Health, damage, speed, armour and both critical values at any
+  rarity, rarest first.- **📊 Real stats.** Health, damage, speed, armour and both critical values at any
   level, with the enhancement track and its cost, and the class badge of the
   creature (fierce, resilient, cunning, wild card) before its name.
 - **🧠 Omega training.** Omega creatures earn training points by levelling (7 per

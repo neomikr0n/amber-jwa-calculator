@@ -93,7 +93,19 @@ try {
      inherited row made the check that the list starts empty fail. */
   localStorage.removeItem("jwa322.inventario");
   localStorage.removeItem("jwa322.mios");
+  localStorage.removeItem("jwa322.nivelJugador");
   INV = {}; MIS = [];
+  /* The player level is read from storage BEFORE this diagnostic runs, so
+     removing the key is not enough: the value the page is already holding has to
+     be put back by hand, like INV and MIS above. It is put back through the
+     PAGE'S OWN handler — set the box and fire `change` — so that the test does
+     not have a second way of setting the level that could drift from the real
+     one. */
+  (function(){
+    var c = document.getElementById("nivelJugador");
+    c.value = String(M.nivelJugadorMax);
+    c.dispatchEvent(new Event("change", {bubbles:true}));
+  })();
 
   log("=== 0. errors loading the script ===",
       (window.__errores && window.__errores.length) ? window.__errores.join(" | ") : "none");
@@ -635,6 +647,162 @@ try {
   nomInf[1].click();
   ok("pressing the name in the report loads that creature",
      !!uInf && elegido === uInf, "chosen=" + elegido + ", expected " + uInf);
+
+  /* --- (c2) the darting column, and the player level it is read with ---
+     Asked for by n30 on 1-oct-2026: «a un lado de la columna de "fusions" agrega
+     una columna de "darts/max" para los dinos dardeables en el mapa, calcula con
+     el número de player level ... y el nivel máximo obtenible de adn el cual
+     cambia por cada nivel de jugador, por ejemplo a nivel 35 el máximo de adn
+     obtenible por sesión de dardeo es para epico 600 de adn y 675 para comun».
+     Those two figures are the anchor of the whole thing: they are the VIP column
+     at level 35, and they are checked here against the RENDERED page and not only
+     in modelo.py, which is the point of this file. */
+  (function(){
+    /* Which creature is open, to put it back at the end. The checks that follow
+       walk the tree of whatever is open, and this block opens another one to get
+       a tree with several dartable creatures in it: without putting the previous
+       one back, the zone checks of section (d) come out red over a tree they
+       never asked for. It happened, and it was this block that caused it. */
+    var antes = elegido;
+    function numero(s){ return Number(String(s).replace(/[^\d]/g, "")); }
+    function filas(){ return document.querySelectorAll("#informeArbol tbody tr"); }
+    function ponerNivel(v){
+      var c = document.getElementById("nivelJugador");
+      c.value = String(v);
+      ev(c, "change");
+      return c;
+    }
+    var cnivel = document.getElementById("nivelJugador");
+    ok("the player level box exists, next to the search box, inside the top strip",
+       !!cnivel && document.querySelector(".barra-sup").contains(cnivel) &&
+       cnivel.closest(".nivel-jugador").previousElementSibling === document.querySelector(".buscador"),
+       cnivel ? ("min " + cnivel.min + " max " + cnivel.max) : "(there is no box)");
+    /* The range is read from the MODEL and not written by hand: a box that
+       accepted levels the table does not have would be a control lying about its
+       own range, and the figures below it would be `undefined`. */
+    ok("and its range is the one the model publishes",
+       !!cnivel && cnivel.min === "1" && Number(cnivel.max) === M.nivelJugadorMax,
+       cnivel ? (cnivel.min + ".." + cnivel.max + " vs model " + M.nivelJugadorMax) : "");
+
+    /* The two figures n30 gave, at level 35. */
+    ponerNivel(35);
+    ok("at level 35 one epic session is 600 DNA and one common session is 675",
+       M.dardoNivel.epic[34] * M.dardoPorSesion === 600 &&
+       M.dardoNivel.common[34] * M.dardoPorSesion === 675,
+       M.dardoNivel.epic[34] + "x" + M.dardoPorSesion + " · " +
+       M.dardoNivel.common[34] + "x" + M.dardoPorSesion);
+
+    elegir("skorpiostegotops");
+    var ths = document.querySelectorAll("#informeArbol thead th");
+    var ultima = ths[ths.length - 1];
+    ok("the report has the darting column right after «Fusions»",
+       ths.length === 7 && ths[5].textContent.trim() === "Fusiones" &&
+       ultima.textContent.trim() === "Sesiones de dardeo",
+       [].map.call(ths, function(t){ return t.textContent.trim(); }).join(" | "));
+    /* A column added to the header and not to the rows leaves a table where every
+       reading by position is off by one. The file already carries a note about
+       this trap; this is the check that keeps it from coming back. */
+    var malCuenta = 0, nFilas = 0;
+    Array.prototype.forEach.call(filas(), function(f){
+      nFilas++;
+      if (f.querySelectorAll("td").length !== ths.length) malCuenta++;
+    });
+    ok("every row —the total one included— has as many cells as the header",
+       nFilas > 1 && malCuenta === 0, nFilas + " rows, " + malCuenta + " with a different count");
+    var ayuda = ultima.getAttribute("title") || "";
+    ok("the header explains itself on hover, and says that the figure is a floor",
+       /sesi/i.test(ayuda) && /15 dardos/i.test(ayuda) && /M[IÍ]NIMO/i.test(ayuda),
+       ayuda.slice(0, 110) + " …");
+
+    /* Every row that shows a figure has to BE that figure: the DNA needed of that
+       row divided by the session's maximum at that level, rounded up. It is
+       recomputed here from what the row prints, so a column that painted a
+       plausible number would not pass. */
+    var revisadas = 0, sinFigura = 0, malas = [], ralezas = {};
+    Array.prototype.forEach.call(filas(), function(f){
+      var tds = f.querySelectorAll("td");
+      if (tds.length !== ths.length) return;
+      var nom = f.querySelector("button.ir");
+      if (!nom) return;                       // the total row carries no creature
+      var u = nom.dataset.ir, rareza = C[u][1];
+      /* Whether the creature is darted is asked of the MODEL and not of the
+         page: comparing against `sesionesDardeo` would be a mirror, and the same
+         misunderstanding would pass green on both sides. */
+      var dardea = (C[u][7] || []).some(function(x){ return M.locDardeo.indexOf(x) >= 0; });
+      var tabla = M.dardoNivel[rareza];
+      var porDardo = (dardea && tabla) ? tabla[NIVEL_JUGADOR - 1] : null;
+      var celda = tds[6].textContent.trim();
+      if (!porDardo){ sinFigura++; return; }
+      var nec = numero(tds[2].textContent);
+      ralezas[rareza] = 1;
+      revisadas++;
+      /* A row with nothing to gather shows «—», and that is not a wrong figure. */
+      var esperado = nec > 0 ? Math.ceil(nec / (M.dardoPorSesion * porDardo)) : "—";
+      if ((celda === "—" ? "—" : numero(celda)) !== esperado)
+        malas.push(rareza + " " + nec + " -> " + celda + ", esperado " + esperado);
+    });
+    ok("the darting figure of each row is the DNA needed divided by that rarity's session, rounded up",
+       revisadas > 1 && malas.length === 0,
+       revisadas + " rows with a figure (" + Object.keys(ralezas).join(", ") + ")" +
+       (malas.length ? " | bad: " + malas.slice(0,3).join(" ; ") : ""));
+    /* And the other direction, which is the one that matters for the creatures
+       that are FUSED: a creature that is not darted must show nothing at all, not
+       a figure worked out from its rarity. */
+    var conFiguraSinDardear = [];
+    Array.prototype.forEach.call(filas(), function(f){
+      var tds = f.querySelectorAll("td");
+      if (tds.length !== ths.length) return;
+      var nom = f.querySelector("button.ir");
+      if (!nom) return;
+      var u = nom.dataset.ir;
+      var dardea = (C[u][7] || []).some(function(x){ return M.locDardeo.indexOf(x) >= 0; });
+      if (!dardea && tds[6].textContent.trim() !== "—")
+        conFiguraSinDardear.push(C[u][0] + " -> " + tds[6].textContent.trim());
+    });
+    ok("a creature that is not hunted on the map shows no figure at all",
+       sinFigura > 0 && conFiguraSinDardear.length === 0,
+       sinFigura + " rows without a figure" +
+       (conFiguraSinDardear.length ? " | bad: " + conFiguraSinDardear.slice(0,3).join(" ; ") : ""));
+
+    /* The holes: legendary and unique have eleven levels with no published value,
+       and there the cell must be EMPTY and not an invented number. */
+    ponerNivel(23);
+    var rL23 = sesionesDardeo("monkeydactyl", 1000);
+    ponerNivel(25);
+    var rL25 = sesionesDardeo("monkeydactyl", 1000);
+    ok("a legendary at a level that is not published has NO figure, and the reason travels with it",
+       rL23.n === null && rL23.causa === "sin-dato" && rL25.n !== null,
+       "nivel 23 -> " + JSON.stringify(rL23) + " | nivel 25 -> " + JSON.stringify(rL25));
+    ok("a creature that is not hunted on the map has no figure either, and for a different reason",
+       sesionesDardeo("purrolyth", 1000).causa === "no-dardeo" &&
+       sesionesDardeo("velociraptor", 1000).causa === "ok",
+       "Purrolyth -> " + sesionesDardeo("purrolyth", 1000).causa);
+
+    /* Raising the level lowers the sessions: it is the whole point of the control,
+       and a control that does not move the figure is decoration. */
+    ponerNivel(1);
+    var bajo = sesionesDardeo("velociraptor", 1000).n;
+    ponerNivel(35);
+    var alto = sesionesDardeo("velociraptor", 1000).n;
+    ok("raising the player level lowers the number of sessions",
+       bajo > alto && alto > 0, "nivel 1 -> " + bajo + " | nivel 35 -> " + alto);
+
+    /* Out of range typed by hand. A number input accepts all of this. */
+    ponerNivel(99);
+    ok("a level above the cap is clamped, not taken",
+       NIVEL_JUGADOR === M.nivelJugadorMax && cnivel.value === String(M.nivelJugadorMax),
+       "NIVEL_JUGADOR " + NIVEL_JUGADOR + " · box " + cnivel.value);
+    ponerNivel(0);
+    ok("a level below 1 is clamped too", NIVEL_JUGADOR === 1, "NIVEL_JUGADOR " + NIVEL_JUGADOR);
+    ponerNivel("");
+    ok("an empty box keeps the level that was there instead of becoming NaN",
+       NIVEL_JUGADOR === 1, "NIVEL_JUGADOR " + NIVEL_JUGADOR);
+    ponerNivel(35);
+    ok("the level is saved under its own key, so «Clear all» cannot wipe it",
+       localStorage.getItem("jwa322.nivelJugador") === "35",
+       String(localStorage.getItem("jwa322.nivelJugador")));
+    elegir(antes);
+  })();
 
   // (d) «se recolecta» no longer exists: instead, the real zone of each creature
   /* The PILL is searched for, not the text: the report prose says «hasta las que

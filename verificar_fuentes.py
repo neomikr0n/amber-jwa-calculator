@@ -23,6 +23,11 @@ What it checks, and why
    against an exact `{"sanctuary"}` and therefore reported 0 cases when in
    reality there are 4. A test that shares the misunderstanding of the data
    passes green and proves nothing.
+6. **Every creature that is darted on the map is one you go and find.** The
+   report's darting column is computed on the DNA a creature needs, and that only
+   makes sense for creatures whose DNA comes out of a dart. Measured: none of the
+   248 hybrids has a darting location, so «darted on the map» and «has no
+   ingredients» cannot disagree.
 
     python3 verificar_fuentes.py     -> 0 if everything matches, 1 if not
 """
@@ -230,7 +235,27 @@ ok("the 271 without ingredients split into the measured five counts",
    "darting %d · combat %d · both %d · sanctuary %d · no source %d"
    % tuple(repartoBase[k] for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente")))
 
-# ---------- 6. the level a fusion requires never drops below birth ----------
+# ---------- 6. every creature that is darted is one you go and find ----------
+"""The report's darting column divides the DNA a creature needs by what one
+darting session gives, and that is only meaningful for a creature whose DNA
+comes out of a dart. A hybrid is fused: its DNA is never darted for, so a figure
+in that column would be advice to go and hunt something that does not appear on
+the map.
+
+It is not a truism, it is a property of the data, and it is measured here: none
+of the 248 hybrids has a darting location. 147 are darted and nothing else, and 1
+—Moros Intrepidus, epic, with a continental zone AND a Strike Tower— has both, so
+the column counts 148 and not 147.
+"""
+dardeables = [u for u in cri if categoria(u) in ("dardeo", "ambos")]
+ok("every creature darted on the map is one you go and find, never a hybrid",
+   len(dardeables) == 148 and all(not cri[u].get("ingredientes") for u in dardeables),
+   "%d darted, %d of them without ingredients, %d hybrids"
+   % (len(dardeables),
+      sum(1 for u in dardeables if not cri[u].get("ingredientes")),
+      sum(1 for u in dardeables if cri[u].get("ingredientes"))))
+
+# ---------- 7. the level a fusion requires never drops below birth ----------
 """`NIVEL_MIN_INGREDIENTE[rareza]` is «one less than the creation level of the
 hybrid», and that is the level at which the report's «breed» button puts an
 ingredient. But a creature CANNOT exist below the level at which its rarity is

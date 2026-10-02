@@ -405,29 +405,12 @@ const I18N_ES = {
   "Darting sessions": "Sesiones de dardeo",
   "Your player level in the game, from 1 to 35. It decides how much DNA one darting session gives, and that is what the «Darting sessions» column of the tree report counts.":
     "Tu nivel de jugador en el juego, de 1 a 35. Decide cuánto ADN da una sesión de dardeo, y eso es lo que cuenta la columna «Sesiones de dardeo» del informe del árbol.",
-  "Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have, and it is empty for creatures that are not hunted on the map and for the levels that legendary and unique creatures do not have published.":
-    "Sesiones de dardeo, no dardos. Una sesión tiene tope: da como mucho el máximo de ADN de una sesión de dardeo a tu nivel de jugador, que son 15 dardos con todos ellos aciertos directos. La cifra es el ADN necesario dividido entre ese máximo, redondeada hacia arriba, porque parte de una sesión es una sesión entera. Es lo MÍNIMO que puede costar: una sesión real trae menos ADN, nunca más, así que la cifra real es esta o mayor. No descuenta lo que ya tienes, y queda vacía para las criaturas que no se cazan en el mapa y para los niveles que las legendarias y las únicas no tienen publicados.",
-  "Not hunted on the map: its DNA does not come from darting.":
-    "No se caza en el mapa: su ADN no sale de dardear.",
-  "This creature has nothing left to gather, so there is nothing to dart for.":
-    "Esta criatura no tiene nada que juntar, así que no hay nada que dardear.",
-  "At player level ": "A nivel de jugador ",
-  ", the DNA that one dart brings to a creature of this rarity is not published. It is not estimated here: the figure is simply not known.":
-    ", el ADN que trae un dardo a una criatura de esta rareza no está publicado. Aquí no se estima: la cifra simplemente no se conoce.",
-  ", a direct hit brings ": ", un acierto directo trae ",
-  " DNA and a session is ": " de ADN y una sesión son ",
-  " darts, so a session brings at most ": " dardos, así que una sesión trae como mucho ",
-  " DNA. ": " de ADN. ",
-  " DNA needed ÷ ": " de ADN necesario ÷ ",
-  " session.": " sesión.",
-  " sessions.": " sesiones.",
-  " All 15 darts would have to be direct hits, so this is the least it can take.":
-    " Los 15 dardos tendrían que ser aciertos directos, así que esto es lo mínimo que puede costar.",
-  "Darting sessions for the whole tree, adding up the creatures that are hunted on the map and have a published figure: ":
-    "Sesiones de dardeo del árbol entero, sumando las criaturas que se cazan en el mapa y tienen cifra publicada: ",
+  "Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have. A cell is left empty for one of three reasons, and they are not the same thing: the creature is not hunted on the map, its level is not published — legendary and unique creatures have eleven levels without a figure —, or it has nothing left to gather. The total at the bottom adds up ONLY the rows that carry a figure, and says how many it added: a session belongs to one creature, so they add up and are not shared.":
+    "Sesiones de dardeo, no dardos. Una sesión tiene tope: da como mucho el máximo de ADN de una sesión de dardeo a tu nivel de jugador, que son 15 dardos con todos ellos aciertos directos. La cifra es el ADN necesario dividido entre ese máximo, redondeada hacia arriba, porque parte de una sesión es una sesión entera. Es lo MÍNIMO que puede costar: una sesión real trae menos ADN, nunca más, así que la cifra real es esta o mayor. No descuenta lo que ya tienes. Una celda queda vacía por una de tres razones, y no son lo mismo: la criatura no se caza en el mapa, su nivel no está publicado —las legendarias y las únicas tienen once niveles sin cifra—, o no le queda nada que juntar. El total de abajo suma SOLO las filas que llevan cifra, y dice cuántas sumó: una sesión es de una criatura, así que se suman y no se comparten.",
+  "What this column counts": "Qué cuenta esta columna",
+  "In this tree right now: ": "En este árbol ahora mismo: ",
+  " creatures carry a figure.": " criaturas llevan cifra.",
   " of the ": " de las ",
-  " creatures of this tree. Each session belongs to ONE creature, so they add up and are not shared. The rest are fused, or fought, or their level is not published.":
-    " criaturas de este árbol. Cada sesión es de UNA criatura, así que se suman y no se comparten. El resto se fusionan, o se combaten, o su nivel no está publicado.",
 };
 
 function idiomaInicial(){
@@ -968,6 +951,15 @@ nav button.on{color:var(--marca);border-bottom-color:var(--marca)}
   .barra-sup .buscador{flex:none;max-width:none}
   .barra-sup .nivel-jugador{flex:none}
   nav{flex:none}
+  /* The header's controls are 378px wide and `flex:0 0 auto`, so they refused to
+     shrink AND to break: on a 390px screen that pushed the PAGE 6px sideways —
+     measured, and it did it before the report's seventh column existed.
+     `flex-wrap` alone fixes nothing: with `flex:0 0 auto` the box is as wide as its
+     content, so it is never asked to wrap. It needs to be allowed to SHRINK
+     (`flex:0 1 auto` plus `min-width:0`, because a flex item's automatic minimum
+     is its content) and then its two controls break onto a second line. At any
+     width where they already fit, none of this does anything. */
+  header .controles{flex:0 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end}
 }
 section{display:none}
 section.on{display:block}
@@ -1248,6 +1240,24 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   text-transform:none;cursor:help;vertical-align:middle;margin-left:6px;
 }
 .ayuda:hover,.ayuda:focus-visible{color:var(--tx);border-color:var(--pill);outline:none}
+.ayuda[aria-expanded="true"]{color:var(--tx);border-color:var(--pill)}
+/* The explanation itself, in a box and not in a native tooltip. A `title` cannot
+   be styled, cannot be read on a phone —a touch screen has no hover— and cannot
+   be tested, because it never enters the DOM. This one does all three.
+   `position:fixed` and a parent of `document.body` are not decoration: the report
+   lives inside a box with `overflow:auto`, and an absolutely positioned child of
+   that box gets CLIPPED, so the explanation would be cut off at the edge of the
+   table. Fixed positioning escapes that box, and hanging it off `body` keeps it
+   clear of the transforms the themes put on `.wrap`. */
+.ayuda-caja{
+  position:fixed;z-index:60;display:none;
+  max-width:min(340px,calc(100vw - 24px));
+  background:var(--panel2);color:var(--tx);
+  border:1px solid var(--borde);border-radius:9px;
+  padding:11px 13px;font-size:12.5px;line-height:1.55;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+.ayuda-caja.on{display:block}
 tbody tr:hover{background:#ffffff06}
 
 .aviso{
@@ -2252,6 +2262,17 @@ function sesionesDardeo(u, adnNec){
           causa: "ok", porDardo: porDardo};
 }
 
+/* The explanation of the darting column, in ONE place. It is a function and not a
+   constant because the language can change while the page is open, and the badge,
+   the box and the label must never show two different texts. */
+const textoAyudaDardeo = () => i18n("Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have. A cell is left empty for one of three reasons, and they are not the same thing: the creature is not hunted on the map, its level is not published — legendary and unique creatures have eleven levels without a figure —, or it has nothing left to gather. The total at the bottom adds up ONLY the rows that carry a figure, and says how many it added: a session belongs to one creature, so they add up and are not shared.");
+
+/* How much of the tree the total covers, filled in by the report. It is kept here
+   and not in the hover that used to carry it, so that the badge's box can append
+   it: a sum over a column with holes means nothing unless it says how many holes
+   it left. */
+let DARDEO_CUENTA = null;
+
 /* ---------- full tree report ---------- */
 /* All the DNA needed, creature by creature. It goes ABOVE the max level block:
    first how much you need in total, and below how far you get with what you
@@ -2304,18 +2325,20 @@ function informeHTML(t, tt){
      floor. A figure nobody can interpret is worse than no figure.
      Since 2-oct-2026 that text hangs off a «?» badge next to the header and not
      off the header cell itself, so that the label stays clean and the help has
-     something visible to point at. The per-row hover STAYS, because it says
-     something else —the division of THAT row— and it is what makes each figure
-     checkable. */
-  const ayudaDardeo = i18n("Sessions of darting, not darts. A session is capped: it gives at most the maximum DNA of one darting session at your player level, which is 15 darts with every one of them a direct hit. The figure is the DNA needed divided by that maximum, rounded up, because part of a session is a whole session. It is the LEAST it can take: a real session brings less DNA, never more, so the real figure is this one or more. It does not subtract what you already have, and it is empty for creatures that are not hunted on the map and for the levels that legendary and unique creatures do not have published.");
+     something visible to point at, and it is opened as a BOX of its own instead of
+     a native `title`, so that a phone can read it too.
+     The per-row hover is GONE, asked for the same day (n30: «quitarla», so that
+     «the only help is the ?»). The three reasons a cell can be empty used to live
+     one per row; they are listed in the text above instead. */
 
   h += '<div style="overflow:auto;margin-top:15px"><table><thead><tr>' +
         i18n("<th>Creature</th><th class=\"num\">Level</th>") +
        i18n("<th class=\"num\">DNA needed</th><th class=\"num\">You have</th>") +
        i18n("<th class=\"num\">Missing</th><th class=\"num\">Fusions</th>") +
        '<th class="num">'+i18n("Darting sessions")+
-         '<span class="ayuda" tabindex="0" title="'+esc(ayudaDardeo)+'" '+
-         'aria-label="'+esc(ayudaDardeo)+'">?</span></th>' +
+         '<span class="ayuda" role="button" tabindex="0" aria-expanded="false" '+
+         'aria-controls="ayudaDardeo" '+
+         'aria-label="'+esc(i18n("What this column counts"))+'">?</span></th>' +
        '</tr></thead><tbody>';
   /* The criar buttons. The individual one's text is short because it goes INSIDE
      a cell of the «Level» column, next to the arrow and the target.
@@ -2351,28 +2374,16 @@ function informeHTML(t, tt){
      The rows that have no figure add nothing, and the total says so on hover. */
   let sumaDardeo = 0, filasDardeo = 0;
 
-  /* The cell. An empty one carries a hover that says WHICH of the reasons it is:
-     an empty cell that says nothing reads as «no data» in all of them, and they
-     are not the same thing — one is a real gap in what the game publishes, and
-     another is simply «this creature is not darted». */
+  /* The cell carries the figure and nothing else. Until 2-oct-2026 each one also
+     had a hover with its own division, and the empty ones had a hover saying WHICH
+     of the three reasons they were empty for; both are gone, asked for the same
+     day. What is NOT lost is the reason: the three of them are listed in the
+     badge's text, which is where they are read now. */
   const celdaDardeo = p => {
     const r = sesionesDardeo(p.uuid, p.nec);
-    if (r.n === null){
-      const motivo = r.causa === "no-dardeo"
-        ? i18n("Not hunted on the map: its DNA does not come from darting.")
-        : r.causa === "nada"
-        ? i18n("This creature has nothing left to gather, so there is nothing to dart for.")
-        : i18n("At player level ")+NIVEL_JUGADOR+i18n(", the DNA that one dart brings to a creature of this rarity is not published. It is not estimated here: the figure is simply not known.");
-      return '<td class="num" title="'+esc(motivo)+'">—</td>';
-    }
+    if (r.n === null) return '<td class="num">—</td>';
     sumaDardeo += r.n; filasDardeo++;
-    const porSesion = r.porDardo * M.dardoPorSesion;
-    const t = i18n("At player level ")+NIVEL_JUGADOR+i18n(", a direct hit brings ")+r.porDardo+
-      i18n(" DNA and a session is ")+M.dardoPorSesion+i18n(" darts, so a session brings at most ")+
-      nf(porSesion)+i18n(" DNA. ")+nf(p.nec)+i18n(" DNA needed ÷ ")+nf(porSesion)+" = "+r.n+
-      (r.n === 1 ? i18n(" session.") : i18n(" sessions."))+
-      i18n(" All 15 darts would have to be direct hits, so this is the least it can take.");
-    return '<td class="num" title="'+esc(t)+'">'+nf(r.n)+'</td>';
+    return '<td class="num">'+nf(r.n)+'</td>';
   };
 
   cri.forEach(p => {
@@ -2432,13 +2443,11 @@ function informeHTML(t, tt){
   POR_CRIAR = cri.filter(p => p.uuid !== t.uuid && (p.sinCrear || p.desde < p.objetivo))
                 .map(p => ({uuid:p.uuid, nivel:nivelFusion(p)}));
 
-  /* The total of the darting column. It is the sum of the ROWS and not the
-     column of the total divided by a session: each row is already rounded up, and
-     a session of one creature cannot be spent on another. The count of rows that
-     carry a figure goes in the hover, because a sum over a column with holes
-     means nothing unless it says how many holes it left. */
-  const totalDardeo = i18n("Darting sessions for the whole tree, adding up the creatures that are hunted on the map and have a published figure: ")+
-    filasDardeo+i18n(" of the ")+cri.length+i18n(" creatures of this tree. Each session belongs to ONE creature, so they add up and are not shared. The rest are fused, or fought, or their level is not published.");
+  /* The total of the darting column. It is the sum of the ROWS and not the column
+     of the total divided by a session: each row is already rounded up, and a
+     session of one creature cannot be spent on another. The count of rows that
+     carry a figure is kept for the badge's box, which appends it. */
+  DARDEO_CUENTA = {filas: filasDardeo, total: cri.length};
 
   h += i18n("<tr class=\"total\"><td>Tree total</td>") +
        '<td class="num">' + (POR_CRIAR.length
@@ -2449,7 +2458,7 @@ function informeHTML(t, tt){
          : '') + '</td>' +
        '<td class="num">'+nf(tt.adnNec)+'</td><td class="num">'+nf(tt.tengo)+'</td>' +
        '<td class="num">'+nf(tt.adn)+'</td><td class="num">'+nf(tt.fus)+'</td>' +
-       '<td class="num" title="'+esc(totalDardeo)+'">'+
+       '<td class="num">'+
          (sumaDardeo ? nf(sumaDardeo) : '—')+'</td></tr>';
   h += '</tbody></table></div>';
 
@@ -2523,6 +2532,80 @@ function irA(t){
   document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
 }
 BOTONES_NAV.forEach(b => { b.onclick = () => irA(b.dataset.t); });
+
+/* ---------- the badge's explanation ----------
+   Opened as a box of its own instead of a native `title`, and each of the three
+   reasons is a defect of `title`: it cannot be styled, it cannot be read on a
+   touch screen —there is no hover there— and it never enters the DOM, so no test
+   can read it. This box is opened by the pointer, by a tap and by the keyboard,
+   and `probar_ui.py` opens it, reads it and closes it.
+
+   The pointer OPENS with `pointerover` and not with `pointerenter`: on a touch
+   screen a tap fires a pointer event and then a click, so opening on the first one
+   and toggling on the second would open and immediately close on the same tap.
+   The `pointerType` check is what keeps the mouse out of that path. */
+const CAJA_AYUDA = document.createElement("div");
+CAJA_AYUDA.className = "ayuda-caja";
+CAJA_AYUDA.id = "ayudaDardeo";
+CAJA_AYUDA.setAttribute("role", "tooltip");
+document.body.appendChild(CAJA_AYUDA);
+
+function textoCajaAyuda(){
+  const t = textoAyudaDardeo();
+  if (!DARDEO_CUENTA) return t;
+  return t + " " + i18n("In this tree right now: ")+DARDEO_CUENTA.filas+
+         i18n(" of the ")+DARDEO_CUENTA.total+i18n(" creatures carry a figure.");
+}
+function abrirAyuda(ancla){
+  CAJA_AYUDA.textContent = textoCajaAyuda();
+  CAJA_AYUDA.classList.add("on");
+  ancla.setAttribute("aria-expanded", "true");
+  /* Placed from the badge's box and kept inside the window on both axes: a box
+     that opens off the edge is a box nobody reads. */
+  const r = ancla.getBoundingClientRect();
+  const c = CAJA_AYUDA.getBoundingClientRect();
+  const izq = Math.min(Math.max(8, r.left + r.width / 2 - c.width / 2), innerWidth - c.width - 8);
+  let arriba = r.bottom + 8;
+  if (arriba + c.height > innerHeight - 8) arriba = Math.max(8, r.top - c.height - 8);
+  CAJA_AYUDA.style.left = Math.round(izq) + "px";
+  CAJA_AYUDA.style.top = Math.round(arriba) + "px";
+}
+function cerrarAyuda(){
+  if (!CAJA_AYUDA.classList.contains("on")) return;
+  CAJA_AYUDA.classList.remove("on");
+  const a = document.querySelector('.ayuda[aria-expanded="true"]');
+  if (a) a.setAttribute("aria-expanded", "false");
+}
+const insigniaDe = e => (e.target && e.target.closest) ? e.target.closest(".ayuda") : null;
+
+document.addEventListener("click", e => {
+  const b = insigniaDe(e);
+  if (b){
+    if (b.getAttribute("aria-expanded") === "true") cerrarAyuda(); else abrirAyuda(b);
+    return;
+  }
+  cerrarAyuda();                        // any click outside closes it
+});
+document.addEventListener("pointerover", e => {
+  if (e.pointerType !== "mouse") return;
+  const b = insigniaDe(e);
+  if (b) abrirAyuda(b);
+});
+document.addEventListener("pointerout", e => {
+  if (e.pointerType !== "mouse") return;
+  const b = insigniaDe(e);
+  if (b) cerrarAyuda();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape"){ cerrarAyuda(); return; }
+  const b = insigniaDe(e);
+  if (b && (e.key === "Enter" || e.key === " ")){
+    e.preventDefault();
+    if (b.getAttribute("aria-expanded") === "true") cerrarAyuda(); else abrirAyuda(b);
+  }
+});
+window.addEventListener("resize", cerrarAyuda);
+window.addEventListener("scroll", cerrarAyuda, true);
 
 /* ---------- player level ----------
    The number the darting column of the tree report is computed with. It has its

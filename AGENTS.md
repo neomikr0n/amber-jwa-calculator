@@ -130,13 +130,15 @@ report» therefore HIDES it: `#informeArbol` is still found by a selector and it
 the report's geometry from the calculator tab, and never take a selector hit as
 proof that something is on screen.
 
-**At 390px wide and in Spanish the page is 6px wider than the viewport, and that is
-OLDER than the report's seventh column.** Measured against `434f10f` — the commit
-before it — the overflow is the same 6px with and without the column: it is the
-theme selector in the header controls (`header .controles`, 18..396), not the
-report. The narrow-screen pass of `probar_ui.py` prints it as a note and does **not**
-assert it, so that a red test keeps meaning «this change broke something». It is
-left alone on purpose: it is the header's layout, not this column's.
+**`header .controles` needs `flex:0 1 auto` and `min-width:0` to break on a narrow
+screen, and `flex-wrap` on its own does nothing.** The controls are 378px wide; at
+390px they used to push the PAGE 6px sideways. Measured against `434f10f` — the
+commit before the report's seventh column — the 6px were there too, so it was not
+that column's doing, but it was fixed on 2-oct-2026. The trap: with `flex:0 0 auto`
+the box is as wide as its content, so it is never asked to wrap and adding
+`flex-wrap:wrap` changes nothing; a flex item also has an automatic minimum of its
+content, which is what `min-width:0` lifts. The narrow-screen pass of `probar_ui.py`
+asserts it at 390px: `.controles` 18..360, page 378px in a 390px viewport.
 
 **Ten of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot return a verdict. Grouped by what they are missing:
@@ -220,13 +222,24 @@ time, record the exit code.
   the `<span class="ayuda">` inside it, which renders as a 15×15 circle — measured
   in the browser by `probar_ui.py`, not read off the CSS rule, because a rule that
   says 50% does not say what the browser did with it. If the help moves back onto
-  the label there would be two tooltips for one question. The per-row `title` STAYS:
-  it says something else, the division of THAT row. Its ring is
+  the label there would be two tooltips for one question. Its ring is
   `1px solid currentColor` and **not** `var(--borde)`: measured against the panel
   behind it, the hairline `--borde` gives 1.39:1 in the default theme and 1.31:1 in
   «boring», so the badge would read as a bare «?». `probar_ui.py` sweeps the seven
   themes in one page and holds the ring at 3:1 or better — the worst theme sits at
   5.93:1.
+- **The explanation itself is a BOX in the DOM, not a `title`, and it is the only
+  help the column has.** A `title` never enters the DOM (so no test can read it),
+  cannot be styled, and cannot be read on a phone. The text lives in `#ayudaDardeo`,
+  hung off `document.body` with `position:fixed` — **not** an absolutely positioned
+  child of the `th`, because the report sits inside a box with `overflow:auto` that
+  would CLIP it. It opens on hover, on a tap and with Enter/Space; it closes on
+  Escape or a click outside. Two traps are pinned by tests: the pointer opens it only
+  for `pointerType === "mouse"` —a tap fires `pointerover` AND `click`, so opening on
+  both would open and close again on the same tap—, and **no cell of the column
+  carries a `title` any more**, because the per-row hover was removed on 2-oct-2026
+  and the three reasons a cell can be empty live in the box's text instead of one
+  per row.
 - **The Omega training table comes only from `detail.points`, and only Omegas have
   it.** `criaturas[u].entrenamiento` (scraper) → `C[u][11] = [cap, delta, pcap]` per
   stat, in the order of `M.statsOrden`. `verificar_stats.py` checks it in both

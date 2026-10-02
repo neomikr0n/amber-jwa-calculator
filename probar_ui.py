@@ -723,14 +723,71 @@ try {
        the badge AND that it is no longer on the label: leaving it on both would
        mean two tooltips for one question, and the first one to appear would be
        the wrong one. */
-    var ayuda = insignia ? (insignia.getAttribute("title") || "") : "";
-    ok("the «?» badge beside the header carries the explanation on hover",
+    /* The explanation lives in a BOX in the DOM and not in a `title`, and each of
+       the three reasons is a defect of `title`: it never enters the DOM, so no
+       test can read it; it cannot be styled; and it cannot be read on a phone.
+       The checks below are those three, one at a time. */
+    var cajaAyuda = document.getElementById("ayudaDardeo");
+    ok("the badge is a button for the keyboard, wired to the box",
        !!insignia && insignia.textContent.trim() === "?" &&
-       /sesi/i.test(ayuda) && /15 dardos/i.test(ayuda) && /M[IÍ]NIMO/i.test(ayuda),
-       insignia ? ayuda.slice(0, 110) + " …" : "(no badge)");
-    ok("the explanation is no longer hanging off the header label itself",
-       !ultima.getAttribute("title"),
-       ultima.getAttribute("title") || "(the cell carries no title)");
+       insignia.getAttribute("role") === "button" &&
+       insignia.tabIndex === 0 && !!cajaAyuda &&
+       insignia.getAttribute("aria-controls") === "ayudaDardeo" &&
+       insignia.getAttribute("aria-expanded") === "false",
+       insignia ? ("role=" + insignia.getAttribute("role") + " · aria-controls=" +
+                   insignia.getAttribute("aria-controls") + " · expanded=" +
+                   insignia.getAttribute("aria-expanded")) : "(no badge)");
+
+    insignia.click();
+    var textoCaja = cajaAyuda ? cajaAyuda.textContent : "";
+    var rc = cajaAyuda ? cajaAyuda.getBoundingClientRect() : null;
+    ok("tapping the badge opens the explanation, and it says what it has to say",
+       !!cajaAyuda && cajaAyuda.classList.contains("on") &&
+       insignia.getAttribute("aria-expanded") === "true" &&
+       /sesi/i.test(textoCaja) && /15 dardos/i.test(textoCaja) && /M[IÍ]NIMO/i.test(textoCaja),
+       textoCaja.slice(0, 120) + " …");
+    ok("and the box opens on screen, not off the edge",
+       !!rc && rc.width > 80 && rc.left >= 0 && rc.right <= innerWidth + 1 &&
+       rc.top >= 0 && rc.bottom <= innerHeight + 1,
+       rc ? (Math.round(rc.left) + ".." + Math.round(rc.right) + " · " +
+             Math.round(rc.top) + ".." + Math.round(rc.bottom) + " inside " +
+             innerWidth + "x" + innerHeight) : "(no box)");
+
+    document.dispatchEvent(new KeyboardEvent("keydown", {key: "Escape", bubbles: true}));
+    ok("Escape closes it",
+       !cajaAyuda.classList.contains("on") &&
+       insignia.getAttribute("aria-expanded") === "false",
+       "expanded=" + insignia.getAttribute("aria-expanded"));
+
+    insignia.click();
+    document.body.click();
+    ok("and so does a click anywhere else",
+       !cajaAyuda.classList.contains("on"),
+       "expanded=" + insignia.getAttribute("aria-expanded"));
+
+    /* The pointer path, and the trap inside it: a TAP fires `pointerover` and then
+       a `click`, so a handler that opened on any pointer event would open and
+       immediately close again on the same tap. The box listens for the mouse only,
+       and the tap is served by the `click`. */
+    insignia.dispatchEvent(new PointerEvent("pointerover", {pointerType: "touch", bubbles: true}));
+    var trasToque = cajaAyuda.classList.contains("on");
+    insignia.dispatchEvent(new PointerEvent("pointerover", {pointerType: "mouse", bubbles: true}));
+    var trasRaton = cajaAyuda.classList.contains("on");
+    ok("the pointer opens it with a mouse and leaves it alone with a finger",
+       !trasToque && trasRaton, "touch=" + trasToque + " · mouse=" + trasRaton);
+    cerrarAyuda();
+
+    /* The per-row hover is gone (n30, 2-oct-2026: «quitarla»), so the last column
+       carries no `title` anywhere. Checked cell by cell: one that survived would be
+       exactly the «two tooltips for one question» this whole change is about. */
+    var conTitulo = 0;
+    Array.prototype.forEach.call(filas(), function(f){
+      var tds = f.querySelectorAll("td");
+      if (tds.length === ths.length && tds[6].getAttribute("title")) conTitulo++;
+    });
+    ok("no cell of the darting column carries a hover any more: the «?» is the only help",
+       conTitulo === 0 && !ultima.getAttribute("title"),
+       conTitulo + " rows with a hover in the last column");
     /* The box is MEASURED and not read off the rule: a badge that renders 15 by
        9 is not a circle, and a rule that says 50% does not say what the browser
        did with it. */
@@ -1900,7 +1957,6 @@ def pasada_movil():
 window.addEventListener("load", function(){
   var RES = [], FALLOS = 0;
   function ok(n, c, d){ if (!c) FALLOS++; RES.push((c ? "OK   " : "FALLO") + " " + n + ": " + (d===undefined?"":d)); }
-  function log(n, v){ RES.push(n + ": " + (v === undefined ? "" : v)); }
   try {
     pintarFotos(); elegir("indoraptor");
     var inf = document.getElementById("informeArbol");
@@ -1935,14 +1991,19 @@ window.addEventListener("load", function(){
        bb ? ("barra-sup " + Math.round(bb.left) + ".." + Math.round(bb.right) + " · viewport " +
              innerWidth + "px · " + barra.children.length + " controls")
           : "no .barra-sup");
-    /* NOT a verdict: the page itself is 6px wider than the viewport at 390px in
-       Spanish, and it was ALREADY 6px wider before this column existed — measured
-       against 434f10f, the commit before it. The overflow is the theme selector in
-       the header controls (18..396), not the report. It is written down instead of
-       asserted so that a red test keeps meaning «this change broke something». */
-    log("page width, for the record", document.documentElement.scrollWidth + "px in a " +
-        innerWidth + "px viewport (the 6px over is the header's theme selector, older " +
-        "than this column)");
+    /* This one IS a verdict, and it is new. The header's controls refused to shrink
+       (`flex:0 0 auto`, 378px wide) and pushed the PAGE 6px sideways at 390px.
+       Measured against 434f10f — the commit before the report's seventh column —
+       the 6px were there too, so it was not this column's doing; it was fixed on
+       2-oct-2026 all the same, by letting the controls wrap. */
+    var controles = document.querySelector("header .controles");
+    var gc = controles ? controles.getBoundingClientRect() : null;
+    ok("the header's controls fit on a narrow screen, so the page does not scroll sideways",
+       !!gc && gc.right <= innerWidth + 1 && gc.left >= -1 &&
+       document.documentElement.scrollWidth <= innerWidth + 1,
+       gc ? ("controles " + Math.round(gc.left) + ".." + Math.round(gc.right) +
+             " · page " + document.documentElement.scrollWidth + "px in " +
+             innerWidth + "px") : "(no controls)");
   } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
   RES.push(FALLOS ? ("=== FALLOS: " + FALLOS + " ===") : "=== TODO OK ===");
   var p = document.createElement("pre"); p.id = "__diag";

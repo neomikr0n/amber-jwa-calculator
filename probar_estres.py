@@ -28,7 +28,7 @@ import os, re, shutil, subprocess
 import informe_browser
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML
+from rutas import HTML, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -1309,9 +1309,7 @@ html = open(HTML, encoding="utf-8").read()
 # the <head>: the app resolves the language while parsing it.
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
-if "<head>" not in html:
-    raise SystemExit("I cannot find <head> to pin the language")
-html = html.replace("<head>", "<head>\n" + PIN, 1)
+html = inyectar_en_cabeza(html, PIN, "probar_estres.py")
 m = re.search(r"<body[^>]*>", html)
 html = html[:m.end()] + CAZA + html[m.end():] + DIAG.replace("__ENTREGA__", srv.js("__diag"))
 # Before opening the browser: if the diagnostic does not compile together with

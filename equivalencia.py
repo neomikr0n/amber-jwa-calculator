@@ -42,7 +42,7 @@ PRUEBA = ["indoraptor", "trykosaurus", "paralidactylus", "aliorasuchus",
           "koolatrodon", "arsionosaurus", "indominus_rex", "acrocanthops",
           "93_classic_t_rex", "rajadorixis", "ankylocodon", "diplotator"]
 
-from rutas import DATOS
+from rutas import DATOS, inyectar_en_cabeza
 
 cri = json.load(open(DATOS))["criaturas"]
 
@@ -139,9 +139,7 @@ DIAG = DIAG.replace("__US__", json.dumps(PRUEBA)).replace("__ENTREGA__", srv.js(
 html = open(os.path.join(RAIZ, "index.html"), encoding="utf-8").read()
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
-if "<head>" not in html:
-    raise SystemExit("cannot find <head> to pin the language")
-html = html.replace("<head>", "<head>\n" + PIN, 1)
+html = inyectar_en_cabeza(html, PIN, "equivalencia.py")
 open(FUERA, "w", encoding="utf-8").write(html + DIAG)
 
 env = dict(os.environ)

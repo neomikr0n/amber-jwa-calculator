@@ -32,7 +32,7 @@ import sys
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML
+from rutas import HTML, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMGDIR = os.path.join(RAIZ, "img")
@@ -166,9 +166,7 @@ env.update({"DBUS_SESSION_BUS_ADDRESS": "disabled:", "NO_AT_BRIDGE": "1",
 
 resultados = []
 for k, (nombre, inyeccion, lang_esp, etiq_esp, place_esp) in enumerate(CASOS):
-    if "<head>" not in fuente:
-        raise SystemExit("no <head> found in the deliverable")
-    pagina = fuente.replace("<head>", "<head>\n" + inyeccion, 1)
+    pagina = inyectar_en_cabeza(fuente, inyeccion, "verificar_idioma.py")
     diag = DIAG.replace("__NOMBRE__", nombre).replace("__LANG__", json.dumps(lang_esp)) \
                .replace("__ETIQ__", json.dumps(etiq_esp)) \
                .replace("__PLACE__", json.dumps(place_esp))

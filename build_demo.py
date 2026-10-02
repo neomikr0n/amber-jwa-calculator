@@ -33,7 +33,7 @@ import re
 import sys
 from datetime import date
 
-from rutas import DATOS, HTML
+from rutas import DATOS, HTML, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -152,7 +152,7 @@ try { elegir(%s); refrescar(); } catch (e) {}
     marca = ("<!-- amber-demo: empaquetado de %s sha256=%s el %s · %d criaturas · %d imágenes -->"
              % (os.path.basename(HTML), sha, date.today().isoformat(), len(inv), len(mapa)))
 
-    html = html.replace("<head>", "<head>\n" + semilla, 1)
+    html = inyectar_en_cabeza(html, semilla, "build_demo.py")
     html = html.replace("</head>", marca + "\n</head>", 1)
     html = html.replace("</body>", apertura + "</body>", 1)
     html = html.replace(VACIO, "const IMG_EN_LINEA = " + json.dumps(mapa, ensure_ascii=False) + ";", 1)

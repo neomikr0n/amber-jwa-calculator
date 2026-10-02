@@ -353,6 +353,15 @@ CASOS = [
     # Inherited datum without the `creado` field
     ("diplotator", 30, 15, 4000, None, True,
      {"diplocaulus": {"nivel": 15, "adn": 100}}),
+    # The shantungosaurus branch, up to the APEX. Added on 1-oct-2026 because
+    # the branch n30 asked about was NOT in this list: it was checked once with
+    # an ad-hoc browser probe, and a probe that is run once and thrown away
+    # protects nothing. It is the only chain here that reaches an apex, and the
+    # only one where a common (jump 3 -> 500 DNA per fusion) and an epic
+    # (jump 1 -> 50) sit side by side under the same hybrid, so the two ends of
+    # the fusion table are compared in the same tree.
+    ("shantrospinos", 35, 0, 0, False, True, {}),
+    ("shantrospinos", 35, 0, 0, False, False, {}),
 ]
 
 

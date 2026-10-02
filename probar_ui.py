@@ -18,7 +18,7 @@ Usage:  python3 probar_ui.py
 import os, re, shutil, subprocess, json
 from informe_browser import arrancar, comprobar_scripts, veredicto
 
-from rutas import HTML
+from rutas import HTML, inyectar_en_cabeza
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(RAIZ, "img")
@@ -1271,9 +1271,7 @@ html = open(HTML, encoding="utf-8").read()
 # whatever a previous run stored.
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
-if "<head>" not in html:
-    raise SystemExit("I cannot find <head> to pin the language")
-html = html.replace("<head>", "<head>\n" + PIN, 1)
+html = inyectar_en_cabeza(html, PIN, "probar_ui.py")
 # The viewer may leave attributes on <body> (data-page-node-id), so it is no
 # good searching for "<body>" as is.
 m = re.search(r"<body[^>]*>", html)
@@ -1354,9 +1352,7 @@ def pasada_tira():
     # value beats anything a previous run stored.
     PIN = ('<script>window.__lang = "es";'
            'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
-    if "<head>" not in html:
-        raise SystemExit("I cannot find <head> to pin the language")
-    html = html.replace("<head>", "<head>\n" + PIN, 1)
+    html = inyectar_en_cabeza(html, PIN, "probar_ui.py")
     LISTA = '["indoraptor","tyrannosaurus_rex","velociraptor"]'
     SEMILLA = (
         "<script>\n"
@@ -1488,9 +1484,7 @@ def pasada_tema():
         # that applies the theme: the order is the whole point of this pass.
         SEMILLA = ('<script>try { localStorage.removeItem("jwa322.idioma"); %s }'
                    ' catch(e){}</script>\n' % js)
-        if "<head>" not in html:
-            raise SystemExit("I cannot find <head> to seed the theme")
-        html = html.replace("<head>", "<head>\n" + SEMILLA, 1)
+        html = inyectar_en_cabeza(html, SEMILLA, "probar_ui.py")
 
         srv3 = arrancar()
         diag = r"""

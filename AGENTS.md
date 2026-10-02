@@ -76,8 +76,9 @@ update makes either of those look like tidying, read this section again first.
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
-**Three of the thirteen need material that is not in the repository.** `cache/` is
-92 MB of scraped pages, excluded by `.gitignore`:
+**Five of the thirteen need material that is not in the repository**, so on a
+fresh clone they cannot return a verdict. `cache/` is 92 MB of scraped pages,
+excluded by `.gitignore`:
 
     python3 verificar_fuentes.py  # reads cache/
     python3 verificar_stats.py    # reads cache/
@@ -90,6 +91,14 @@ counting them as passed.
 `probar_demo.py` is the third: it reads `amber-demo.html`, which is built from
 `.privado/` and carries copyrighted artwork, so it is not published either. On a
 fresh clone it exits 2 with a message saying exactly that.
+
+`verificar_version.py` and `probar_version.py` are the last two, and they are the
+ones most easily mistaken for a defect in the code: both read `.privado/LEEME.md`,
+which is never published, and both stop with `FAIL` naming that file instead of
+announcing that they cannot judge. This paragraph said **«Three»** until
+1-oct-2026. The count was measured on a real clone — `git clone` into an empty
+directory, one script at a time — and it is five. Only `probar_demo.py` announces
+that it cannot judge.
 
 ## Invariants that are easy to break
 

@@ -26,7 +26,7 @@ Usage:
 import os, re, subprocess, sys
 
 from informe_browser import arrancar, comprobar_scripts, veredicto
-from rutas import DATOS, HTML
+from rutas import DATOS, HTML, inyectar_en_cabeza
 
 VISUAL = "--visual" in sys.argv
 
@@ -50,9 +50,7 @@ html = open(HTML, encoding="utf-8").read()
 # resolves the language.
 PIN = ('<script>window.__lang = "es";'
        'try { localStorage.removeItem("jwa322.idioma"); } catch (e) {}</script>\n')
-if "<head>" not in html:
-    raise SystemExit("cannot find <head> to pin the language")
-html = html.replace("<head>", "<head>\n" + PIN, 1)
+html = inyectar_en_cabeza(html, PIN, "probar_rareza.py")
 
 # 1) the :root block. It is wrapped again in the selector: the group is only the
 #    declarations, and pasting them loose into the sheet leaves them ownerless -> var()

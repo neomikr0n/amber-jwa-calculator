@@ -61,6 +61,21 @@ carries a version, and that is deliberate:
   the exported file name. Renaming it does not migrate anything: it hides every
   saved creature behind an empty calculator, in silence. `verificar_version.py`
   fails if it moves.
+- **The exported name carries the date and time of the export** (since
+  2-oct-2026): `jwa322-mis-criaturas-2026-10-02-1747.json`, and the file carries
+  the same instant in `exportado`, in ISO. That is why the guard watches the
+  PREFIX `jwa322-mis-criaturas-` and not the whole name any more. It is the one
+  place where a date IS wanted and where it DOES come from the clock on the wall:
+  it says when the file was written, which is exactly what the person reopening
+  it needs. In LOCAL time, and without a timezone: the two halves are built from
+  a single `Date`, so a minute turning over between them cannot make the name and
+  the content disagree. The imported file's `exportado` is ignored on import —
+  what matters is the data, and copying the stamp into the store would make it
+  mean nothing.
+- **A `jwa322.*` key is a contract; an exported name is not.** The four storage
+  keys and the `jwa322` mark of the file have to stay literal because saved data
+  hangs off them. The rest of the exported name is free to change, and this is
+  the shape it takes today.
 
 Do not put a version in a file name, and do not add a second output. If a future
 update makes either of those look like tidying, read this section again first.

@@ -3735,11 +3735,37 @@ document.getElementById("btnCat").onclick = () => {
    purpose: an exported file is read back by this same page, and renaming the
    mark would stop it from recognising its own files. Frozen identifier — see
    the note at the top of the file. */
+/* The moment of the export, in the LOCAL time of whoever presses the button.
+   Both halves are built from the SAME Date, so a minute ticking over between
+   them cannot make the name and the content disagree.
+
+   `fecha` is a pair and not a string on purpose: the name needs it compact
+   (2026-10-02-1747, which sorts correctly in a file list) and the content needs
+   it in ISO (2026-10-02T17:47). Deriving one from the other by cutting up the
+   string would work today and break the day the separator changes.
+
+   No timezone is written: it is the clock on the wall of whoever exported, and
+   that is the one they recognise. An exported file is read back by this same
+   page, so nothing here needs to compare two of them across machines. */
+function fechaDeExportacion(d) {
+  const p = n => String(n).padStart(2, "0");
+  const fecha = {
+    y: d.getFullYear(), m: p(d.getMonth() + 1), d: p(d.getDate()),
+    h: p(d.getHours()), min: p(d.getMinutes())
+  };
+  fecha.nombre = fecha.y + "-" + fecha.m + "-" + fecha.d + "-" + fecha.h + fecha.min;
+  fecha.iso = fecha.y + "-" + fecha.m + "-" + fecha.d + "T" + fecha.h + ":" + fecha.min;
+  return fecha;
+}
+
 document.getElementById("btnExport").onclick = () => {
-  const b = new Blob([JSON.stringify({jwa322: 1, mios: MIS, inventario: INV}, null, 2)],
+  const f = fechaDeExportacion(new Date());
+  const b = new Blob([JSON.stringify({jwa322: 1, exportado: f.iso, mios: MIS, inventario: INV}, null, 2)],
                      {type:"application/json"});
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(b); a.download = "jwa322-mis-criaturas.json"; a.click();
+  a.href = URL.createObjectURL(b);
+  a.download = "jwa322-mis-criaturas-" + f.nombre + ".json";
+  a.click();
 };
 document.getElementById("btnImport").onclick = () => {
   const i = document.createElement("input"); i.type = "file"; i.accept = ".json";
@@ -3750,7 +3776,12 @@ document.getElementById("btnImport").onclick = () => {
       try {
         const d = JSON.parse(fr.result);
         if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error(i18n("not an object"));
-        // new format ({jwa322, mios, inventario}) or old one (plain object)
+        // new format ({jwa322, exportado, mios, inventario}) or old one (plain object)
+        /* `exportado` is ignored on purpose. It says when the file was WRITTEN,
+           which is not what is being imported: what matters is the data inside.
+           It is not carried over to the store either — the moment a creature was
+           last touched is not the moment of an export, and mixing the two would
+           make the stamp mean nothing. */
         const datos = (d.jwa322 && d.inventario && typeof d.inventario === "object")
                       ? d.inventario : d;
         const lista = (d.jwa322 && Array.isArray(d.mios)) ? d.mios : Object.keys(datos);

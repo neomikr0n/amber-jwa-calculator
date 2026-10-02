@@ -445,9 +445,28 @@ window.addEventListener("load", function(){
     document.getElementById("btnExport").click();
     ok("Exportar delivers a Blob of type application/json",
        !!BLOB && BLOB.type === "application/json", BLOB ? BLOB.type + " / " + BLOB.size + " bytes" : "(no blob)");
-    ok("the exported file is called jwa322-mis-criaturas.json",
-       !!ANCLA && ANCLA.download === "jwa322-mis-criaturas.json",
-       ANCLA ? ANCLA.download : "(not pressed)");
+    /* The name carries the date and time of the export, to the minute. The prefix
+       stays first so the file still sorts and is still recognised as ours. */
+    var RE_NOMBRE = /^jwa322-mis-criaturas-\d{4}-\d{2}-\d{2}-\d{4}\.json$/;
+    ok("the exported file is called jwa322-mis-criaturas-<date>-<time>.json",
+       !!ANCLA && RE_NOMBRE.test(ANCLA.download), ANCLA ? ANCLA.download : "(not pressed)");
+    /* The name and the content come from the SAME Date. Rebuilding what the
+       browser clock said when the button was pressed and refusing anything else
+       is what catches the two drifting apart: a test that only checked the shape
+       would stay green while they disagreed. The two accepted values cover the
+       minute rolling over between the click and this line. */
+    var ahora = new Date();
+    var p2 = function(n){ return String(n).padStart(2, "0"); };
+    var hora = function(d, iso){
+      var base = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + "-" +
+                 p2(d.getHours()) + p2(d.getMinutes());
+      return iso ? base.replace(/-(\d{2})(\d{2})$/, "T$1:$2") : base;
+    };
+    var minutoAntes = new Date(ahora.getTime() - 60000);
+    ok("the name carries the date and time of the moment of the export",
+       !!ANCLA && (ANCLA.download === "jwa322-mis-criaturas-" + hora(ahora) + ".json" ||
+                   ANCLA.download === "jwa322-mis-criaturas-" + hora(minutoAntes) + ".json"),
+       (ANCLA ? ANCLA.download : "-") + "  (esperado jwa322-mis-criaturas-" + hora(ahora) + ".json)");
     /* The file carries TWO things since 25-sep-2026: the data and the list. Before
        it only carried the data, because the list was «the keys of the data». */
     var ida = JSON.parse(TEXTO_BLOB);
@@ -462,6 +481,17 @@ window.addEventListener("load", function(){
     Object.keys(ida.inventario).forEach(function(k){ if (ida.inventario[k].creado !== undefined) conCreado++; });
     ok("the 'creado' field comes out in the exported file", conCreado === Object.keys(ida.inventario).length,
        conCreado + "/" + Object.keys(ida.inventario).length);
+    /* The stamp travels IN the file too, in ISO. It is the same instant as the
+       name: if only one of the two carried it, the other could not be trusted.
+       The comparison is derived from the NAME and not rebuilt from the clock,
+       so it checks the thing that matters — that the two agree with each other. */
+    ok("the exported JSON carries the same instant in ISO",
+       !!ANCLA && (ida.exportado === hora(ahora, true) || ida.exportado === hora(minutoAntes, true)),
+       ida.exportado + "  (esperado " + hora(ahora, true) + ")");
+    ok("and the instant of the name and the one of the content are the same",
+       !!ANCLA && ANCLA.download.indexOf("-" + ida.exportado.slice(0, 10)) > 0 &&
+                  ANCLA.download.indexOf(ida.exportado.slice(11, 13) + ida.exportado.slice(14, 16)) > 0,
+       (ANCLA ? ANCLA.download : "-") + "  vs  " + ida.exportado);
 
     // --- delete ---
     document.getElementById("btnBorrar").click();

@@ -201,7 +201,12 @@ CLAVES = [
     ('"jwa322.inventario"', "the inventory key"),
     ('"jwa322.mios"', "the «my creatures» key"),
     ("{jwa322: 1,", "the export mark"),
-    ('"jwa322-mis-criaturas.json"', "the exported file name"),
+    # Since 2-oct-2026 the exported name ends in the date and time of the export,
+    # so the frozen part is only the PREFIX. That is deliberate: the name is
+    # still recognised as ours AND the stamp is outside it. The prefix is what
+    # this guard is for — if it moves, files exported before today stop being
+    # recognised by the page that wrote them.
+    ('"jwa322-mis-criaturas-"', "the exported file name's frozen prefix"),
 ]
 for aguja, que in CLAVES:
     if aguja not in efectiva:

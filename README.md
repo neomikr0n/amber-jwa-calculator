@@ -71,8 +71,10 @@ creature photos are missing there on purpose — see the note at the end.
 ### How do I get my creatures onto another device, or onto the live site?
 
 **Export JSON**, under *My creatures* → *Summary*, downloads
-`jwa322-mis-criaturas.json`: a plain-text file holding two things — the data of
-every creature you have entered a figure for (its level, the DNA you hold, your
+`jwa322-mis-criaturas-<date>-<time>.json` (for example
+`jwa322-mis-criaturas-2026-10-02-1747.json`, in your own local time): a
+plain-text file holding two things — the data of every creature you have entered
+a figure for (its level, the DNA you hold, your
 enhancement points), including the ones you only opened inside a fusion tree, and
 the list of the ones you saved on purpose, each with its target level. Keep it,
 mail it to yourself, put it in cloud storage: it is the only thing that carries

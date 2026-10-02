@@ -118,6 +118,11 @@ major digit down to zero.
 
 The browser tests need Firefox at `/usr/lib/firefox/firefox`.
 
+**Headless Firefox does not exit on its own: the `--screenshot` flag is what makes
+it quit.** A probe that forgets it hangs until the 180-second timeout and looks like
+a slow page, not like a missing flag. The report travels back through the local
+server, so the PNG is throwaway — it is there to end the process.
+
 **Ten of the fourteen need material that is not in the repository**, so on a
 fresh clone they cannot return a verdict. Grouped by what they are missing:
 

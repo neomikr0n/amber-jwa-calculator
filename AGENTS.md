@@ -487,8 +487,19 @@ of them dead, is one button too many.
 - **`.privado/`.** The deep reference, described below. Not published and not
   deployed.
 
-The repository is **private and not deployed**, so there is no live URL. Nothing
-here should assume one.
+**The repository is public, and it IS deployed.** GitHub Pages serves `main` at
+<https://neomikr0n.github.io/amber-jwa-calculator/>, so **every push republishes
+the tool**: the same `index.html` this repository builds, with no build step in
+between. Measured on 4-oct-2026, the site served 365 361 bytes, byte for byte
+`index.html` at `434f10f`, which was `origin/main` at the time.
+
+This paragraph used to say the opposite («private and not deployed, so there is no
+live URL»), and that had been false since 1-oct-2026, when the site was published.
+Believing it is not a cosmetic error: **a release is not a release until it is
+pushed**, and a tag message that claims the site serves a given sha256 is lying
+until the commit is on the remote. On 4-oct-2026 `main` was twelve commits ahead of
+`origin/main`, so four changes n30 had asked for were on this machine and not on
+the site.
 
 - **`AGENTS.local.md`.** Personal working notes for whoever is driving this
   session, listed in `.gitignore`. If the file is there, it is read at startup;

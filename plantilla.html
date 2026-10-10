@@ -1130,7 +1130,7 @@ button.ir.rc-omega{color:var(--r-omega)}
    portrait on the left and, to its right, the fields of «Your data» (what used
    to be section 2). The ingredients go at the foot of the photo and the
    hatch/cost/cap line stays in the photo's tooltip. The portrait is 207x250, the
-   NATIVE size of the WebP (measured on the 519 files): the double of the old
+   NATIVE size of the WebP (measured on the 520 files): the double of the old
    104x126 would be 208x252, and the native size is the largest that is not
    upscaled. */
 .ficha{display:flex;flex-direction:column;gap:14px}
@@ -1607,7 +1607,7 @@ const rangoRareza = r => { const i = ORDEN_RAREZA.indexOf(r); return i < 0 ? 99 
 const TIPOS   = {non_hybrid:"Non-Hybrid",hybrid:"Hybrid",super_hybrid:"Super Hybrid",mega_hybrid:"Mega Hybrid",giga_hybrid:"Giga Hybrid"};
 
 /* ---------- the class of a creature (fierce, cunning, resilient…) ---------- */
-/* `clase` is a datum in the 519 creatures and takes seven values: the four single
+/* `clase` is a datum in the 520 creatures and takes seven values: the four single
    ones and three combinations joined with «_». `wild_card` carries an underscore
    of its own, so splitting the code by «_» would cut it in half: the label is
    built token by token from this map, which is also the only place that knows
@@ -1667,7 +1667,7 @@ const compartida = n => LANG === "es" ? (n === 1 ? " compartida" : " compartidas
        presented as a darting zone. Only 2 creatures have both things.
      - NO SOURCE: omega and event creatures, which do not appear on the map.
    The sanctuary is omitted on purpose: it is passive placement, not a zone. It
-   can be omitted without losing anything because NONE of the 519 has it as the
+   can be omitted without losing anything because NONE of the 520 has it as the
    only source, and `verificar_fuentes.py` checks that on every pass.          */
 const etiqLoc = c => M.locEtiquetas[c] || c;
 /* The paleo.gg label carries the time slot stuck to it («Local Area 3 | All
@@ -1694,7 +1694,7 @@ function zonaTitulo(u){
   if (!f.length) return i18n("No origin data in the source");
   return i18n("In-game sources: ") + f.map(etiqLoc).join(" · ");
 }
-/* Does the zone add anything here? Of the 519, 248 are hybrids and their
+/* Does the zone add anything here? Of the 520, 249 are hybrids and their
    source is `none`: those are not looked for on the map, they are fused, so
    telling them «no source on the map» is noise. The pill is shown only when it
    says something: always on the ones that have no ingredients (it is exactly
@@ -1854,8 +1854,8 @@ const ENT_CAMPO = {vida:"tVida", dano:"tDano", velocidad:"tVel",
    order of the six can never silently swap health with damage. */
 const ENT_CAMPOS = M.statsOrden.map(k => ENT_CAMPO[k]);
 const MEJ_CAMPOS = ["bVida", "bDano", "bVel", "mejora"].concat(ENT_CAMPOS);
-/* The enhancement track of a creature, or null if it does not have one (371 of
-   the 519: only Unique and Apex carry it). */
+/* The enhancement track of a creature, or null if it does not have one (373 of
+   the 520: only Unique and Apex carry it). */
 const PISTA = u => (C[u] && C[u][9]) || null;
 
 /* The cap bonus that the ALREADY applied enhancements give: the sum of the
@@ -2079,7 +2079,7 @@ const imgDe = u => imgEnLinea("img/" + u + ".webp");
    appeared in their place, while eager clones of the SAME addresses loaded
    without a problem (that is, the files were fine and the bug was the `lazy`).
    For the tree and the tables it is still `lazy`, which is what avoids
-   requesting 519 files at once. */
+   requesting 520 files at once. */
 const foto = (u, clase, tam, ansiosa) => {
   const c = C[u];
   return '<img class="'+clase+'" src="'+imgDe(u)+'" alt="'+esc(c?c[0]:u)+'"'+

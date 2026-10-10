@@ -68,7 +68,7 @@ def cargar_datos():
     for u, x in cri.items():
         s = x.get("stats") or {}
         # The enhancements are stored as [dna_cost, req, [type, value]] and only
-        # Unique and Apex have them (147 of 519). The raw codes of the resources
+        # Unique and Apex have them (147 of 520). The raw codes of the resources
         # and the `type` of the effect are kept: the label is resolved in the
         # browser, just as with the zones.
         mj = [[m["cost"], m["req"], [m["rwd"]["type"], m["rwd"]["value"]]]

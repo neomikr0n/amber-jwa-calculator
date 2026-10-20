@@ -21,7 +21,7 @@ What it checks, and why
    it would show up here.
 2. **At what level those numbers are.** The card itself says so in the
    «Compare Creatures» link: `compare?ck=0__<uuid>__26`. The 26 is not set by
-   us, the source sets it, in all 520 cards. The whole interface relies on the
+   us, the source sets it, in all 524 cards. The whole interface relies on the
    datum being level 26; this checks it.
 3. **The enhancement track, step by step, against the cache**, and against the
    copy that paleo.gg itself brings in `evolutionData` — two places in the same
@@ -84,7 +84,7 @@ def ok(que, bien, detalle=""):
 # ---------------------------------------------------------------------------
 # 0) Load the cache only once
 # ---------------------------------------------------------------------------
-# 520 cards x 180 KB: they are read whole and kept. Reading them twice per
+# 524 cards x 180 KB: they are read whole and kept. Reading them twice per
 # section would throw away half a minute.
 NEXT = re.compile(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
 # The stats block goes from `id="stats"` to `id="resistance"`: bounded on
@@ -113,7 +113,7 @@ cri = d["criaturas"]
 
 print("=== 0. the cache and the data cover the same thing ===")
 ok("there is one card per creature and one creature per card",
-   set(fichas) == set(cri) and len(fichas) == 520,
+   set(fichas) == set(cri) and len(fichas) == 524,
    "%d cards, %d creatures, %d without a pair"
    % (len(fichas), len(cri), len(set(fichas) ^ set(cri))))
 ok("all cards have __NEXT_DATA__ and a stats block",
@@ -134,7 +134,7 @@ CAMPOS = [("health", "vida"), ("damage", "dano"), ("speed", "velocidad"),
 PCT = {"armor", "crit", "critm"}
 
 print()
-print("=== 1. the six stats, one by one (520 x 6 = 3,120 numbers) ===")
+print("=== 1. the six stats, one by one (524 x 6 = 3,144 numbers) ===")
 malCampo = []
 malTxt = []
 for u, v in sorted(fichas.items()):
@@ -154,8 +154,8 @@ for u, v in sorted(fichas.items()):
         limpio = (bruto or "").replace("%", "").strip()
         if not limpio.isdigit() or int(limpio) != esperado:
             malTxt.append("%s.%s: pintado=%r esperado=%d" % (u, campo, bruto, esperado))
-ok("the cache field and the JSON say the same in all 3,120",
-   not malCampo, malCampo[0] if malCampo else "3,120 numbers, 520 creatures")
+ok("the cache field and the JSON say the same in all 3,144",
+   not malCampo, malCampo[0] if malCampo else "3,144 numbers, 524 creatures")
 ok("the RENDERED text of the card too (second independent copy)",
    not malTxt, malTxt[0] if malTxt else "no discrepancies")
 ok("the three percentages are painted with «%» and the other three are not",
@@ -183,13 +183,13 @@ for u, v in fichas.items():
         niveles[v["nivel"][0][1]] += 1
 ok("each card declares its level once, and it is its own",
    not enlaces, str(enlaces[:3]) if enlaces else "%d cards" % len(fichas))
-ok("the declared level is 26 in all 520 (not 1, not 35, not the maximum)",
-   niveles == {"26": 520}, str(dict(niveles)))
+ok("the declared level is 26 in all 524 (not 1, not 35, not the maximum)",
+   niveles == {"26": 524}, str(dict(niveles)))
 # And the consequence, checked over the whole dataset: at level 26 the
-# multiplier changes NOTHING, in none of the 3,120 numbers.
+# multiplier changes NOTHING, in none of the 3,144 numbers.
 ident = all(int(cri[u]["stats"][k] * MULT_NIVEL[25] // 10 ** 9) == cri[u]["stats"][k]
             for u in cri for k in cri[u]["stats"])
-ok("at level 26 the table returns the same number, in all 3,120",
+ok("at level 26 the table returns the same number, in all 3,144",
    ident and MULT_NIVEL[25] == 1000000000,
    "MULT_NIVEL[25] = %d, exact" % MULT_NIVEL[25])
 
@@ -200,20 +200,20 @@ ok("at level 26 the table returns the same number, in all 3,120",
 # of the same thing inside the same file. Checking both is not redundant: if
 # paleo.gg updates one and forgets the other, that is exactly what must be seen.
 print()
-print("=== 3. the enhancement track (147 creatures) ===")
+print("=== 3. the enhancement track (149 creatures) ===")
 conPista = [u for u in cri if cri[u].get("mejoras")]
 sinPista = [u for u in cri if not cri[u].get("mejoras")]
-ok("147 with a track and 373 without one, and they add up to 520",
-   len(conPista) == 147 and len(sinPista) == 373 and len(conPista) + len(sinPista) == 520,
-   "%d + %d = 520" % (len(conPista), len(sinPista)))
+ok("149 with a track and 375 without one, and they add up to 524",
+   len(conPista) == 149 and len(sinPista) == 375 and len(conPista) + len(sinPista) == 524,
+   "%d + %d = 524" % (len(conPista), len(sinPista)))
 
 porRareza = collections.Counter(cri[u]["rareza"] for u in conPista)
 ok("only Unique and Apex have a track; no other rarity",
    set(porRareza) == {"unique", "apex"},
    "unique %d, apex %d" % (porRareza["unique"], porRareza["apex"]))
 ok("and they are all the Uniques and all the Apex there are",
-   porRareza["unique"] == 92 and porRareza["apex"] == 55,
-   "92 unique + 55 apex = 147")
+   porRareza["unique"] == 93 and porRareza["apex"] == 56,
+   "93 unique + 56 apex = 149")
 
 malPaso = []
 malEvol = []
@@ -234,10 +234,10 @@ for u in conPista:
     ev = (det.get("evolutionData") or {}).get(u) or {}
     if norm(mj) != norm(ev.get("enhancements") or []):
         malEvol.append(u)
-ok("all 147 have exactly %d steps" % MEJORA_PASOS, not sinCinco,
-   str(sinCinco[:3]) if sinCinco else "5 steps x 147 = 735 steps")
-ok("cost, requirements and reward of the 735 steps match the cache",
-   not malPaso, str(malPaso[:5]) if malPaso else "735 steps, one by one")
+ok("all 149 have exactly %d steps" % MEJORA_PASOS, not sinCinco,
+   str(sinCinco[:3]) if sinCinco else "5 steps x 149 = 745 steps")
+ok("cost, requirements and reward of the 745 steps match the cache",
+   not malPaso, str(malPaso[:5]) if malPaso else "745 steps, one by one")
 ok("and they also match the SECOND copy (`evolutionData`)",
    not malEvol, str(malEvol[:5]) if malEvol else "the cache does not contradict itself")
 
@@ -247,8 +247,8 @@ malIng = [u for u in cri
           if sorted(cri[u]["ingredientes"]) !=
              sorted(((fichas[u]["det"].get("evolutionData") or {}).get(u) or {})
                     .get("ingredients") or [])]
-ok("the ingredients of all 520 match `evolutionData`", not malIng,
-   str(malIng[:5]) if malIng else "520 creatures")
+ok("the ingredients of all 524 match `evolutionData`", not malIng,
+   str(malIng[:5]) if malIng else "524 creatures")
 
 # ---------------------------------------------------------------------------
 # 4) The order of the steps: it is NOT the same in unique and in apex
@@ -279,18 +279,18 @@ for u in conPista:
     for p in cri[u]["mejoras"]:
         valores[(cri[u]["rareza"], p["rwd"]["type"])][p["rwd"]["value"]] += 1
 ESPERADO_VAL = {
-    ("unique", "health"): {110: 92}, ("unique", "damage"): {110: 92},
-    ("unique", "speed"): {2: 92}, ("unique", "boost_max"): {1: 92},
-    ("apex", "health"): {110: 55}, ("apex", "damage"): {110: 55},
-    ("apex", "speed"): {2: 55}, ("apex", "boost_max"): {2: 55},
+    ("unique", "health"): {110: 93}, ("unique", "damage"): {110: 93},
+    ("unique", "speed"): {2: 93}, ("unique", "boost_max"): {1: 93},
+    ("apex", "health"): {110: 56}, ("apex", "damage"): {110: 56},
+    ("apex", "speed"): {2: 56}, ("apex", "boost_max"): {2: 56},
 }
 ok("the reward values are the measured ones (health/damage x1.10 · speed +2)",
    all(dict(valores[k]) == v for k, v in ESPERADO_VAL.items()),
-   "boost_max: +1 in unique (x92), +2 in apex (x55)")
+   "boost_max: +1 in unique (x93), +2 in apex (x56)")
 ok("the `moves_reactive` steps each give a different move",
    all(len({p["rwd"]["value"] for p in cri[u]["mejoras"]
             if p["rwd"]["type"] == "moves_reactive"}) == 1 for u in conPista),
-   "147 reactive moves, none repeated within its creature")
+   "149 reactive moves, none repeated within its creature")
 
 # ---------------------------------------------------------------------------
 # 5) MULT_NIVEL: 35 entries, and it is NOT 1.05^(L-26)

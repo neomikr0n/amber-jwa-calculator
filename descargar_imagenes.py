@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Downloads the images of the 519 creatures from the paleo.gg CDN and converts
+Downloads the images of the 524 creatures from the paleo.gg CDN and converts
 them to high quality WebP.
 
 Why WebP: the original PNG is 207x250 RGBA and weighs ~48 KB, badly compressed
 (optipng gets nothing out of it, pngquant leaves it at 24 KB). In WebP q90 it
-drops to ~16 KB with no visible difference at this size. 519 x 16 KB = ~8 MB,
+drops to ~16 KB with no visible difference at this size. 524 x 16 KB = ~8 MB,
 which is manageable.
 
 There is NO higher resolution available: @2x, /large/ and .webp were tried on

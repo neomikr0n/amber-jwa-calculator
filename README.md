@@ -20,7 +20,7 @@ missing there on purpose.
 
 ## What it does
 
-- **Calculator.** Pick any of the 519 creatures, set the level you have and the
+- **Calculator.** Pick any of the 524 creatures, set the level you have and the
   level you want. You get the DNA, the coins and the number of fusions it takes,
   and what you are missing.
 - **Fusion tree.** The full ingredient cascade for any hybrid, down to the
@@ -159,7 +159,7 @@ python3 descargar_imagenes.py            # optional: fetches the creature photos
 `scrape_paleo.py` downloads the dinodex and writes `cache/`, about 92 MB, which is
 regenerable and therefore not in the repository.
 
-`descargar_imagenes.py` fetches the 519 creature images into `img/`. They are not
+`descargar_imagenes.py` fetches the 524 creature images into `img/`. They are not
 in the repository and are not published on the site, because they are copyrighted
 game artwork; see `NOTICE`. Without them the calculator still works: each image
 hides itself on error and the layout falls back to names and figures.

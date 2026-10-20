@@ -128,7 +128,7 @@ def entrenamiento(points):
     point short of reachable there. The bound that counts is `pcap`.
 
     It is omitted for the creatures that do not have it, instead of storing a
-    null in 486 of the 519 entries."""
+    null in 491 of the 524 entries."""
     if not points:
         return None
     return {grupo: {STAT_KEYS[k]: v for k, v in (points.get(grupo) or {}).items()
@@ -189,7 +189,7 @@ def main():
             "fuentes_adn": det.get("dna_source") or [],
             "mejoras": det.get("enhancements") or [],
         }
-        # Only the Omega creatures carry it (33 of the 519).
+        # Only the Omega creatures carry it (33 of the 524).
         ent = entrenamiento(det.get("points"))
         if ent:
             criaturas[uuid]["entrenamiento"] = ent

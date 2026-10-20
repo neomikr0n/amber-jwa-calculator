@@ -1447,7 +1447,7 @@ os.makedirs(DIR, exist_ok=True)
 os.makedirs(PERFIL, exist_ok=True)
 enlazar_img(os.path.join(DIR, "img"), IMG)
 
-# Are the creature photos here? They are 520 `.webp` files of game artwork and
+# Are the creature photos here? They are 524 `.webp` files of game artwork and
 # they are NOT published with the repository, so a clone does not have them. One
 # check of this test loads every image the page references, and without the files
 # it fails — which on a clone reads as a defect of the page. It is skipped and
@@ -1507,7 +1507,7 @@ if codigo == 2:
 if not HAY_FOTOS:
     print()
     print("RESULT: cannot judge — one check did not run: «all the referenced images load».")
-    print("        The creature photos are 520 `.webp` files of game artwork and they are")
+    print("        The creature photos are 524 `.webp` files of game artwork and they are")
     print("        NOT published with the repository, so on a clone every reference fails")
     print("        and the failure reads like a defect of the page. The other checks DID run")
     print("        and came out green. Exit 2, not a failure — and not a green verdict either,")

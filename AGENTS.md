@@ -162,7 +162,7 @@ fresh clone they cannot return a verdict. Grouped by what they are missing:
         python3 verificar_fuentes.py
         python3 verificar_recetas.py
         python3 verificar_stats.py
-    img/*.webp — 519 files of game artwork, which this project does not distribute
+    img/*.webp — 524 files of game artwork, which this project does not distribute
         python3 probar_estres.py
         python3 probar_rareza.py
         python3 probar_ui.py
@@ -224,9 +224,9 @@ time, record the exit code.
   `probar_ui.py` re-derives every row of the report from `C` and `M.locDardeo`
   instead of trusting the page.
 - **The darting column exists only for creatures that are darted on the map, and
-  every one of them is a base creature.** 148 of the 519 — 147 darted and nothing
+  every one of them is a base creature.** 148 of the 524 — 147 darted and nothing
   else, plus Moros Intrepidus, which has a continental zone and a Strike Tower —
-  and **none of the 248 hybrids has a darting location**, which
+  and **none of the 252 hybrids has a darting location**, which
   `verificar_fuentes.py` pins. The column divides the row's **DNA needed** (not
   what is missing: what you already hold is not subtracted) by the session, rounded
   up, so it is a FLOOR on the work and the hover says so. It is read with the

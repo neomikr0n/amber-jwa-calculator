@@ -267,7 +267,7 @@ try {
   ok("the card has a large image", !!document.querySelector("#elegida img.grande"));
 
   /* The card redesign (27-sep-2026): portrait at the NATIVE size of the WebP
-     (207x250, measured on the 520 files), the name and the badges on a header
+     (207x250, measured on the 524 files), the name and the badges on a header
      across the top, the ingredients at the foot of the photo, the hatch/cost/cap
      line in the photo's tooltip, and «Your data» (the three fields that used to
      be section 2) to the right of the photo. Everything is MEASURED. */
@@ -1072,7 +1072,7 @@ try {
   }
 
   /* The card of the chosen creature. The zone pill only has to show up if it
-     says something: in a hybrid its source is `none` (248 of the 520) and «sin fuente en
+     says something: in a hybrid its source is `none` (251 of the 524) and «sin fuente en
      el mapa» is noise — a hybrid is not searched for, it is fused. It is checked with
      the independent criterion: empty ingredients, or a real source in the model. */
   var faltan = [], sobran = [], nBase = 0, nHib = 0;
@@ -1106,11 +1106,11 @@ try {
      faltan.length ? faltan.length + " without pill: " + faltan.slice(0, 6).join(", ") : "none of " + nBase + " base");
   ok("and it is not superfluous in any hybrid without a source", sobran.length === 0,
      sobran.length ? sobran.length + " with a filler pill: " + sobran.slice(0, 6).join(", ") : "none of " + nHib + " hybrids");
-  ok("the 520 split between 271 without ingredients and 249 hybrids", nBase === 271 && nHib === 249,
+  ok("the 524 split between 272 without ingredients and 252 hybrids", nBase === 272 && nHib === 252,
      nBase + " base + " + nHib + " hybrids = " + (nBase + nHib));
-  ok("all 520 show their class badge before the name", sinClase.length === 0,
+  ok("all 524 show their class badge before the name", sinClase.length === 0,
      sinClase.length ? sinClase.length + " without badge: " + sinClase.slice(0, 6).join(", ")
-                     : "520 with badge, from the class in the data");
+                     : "524 with badge, from the class in the data");
   ok("and the badge is the file of ITS class, not another one", claseMal.length === 0,
      claseMal.length ? claseMal.slice(0, 6).join(" ;; ") : "the 7 files of img/clase/");
   ok("and the class is named in words (Spanish), not left as the raw code",
@@ -1648,7 +1648,7 @@ os.makedirs(PERFIL, exist_ok=True)
 # the images are referenced as img/<uuid>.webp, relative to the HTML
 enlazar_img(os.path.join(DIR, "img"), IMG)
 
-# Are the creature photos here? They are 520 `.webp` files of game artwork and
+# Are the creature photos here? They are 524 `.webp` files of game artwork and
 # they are NOT published with the repository, so a clone does not have them. One
 # check of this test loads every image the page references, and without the files
 # it fails — which on a clone reads as a defect of the page. It is skipped and
@@ -1796,7 +1796,7 @@ window.addEventListener("load", function(){
       RES.push("SKIPPED the photos load and are visible: " + imgs.length +
                " references, and no photo to load: they are not in the repository");
     }
-    // the tree can still be lazy: 520 files at once, no
+    // the tree can still be lazy: 524 files at once, no
     var vagas = document.querySelectorAll('#arbolCuerpo img[loading="lazy"]').length;
     RES.push("   (informational) lazy images in the tree: " + vagas);
   } catch(e){ RES.push("!! EXCEPTION " + e.message); FALLOS++; }
@@ -2085,7 +2085,7 @@ if codigo_final == 2:
 if not HAY_FOTOS:
     print()
     print("RESULT: cannot judge — the checks that load the creature photos did not run.")
-    print("        `img/*.webp` is 520 files of game artwork and it is NOT published with the")
+    print("        `img/*.webp` is 524 files of game artwork and it is NOT published with the")
     print("        repository, so on a clone there is nothing to load and those checks would")
     print("        fail, which reads like a defect of the page. They are in the main pass")
     print("        («all the image files load and decode») and in the strip pass («the photos")

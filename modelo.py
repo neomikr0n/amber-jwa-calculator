@@ -166,7 +166,7 @@ TOPES_ADN = {"common": 850000, "rare": 250000, "epic": 85000,
 # --------------------------------------------------------------------------
 # The `stats` carried by each creature in the data are LEVEL 26 values, and this
 # is not our inference: the source states it in the "Compare Creatures" link,
-# which carries `compare?ck=0__<uuid>__26` on all 520 entries. Two more facts
+# which carries `compare?ck=0__<uuid>__26` on all 524 entries. Two more facts
 # agree: the level-26 multiplier is exactly 1.000000 (see MULT_NIVEL) and the
 # rendered text of the entry shows those same numbers (alacranix: 4250 / 1650 /
 # 115 / 40% / 15% / 125%, identical to the JSON). `verificar_stats.py` checks
@@ -241,7 +241,7 @@ MEJORA_PASOS = 5
 #   - COMBAT: its DNA comes from fighting (Arena, Strike Towers, Raid,
 #     Alliance Missions). It is not a darting zone and it cannot be presented
 #     as if it were one.
-#   - SANCTUARY: passive placement, neither darting nor combat. NONE of the 520
+#   - SANCTUARY: passive placement, neither darting nor combat. NONE of the 524
 #     has it as its only source (measured), so it is omitted without losing
 #     anything.
 #   - `none`: it does not appear on the map. They are omega and event creatures.

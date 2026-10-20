@@ -15,7 +15,7 @@ And the report travels over synchronous XHR (see informe_browser.py), not inside
 PNG: if a tag comes out with no color, the script fails with exit code 1.
 
 There is a third verdict, and it is the one that used to contradict the other
-two. The photo-frame table reads `img/*.webp`; those 520 files are game artwork
+two. The photo-frame table reads `img/*.webp`; those 524 files are game artwork
 and are not published, so on a clone there is nothing to measure. That used to
 count as a failure, and since the two printed verdicts are the browser's and
 this one decides the exit code, the script printed «RESULT: all OK (17 checks)»
@@ -822,7 +822,7 @@ if sin_fotos:
     print()
     print("RESULT: cannot judge — %d of the %d rarities have no photo to measure: %s"
           % (len(sin_fotos), len(ORDEN), ", ".join(sin_fotos)))
-    print("        The creature photos are 520 `.webp` files of game artwork and they are")
+    print("        The creature photos are 524 `.webp` files of game artwork and they are")
     print("        NOT published with the repository, so on a clone there is no frame to")
     print("        measure here. The two verdicts above DID run — they are the browser's and")
     print("        both came out green — and what could not be read is this one table.")

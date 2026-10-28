@@ -593,6 +593,30 @@ window.addEventListener("load", function(){
     ok("and it does not touch the inventory that was already there",
        Object.keys(INV).length === antesMalo, Object.keys(INV).length + " of " + antesMalo);
 
+    // JSON.parse gives "__proto__" an own property, but reading C["__proto__"]
+    // on this plain object resolves Object.prototype and used to treat it as a
+    // valid creature. The same applies to inherited "constructor" and "toString".
+    var invAntesClavePrototipo = JSON.stringify(INV);
+    var miosAntesClavePrototipo = JSON.stringify(MIS);
+    var protoAntesClavePrototipo = Object.getPrototypeOf(INV);
+    var alertasAntesClavePrototipo = ALERTAS.length;
+    TEXTO_A_IMPORTAR = '{"__proto__":{"polluted":true},"constructor":{"nivel":1},"toString":{"nivel":1}}';
+    document.getElementById("btnImport").click();
+    var dt3 = new DataTransfer();
+    dt3.items.add(new File([TEXTO_A_IMPORTAR], "claves-prototipo.json", {type:"application/json"}));
+    ENTRADA.files = dt3.files;
+    ENTRADA.dispatchEvent(new Event("change"));
+    var alertaClavePrototipo = ALERTAS.slice(alertasAntesClavePrototipo).join(" | ");
+    ok("the import ignores inherited Object keys instead of saving them as creatures",
+       JSON.stringify(INV) === invAntesClavePrototipo &&
+       JSON.stringify(MIS) === miosAntesClavePrototipo &&
+       Object.getPrototypeOf(INV) === protoAntesClavePrototipo,
+       "inventory=" + Object.keys(INV).join(",") + " · list=" + MIS.join(",") +
+       " · prototype intact=" + (Object.getPrototypeOf(INV) === protoAntesClavePrototipo));
+    ok("an import with only inherited keys completes without a rendering error",
+       !alertaClavePrototipo.includes(i18n("That file is not valid: ")),
+       alertaClavePrototipo || "no alert");
+
     HTMLAnchorElement.prototype.click = clickAncla;
     HTMLInputElement.prototype.click = clickInput;
     window.Blob = BlobReal;

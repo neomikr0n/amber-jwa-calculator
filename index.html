@@ -1638,6 +1638,8 @@ const nf = n => (n==null?"—":n.toLocaleString(LANG === "es" ? "es-MX" : "en-US
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const tag = r => '<span class="tag rc-'+CLASE[r]+'">'+i18n(RAREZAS[r])+'</span>';
 const minLv = r => M.minLv[r] || 1;
+const esUuidDeCriatura = u => typeof u === "string" &&
+  Object.prototype.hasOwnProperty.call(C, u);
 
 /* Plural agreement, the one place an English-keyed dictionary cannot do the
    job: English does not inflect an adjective after a count ("2 shared"),
@@ -1804,13 +1806,20 @@ const nFus   = d => d <= 0 ? 0 : Math.ceil(d / M.media);
 const CLAVE = "jwa322.inventario";
 const CLAVE_MIOS = "jwa322.mios";
 let INV = {};
-try { INV = JSON.parse(localStorage.getItem(CLAVE) || "{}"); } catch(e){ INV = {}; }
+try {
+  const guardado = JSON.parse(localStorage.getItem(CLAVE) || "{}");
+  if (guardado && typeof guardado === "object" && !Array.isArray(guardado)){
+    for (const u of Object.keys(guardado))
+      if (esUuidDeCriatura(u) && guardado[u] && typeof guardado[u] === "object" &&
+          !Array.isArray(guardado[u])) INV[u] = guardado[u];
+  }
+} catch(e){ INV = {}; }
 /* The list is new. If it does not exist it is migrated from what was already
    saved, so that nobody loses «My creatures» when opening this version. */
 let MIS = null;
 try { MIS = JSON.parse(localStorage.getItem(CLAVE_MIOS) || "null"); } catch(e){ MIS = null; }
 if (!Array.isArray(MIS)) MIS = Object.keys(INV);
-MIS = MIS.filter(u => !!C[u]);
+MIS = MIS.filter(esUuidDeCriatura);
 const guardar = () => {
   try {
     localStorage.setItem(CLAVE, JSON.stringify(INV));
@@ -3819,14 +3828,14 @@ document.getElementById("btnImport").onclick = () => {
                       ? d.inventario : d;
         const lista = (d.jwa322 && Array.isArray(d.mios)) ? d.mios : Object.keys(datos);
         let n = 0;
-        for (const k of Object.keys(datos)) if (C[k]) { INV[k] = datos[k]; n++; }
+        for (const k of Object.keys(datos)) if (esUuidDeCriatura(k)) { INV[k] = datos[k]; n++; }
         /* What is imported can bring enhancement points that do not fit with the level
            it brings, or a track below level 30. It is bounded BEFORE saving:
            otherwise, on reload something other than what was seen on importing
            would come out. */
-        for (const k of Object.keys(INV)) if (C[k]) acotarMejoras(k);
+        for (const k of Object.keys(INV)) if (esUuidDeCriatura(k)) acotarMejoras(k);
         let s = 0;
-        for (const u of lista) if (C[u]) { if (anadirMia(u)) s++; }
+        for (const u of lista) if (esUuidDeCriatura(u)) { if (anadirMia(u)) s++; }
         /* The file can bring another target for the creature that is already
            open, so it has to be put back into the slider before repainting: if
            not, the card would keep the old target. */

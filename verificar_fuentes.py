@@ -26,7 +26,7 @@ What it checks, and why
 6. **Every creature that is darted on the map is one you go and find.** The
    report's darting column is computed on the DNA a creature needs, and that only
    makes sense for creatures whose DNA comes out of a dart. Measured: none of the
-   251 hybrids has a darting location, so «darted on the map» and «has no
+   253 hybrids has a darting location, so «darted on the map» and «has no
    ingredients» cannot disagree.
 
     python3 verificar_fuentes.py     -> 0 if everything matches, 1 if not
@@ -176,7 +176,7 @@ ok("and none of them is a hybrid: they are the ones you must go and find",
 # anything unclassified into «sanctuary only». The numbers came out, but by
 # accident. Here the category is computed once and asserted whole.
 print()
-print("=== 4. where each creature comes from (524) ===")
+print("=== 4. where each creature comes from (526) ===")
 D, Cm = set(LOC_DARDEO), set(LOC_COMBATE)
 
 
@@ -203,32 +203,32 @@ print("      %-12s %6s %8s %8s" % ("category", "all", "no ing", "hybrids"))
 for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente"):
     print("      %-12s %6d %8d %8d" % (k, reparto[k], repartoBase[k], repartoHib[k]))
 
-ESPERADO = {"dardeo": 147, "combate": 108, "ambos": 1, "santuario": 5, "sin fuente": 263}
-ok("the 524 split into the five categories",
-   sum(reparto.values()) == len(cri) == 524,
+ESPERADO = {"dardeo": 147, "combate": 108, "ambos": 1, "santuario": 5, "sin fuente": 265}
+ok("the 526 split into the five categories",
+   sum(reparto.values()) == len(cri) == 526,
    "%d = %d creatures" % (sum(reparto.values()), len(cri)))
 ok("and each count is the measured one", all(reparto[k] == v for k, v in ESPERADO.items()),
    " | ".join("%s %d (expected %d)" % (k, reparto[k], v)
               for k, v in ESPERADO.items() if reparto[k] != v) or
    "darting %d · combat %d · both %d · sanctuary %d · no source %d"
    % tuple(reparto[k] for k in ("dardeo", "combate", "ambos", "santuario", "sin fuente")))
-ok("the 272 with no ingredients and the 252 hybrids add up to the 524",
-   len(base) == 272 and len(hib) == 252 and len(base) + len(hib) == len(cri),
+ok("the 273 with no ingredients and the 253 hybrids add up to the 526",
+   len(base) == 273 and len(hib) == 253 and len(base) + len(hib) == len(cri),
    "%d + %d = %d" % (len(base), len(hib), len(base) + len(hib)))
-ok("of the hybrids, 251 do not appear on the map and 1 does (Purrolyth)",
-   repartoHib["sin fuente"] == 251 and repartoHib["combate"] == 1,
+ok("of the hybrids, 252 do not appear on the map and 1 does (Purrolyth)",
+   repartoHib["sin fuente"] == 252 and repartoHib["combate"] == 1,
    "no source %d, combat %d" % (repartoHib["sin fuente"], repartoHib["combate"]))
 ok("the 5 sanctuary ones have no ingredients, and they are the only ones",
    repartoBase["santuario"] == 5 and repartoHib["santuario"] == 0,
    "%d base, %d hybrids" % (repartoBase["santuario"], repartoHib["santuario"]))
 
-# The 272 split by category, pinned. This column was PRINTED but not asserted,
+# The 273 split by category, pinned. This column was PRINTED but not asserted,
 # and the manual's table for it drifted to 146 · 106 · 2 — which sums 270,
-# against the 272 of the sentence printed right below it. Nothing caught that,
-# because the check above pins the totals for the 524 and not this column.
-# Measured: 147 · 107 · 1 · 5 · 12.
-ESPERADO_BASE = {"dardeo": 147, "combate": 107, "ambos": 1, "santuario": 5, "sin fuente": 12}
-ok("the 272 without ingredients split into the measured five counts",
+# against the 273 of the sentence printed right below it. Nothing caught that,
+# because the check above pins the totals for the 526 and not this column.
+# Measured: 147 · 107 · 1 · 5 · 13.
+ESPERADO_BASE = {"dardeo": 147, "combate": 107, "ambos": 1, "santuario": 5, "sin fuente": 13}
+ok("the 273 without ingredients split into the measured five counts",
    all(repartoBase[k] == v for k, v in ESPERADO_BASE.items()),
    " | ".join("%s %d (expected %d)" % (k, repartoBase[k], v)
               for k, v in ESPERADO_BASE.items() if repartoBase[k] != v) or
@@ -243,7 +243,7 @@ in that column would be advice to go and hunt something that does not appear on
 the map.
 
 It is not a truism, it is a property of the data, and it is measured here: none
-of the 251 hybrids has a darting location. 147 are darted and nothing else, and 1
+of the 253 hybrids has a darting location. 147 are darted and nothing else, and 1
 —Moros Intrepidus, epic, with a continental zone AND a Strike Tower— has both, so
 the column counts 148 and not 147.
 """

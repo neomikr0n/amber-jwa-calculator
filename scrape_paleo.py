@@ -115,9 +115,9 @@ STAT_KEYS = {"health": "vida", "damage": "dano", "speed": "velocidad",
 
 
 def entrenamiento(points):
-    """`detail.points` is the Omega training table, and only the 33 Omega
+    """`detail.points` is the Omega training table, and only the 34 Omega
     creatures have it (verified against the whole cache: the card appears in
-    exactly those 33 pages).
+    exactly those 34 pages).
 
     Three groups per stat:
       `cap`   where that stat tops out with training,
@@ -128,7 +128,7 @@ def entrenamiento(points):
     point short of reachable there. The bound that counts is `pcap`.
 
     It is omitted for the creatures that do not have it, instead of storing a
-    null in 491 of the 524 entries."""
+    null in 492 of the 526 entries."""
     if not points:
         return None
     return {grupo: {STAT_KEYS[k]: v for k, v in (points.get(grupo) or {}).items()
@@ -189,7 +189,7 @@ def main():
             "fuentes_adn": det.get("dna_source") or [],
             "mejoras": det.get("enhancements") or [],
         }
-        # Only the Omega creatures carry it (33 of the 524).
+        # Only the Omega creatures carry it (34 of the 526).
         ent = entrenamiento(det.get("points"))
         if ent:
             criaturas[uuid]["entrenamiento"] = ent

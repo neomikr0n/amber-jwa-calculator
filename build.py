@@ -68,7 +68,7 @@ def cargar_datos():
     for u, x in cri.items():
         s = x.get("stats") or {}
         # The enhancements are stored as [dna_cost, req, [type, value]] and only
-        # Unique and Apex have them (149 of 524). The raw codes of the resources
+        # Unique and Apex have them (150 of 526). The raw codes of the resources
         # and the `type` of the effect are kept: the label is resolved in the
         # browser, just as with the zones.
         mj = [[m["cost"], m["req"], [m["rwd"]["type"], m["rwd"]["value"]]]
@@ -101,7 +101,7 @@ def cargar_datos():
             # in img/clase/: the code is the identity and the label is resolved in
             # the browser, as with the zones and the resources.
             x["clase"],
-            # 11: the OMEGA training table, or None. Only the 33 Omega creatures
+            # 11: the OMEGA training table, or None. Only the 34 Omega creatures
             # have it: `cap` where each stat tops out with training, `delta` what
             # one point adds and `pcap` how many points it takes. The three lists
             # come in the order of STATS_ORDEN, the same one used by slot 8, so the

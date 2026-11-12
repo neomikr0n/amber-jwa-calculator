@@ -27,8 +27,8 @@ What it checks, and why
 3. **A hybrid has a block and a non-hybrid does not.** The two counts are
    asserted, so a creature changing type does not pass unnoticed.
 
-4. **The counts are asserted as figures.** 524 creatures, 252 with an
-   Ingredients block, 272 without, 504 ingredient links. And one invariant that
+4. **The counts are asserted as figures.** 526 creatures, 253 with an
+   Ingredients block, 273 without, 506 ingredient links. And one invariant that
    is worth more than the figures: **the ingredient links and the child links
    have to be the SAME number**, because every ingredient link is a child link
    seen from the other side. If they ever differ, the two lists disagree about
@@ -60,11 +60,11 @@ ENLACE = r"/dinodex/([A-Za-z0-9_]+)"
 # The figures this dataset has. They are asserted so that a data change has to
 # be looked at, and so that this script cannot go green on an empty cache.
 ESPERADO = {
-    "criaturas": 524,
-    "con_ingredientes": 252,
-    "sin_ingredientes": 272,
-    "enlaces_ingrediente": 504,
-    "paginas": 525,          # the 524 creatures plus the dinodex index
+    "criaturas": 526,
+    "con_ingredientes": 253,
+    "sin_ingredientes": 273,
+    "enlaces_ingrediente": 506,
+    "paginas": 527,          # the 526 creatures plus the dinodex index
 }
 
 # The branch n30 asked about. Named here so the report says something about it
